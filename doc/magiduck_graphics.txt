@@ -1,0 +1,81 @@
+TODO:
+ X Sprite-rutiiniin pelkät tasaluku rivit.
+ 
+ - Pienemmät kentät.
+ 
+ - Vähemmän leikkaustilaa näyttöbufferiin 3200t -> 1600t
+ 
+ - Objekti-pathi animaatiot.
+ 
+ - Äänisysteemi.
+ 
+ - Muistipankkien aloitusosoitteet tasaluvuiksi (jotta voidaan lukea/kirjoittaa 16bittiä kerralla)
+
+ - Menuparseri: Käytä PEEK:iä
+
+ - Spriterutiini: Voiko tehdä yhden rutiinin, jossa hypätään spriten leveyden mukaan tiettyyn unrollattuun looppiin?
+ 
+------------------------------------------------
+
+
+
+ 
+----------------------------------
+pelaaja
+
+3 vihollista
+
+4 aarretta
+
+health item
+
+pölähdys
+
+pyörivä tähti
+
+luoti
+
+tähti
+
+scoret, 50, 100, 200, 500, 1000
+
+
+
+----------------------------------
+Editor list:
+
+-Player
+
+-Enemy 1
+-Enemy 2
+-Enemy 3
+-Enemy 4
+
+-Health
+-Powerup 1
+-Powerup 2
+-Powerup 3
+
+-Jewel 1
+-Jewel 2
+-Jewel 3
+-Jewel 4
+
+-Button
+
+-Var holder
+
+-Tile Destroyer
+
+-Tile Creator
+
+-Pushable tile
+
+-Jewel Block
+
+-Wind R
+-Wind L
+-Wind U
+-Wind D
+
+-Level exit
