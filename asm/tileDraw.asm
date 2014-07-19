@@ -1,10 +1,17 @@
+.model medium,basic
+
+.code
+
+;================================================================================	
+aDrawTile PROC
+
 ;============================================================================
 ;
-; Tile area drawing routine		v. 8.01
+; Update Tile routine v. 8.01
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
-; Draws a 20x3 tile area from Tile Map to Tile Buffer, using Tile Bank graphics.
+; Draws a single tile in the specified tile Map and Buffer offset.
 ;
 ;============================================================================
 
@@ -19,8 +26,10 @@
 ;08 tileMap offset
 ;10 tileBuffer offset
 ;12 tileBuffer Segment
-;14 Write area offset
-;16 Tilemap read offset
+;14 Tilemap read offset
+;16 Tile X offset
+;18 Tile Y offset
+;
 ;============================================================================
 
 push bp
@@ -34,79 +43,65 @@ mov es, [bp + 12]				;ES = tile buffer seg
 mov di, [bp + 10]				;DI = tile buffer ofs
 
 mov ds, [bp + 12]				;DS = Tilebuffer seg
-mov si, [bp + 16]				;SI = Tilemap ofs
-add si, [bp + 08]
+mov si, [bp + 14]				;SI = Tilemap tile read offset
+add si, [bp + 08]				;	+ Tilemap start offset
 
-mov ax, [bp + 14]				;Set write offset to point to the desired area. (Y * 640)
-mov bx, 1920
+mov ax, [bp + 18]				;DI = DI + (Y * 640)
+mov bx, 640
 mul bx
+add di, ax						
 
-add di, ax
+mov ax, [bp + 16]				;DI = DI + (X * 4)
+shl ax, 2
+add di, ax						
 
-mov bx, 76						;BX = Tile drawing CR value.
+;---------------------------------------------------------------------------
 
-;============================================================================
-; Loop
-;============================================================================
-
-mov dh, 3						;Y Loop = 3
-loopY:
-
-mov cx, 20						;Draw 20 tiles per row
-loopX:
-;============================================================================
-; Tile Map, read tile index
-;============================================================================
 xor ax, ax						;AX = 0
 lodsb							;AL = Tile index
 shl ax, 5						;AX * 32 to get tile read offset
 
-push si							;Push SI (as tile map read offset)
-
 mov si, ax						;SI = Tile bank offset
 add si, [bp + 06]				;SI + AX (tile index)
 
-push di							;Store current DI (buffer write offset)
+mov bx, 76						;BX = Tile draw CR value.
+
 ;----------------------------------------------------------------------------
 ; Tile BLIT
-movsw
-movsw
-add di, bx
-movsw
-movsw
-add di, bx
-movsw
-movsw
-add di, bx
-movsw
-movsw
-add di, bx
-movsw
-movsw
-add di, bx
-movsw
-movsw
-add di, bx
-movsw
-movsw
-add di, bx
-movsw
-movsw
-
-pop di							;pop DI
-add di, 4						;DI + 4
-
-pop si							;POP SI
-loop loopx
 ;----------------------------------------------------------------------------
-add di, 560
-dec dh
-cmp dh, 0
-je exit
-JMP loopY
+movsw
+movsw
+add di, bx
+movsw
+movsw
+add di, bx
+movsw
+movsw
+add di, bx
+movsw
+movsw
+add di, bx
+movsw
+movsw
+add di, bx
+movsw
+movsw
+add di, bx
+movsw
+movsw
+add di, bx
+movsw
+movsw
 ;----------------------------------------------------------------------------
 
 exit:
 
 pop bp
-retf 12
+retf 14
+
+;================================================================================	
+aDrawTile ENDP
+
+public aDrawTile
+
+end

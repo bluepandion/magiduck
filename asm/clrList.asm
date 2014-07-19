@@ -1,11 +1,18 @@
+.model medium,basic
+
+.code
+
+;================================================================================	
+aClearList PROC
+
 ;---------------------------------------------------------------------------
-; Rectangle Copy Routine v. 8.1
+; Rectangle Character Clear Routine v. 8.1
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
-; Copies a set of rectangles from Tile Buffer to Video memory.
+; Clears a rectangle area of characters in Video memory.
 ;
-; Uses sprite lists to copy many rectangles within one call.
+; Uses sprite lists to clear many rectangles within one call.
 ;
 ;---------------------------------------------------------------------------
 ;
@@ -26,29 +33,25 @@
 
 ;06 Sprite list offset
 ;08 Sprite list segment
-;10 Tile buffer offset
-;12 Tile buffer segment
-;14 Tile buffer Wrap
-;16 Video buffer offset
-;18 Video buffer segment
-;20 Video Wrap (CGA = 16384, EGA-> = 32768)
-;22 Tile buffer Window offset
+;10 Character and attribute to clear with
+;12 Video buffer offset
+;14 Video buffer segment
+;16 Video Wrap (CGA = 16384, EGA-> = 32768)
 
 ;----------------------------------------------------------------------------
 
 push bp				
 mov bp, sp				;Get stack pointer
 
+mov es, [bp + 14]		;ES = video memory write segment (0xB800)
+
+mov ds, [bp + 08]		;DS = sprite List read segment
 mov si, [bp + 06]		;SI = sprite List read offset
-push si					;Push SI for routine logic
 
 ;============================================================================
 ; SPRITE LIST READ
 ;============================================================================
 newRectangle:
-
-mov ds, [bp + 08]		;DS = sprite List read segment
-pop si					;Pop SI, sprite list offset from stack
 
 lodsw					;AX = DS:[SI], [SI] + 2			Skip sprite offset
 
@@ -60,7 +63,7 @@ cmp ax, 255				;Has list ended?
 JNZ continuelist		;
 exit:					;----------------------------------------------------
 pop bp					;		Pop BP
-retf 18					;		EXIT
+retf 12					;		EXIT
 						;----------------------------------------------------
 
 continuelist:
@@ -73,26 +76,16 @@ lodsw					;Sprite H
 xchg ah, al 			;AX * 256
 or cx, ax				;CH = Sprite H		CL = Sprite W
 
-;----------------------------------------------------------------
-
-push si					;Push Sprite list offset to stack										
-
-and cl, cl				;IF Width = 0, skip this list entry.
-jz newRectangle
-
 ;============================================================================
 ;============================================================================
 ; write offset prep:
 ;============================================================================
 ;============================================================================
 
-mov di, [bp + 16]		;DI = video memory write offset
-mov si, [bp + 10]		;SI = tile buffer read offset
+mov di, [bp + 12]		;DI = video memory write offset
 	
 xor ax, ax
 mov al, bl
-
-add si, ax				;Add X to read offset
 
 shl ax, 1				;X * 2
 add di, ax				;Add X to write offset
@@ -105,12 +98,8 @@ shl bx, 2				;+ Y * 16 * 4
 add bx, ax				;= Y * 80
 		
 add di, bx				;add Y * 80 to write offset
-inc di					;DI + 1, to hit the attribute byte.
 
-and di, [bp + 20]		;		Wrap DI with video wrap offset.
-
-add si, bx				;add Y * 80 to read offset
-add si, [bp + 22]		;add Window offset to read offset
+and di, [bp + 16]		;Wrap DI with video wrap offset.
 
 ;Store row change value to BX
 
@@ -122,14 +111,13 @@ mov dx, 80
 sub dl, cl				;DX = 80 - Width
 
 ;============================================================================
-; COPY RECTANGLE
+; CLEAR RECTANGLE
 ;============================================================================
 
-mov ds, [bp + 12]		;DS = Tile Buffer segment
-mov es, [bp + 18]		;ES = video memory write segment (0xB800)
+mov ax, [bp + 10]		;AX = character and attribute
 
 push cx					;Check if video memory offset is
-mov cx, [bp + 20]		; safe for drawing without wrap check.
+mov cx, [bp + 16]		; safe for drawing without wrap check.
 sub cx, 4000
 cmp di, cx
 pop cx
@@ -140,33 +128,26 @@ JMP loopYsafe
 loopYwrap:				;Rectangle requires Wrap checking.
 
 push cx					;Push CL=width, CH=height to stack
-mov ch, 0				;Height = 0, for X-loop
+xor ch, ch				;Height = 0, for X-loop
 
-;CMP si, [bp + 14]		;	IF (SI => BufferWrap) THEN
-;JB noBufferWrap			;	
-;	sub si, 7680		;		SI - 7680
-;noBufferWrap:			;	END IF
-	
 ;-----------------------------------------------------------------------------
 loopXwrap:				;		
 
-movsb					;3		Store DS:[SI] to ES:[DI], SI + 1, DI + 1
-inc di					;2		DI + 1
+stosw					;3		Store AX to ES:[DI], DI + 2
 
-and di, [bp + 20]		;		Wrap DI with video wrap offset.
+and di, [bp + 16]		;		Wrap DI with video wrap offset.
 
 loop loopXwrap
 ;--------------------------------------------------------------------------
 
 add di, bx				;2		Change write line by BX
-add si, dx				;2		Change read line 
 
-and di, [bp + 20]		;		Wrap DI with video wrap offset.
+and di, [bp + 16]		;		Wrap DI with video wrap offset.
 
 pop cx					;		Pop CL = Width, CH = Height
 
 dec ch					;2		Height - 1					;
-CMP ch, 0				;		IF Height = 0 {
+XOR ch, 0				;		IF Height = 0 {
 JZ backtolist			;		 GOTO backtolist }
 JMP loopYwrap			;		else { GOTO loopy }
 ;============================================================================
@@ -178,17 +159,15 @@ JMP newRectangle
 loopYsafe:				;No video wrap check.
 
 push cx					;Push CL=width, CH=height to stack
-mov ch, 0				;Height = 0, for X-loop
+xor ch, ch				;Height = 0, for X-loop
 
 ;-----------------------------------------------------------------------------
 loopXsafe:				;		
-movsb					;3		Store DS:[SI] to ES:[DI], SI + 1, DI + 1
-inc di					;2		DI + 1
+stosw					;3		Store AX to ES:[DI], DI + 2
 loop loopXsafe
 ;--------------------------------------------------------------------------
 
 add di, bx				;2		Change write line by BX
-add si, dx				;2		Change read line 
 
 pop cx					;		Pop CL = Width, CH = Height
 
@@ -196,3 +175,11 @@ dec ch					;2		Height - 1					;
 CMP ch, 0				;		IF Height = 0 {
 JZ backtolist			;		 GOTO backtolist }
 JMP loopYsafe			;		else { GOTO loopy }
+
+;--------------------------------------------------------------------------
+
+aClrList ENDP
+
+public aClearList
+
+end

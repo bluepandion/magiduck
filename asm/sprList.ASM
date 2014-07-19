@@ -1,3 +1,10 @@
+.model medium,basic
+
+.code
+
+;================================================================================	
+aSpriteList PROC
+
 ;---------------------------------------------------------------------------
 ; Sprite drawing routine version 8.1
 ;
@@ -342,3 +349,10 @@ skipSprite:
 
 				stosw					;Width = 0, ES:DI = AX, DI + 2	
 jmp newSprite
+
+;============================================================================
+aSpriteList ENDP
+
+public aSpriteList
+
+end
