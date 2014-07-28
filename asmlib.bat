@@ -1,14 +1,7 @@
 @echo off 
 set disk=c:
 set fileOut=libElf
-set file0=c:\elf\gitDuck\asm\pageFlip.asm
-set file1=c:\elf\gitDuck\asm\kbInit.asm
-set file2=c:\elf\gitDuck\asm\rectList.asm
-set file3=c:\elf\gitDuck\asm\sprList.asm
-set file4=c:\elf\gitDuck\asm\tileArea.asm
-set file5=c:\elf\gitDuck\asm\tilePan.asm
-set file6=c:\elf\gitDuck\asm\tileDraw.asm
-set file7=c:\elf\gitDuck\asm\clrList.asm
+set file0=c:\elf\gitDuck\asm\libElf.asm
 set dest=\elf\gitDuck\
 set masm=cd\masm611\bin\
 set link=cd\bc7\binb\
@@ -16,11 +9,14 @@ set link=cd\bc7\binb\
 @echo on
 
 %masm%
-ml %file0%,%file1%,%file2%,%file3%,%file4%,%file5%,%file6%,%file7% /c
+ml %file0% 
+
 copy %fileOut%.obj %dest%
+del %fileOut%.exe
 
 %link%
-link /q %dest%%fileOut%.obj, %dest%%fileOut%.qlb, ,c:\bc7\lib\qbx.lib c:\bc7\lib\qbxqlb.lib;
+link /q %dest%%fileOut%.obj, %dest%bas\%fileOut%.qlb, ,c:\bc7\lib\qbx.lib c:\bc7\lib\qbxqlb.lib;
+del  %dest%bas\%fileOut%.lib
+lib  %dest%bas\%fileOut%.lib + %dest%%fileOut%.obj
 
 cd%dest%
-copy %fileOut%.qlb .\bas

@@ -1,10 +1,24 @@
 DEFINT A-Z
 
+DECLARE SUB aPageFlip (BYVAL wrapOfs%, BYVAL hudSSeg%, BYVAL hudSofs%, BYVAL prevPageOfs%, BYVAL setPageOfs%)
+DECLARE SUB aKBinit (oldSeg%, oldOfs%, BYVAL newSeg%, BYVAL newOfs%)
+DECLARE SUB aKBremove (BYVAL oldSeg%, BYVAL oldOfs%)
+DECLARE SUB aClearList (BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL ClearWord%, BYVAL sprListSeg%, BYVAL sprListOfs%)
+DECLARE SUB aRectList (BYVAL tileBufWindowOfs%, BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL tileBufWrap%, BYVAL tileBufSeg%, BYVAL tileBugOfs%, BYVAL sprListSeg%, BYVAL sprListOfs%)
+DECLARE SUB aSpriteList (BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL sprBankSeg%, BYVAL sprBankOfs%, BYVAL sprListSeg%, BYVAL sprListOfs%)
+DECLARE SUB aTileArea (BYVAL forceOfs%, BYVAL area%, BYVAL tileBufferSeg%, BYVAL tileBufferOfs%, BYVAL tileMapOfs%, BYVAL tileBankOfs%)
+DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%, BYVAL tileBufSeg%, BYVAL tileBufOfs%, BYVAL tileMapOfs%, BYVAL tileBankOfs%)
+DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
+
 '-------------------------------------------------------------------------
 ' Variables and types
 '-------------------------------------------------------------------------
 
 '$STATIC
+
+COMMON SHARED dataFolder AS STRING
+
+COMMON SHARED hudBuffer AS STRING * 160
 
 DIM KBdelta(128)  AS INTEGER
 COMMON SHARED KBdelta() AS INTEGER
@@ -40,6 +54,9 @@ DIM spriteHeight(128)  AS INTEGER
 COMMON SHARED spriteOffset() AS INTEGER
 COMMON SHARED spriteWidth() AS INTEGER
 COMMON SHARED spriteHeight() AS INTEGER
+
+COMMON SHARED spriteBankSeg AS INTEGER
+COMMON SHARED spriteBankOfs AS INTEGER
 
 
 TYPE physicsType
@@ -212,3 +229,4 @@ COMMON SHARED playerObj AS INTEGER
 COMMON SHARED skippedFrame AS INTEGER
 
 COMMON SHARED angle AS angleType
+

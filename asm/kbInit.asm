@@ -34,14 +34,17 @@ mov ah, 035h		;Subfunction 35h: Get current interrupt handler address
 mov al, 09h			;Subfunction 09h: Get address of int 09h (keyboard handler)
 int 021h			;Call interrupt 21h
 
-mov di, bx			;Set read offset to BX (address returned by interrupt)
+mov di, bx			;Set write offset to BX (address returned by interrupt)
 					;ES was set by interrupt as well.
 
-mov bx, [bp + 14]	;Save old segment to our parameter
-mov [bx], es
+;mov bx, [bp + 14]	;Save old segment to our parameter
+;mov [bx], es
+;mov bx, [bp + 12]	;Save old offset to our parameter
+;mov [bx], di
 
-mov bx, [bp + 12]	;Save old offset to our parameter
-mov [bx], di
+-mov es, [bp + 14]
+-mov di, [bp + 10]
+-mov es:[di], 
 
 mov dx, [bp + 10]	;Set read segment to New keyboard routine parameter
 mov ds, dx			

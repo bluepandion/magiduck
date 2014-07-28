@@ -1,10 +1,7 @@
-DECLARE SUB aClearList (clearWord%, listSeg%, listOfs%)
 DECLARE SUB syncPages ()
-DECLARE SUB aTilePan (direction%)
 DECLARE SUB setErrorMsg (msg$)
 DECLARE SUB aDrawTiles (area%, forceOfs%)
 DECLARE SUB aCopyTileAreas (page%, listSeg%, listOfs%)
-DECLARE SUB aScroll ()
 DECLARE SUB queueSound (offset%, Note%)
 DECLARE FUNCTION collision% (x0%, y0%, w0%, h0%, x1%, y1%, w1%, h1%)
 DECLARE SUB debugWrite (message$)
@@ -12,16 +9,11 @@ DECLARE SUB loadLevel (fileName AS STRING)
 DECLARE SUB testControl ()
 DECLARE SUB handleKeyboard ()
 DECLARE SUB myPrint (x%, y%, text$, colour1%, colour2%, overRideSeg%, overRideOfs%)
-DECLARE SUB aPageFlip ()
-DECLARE SUB animEditor ()
-DECLARE SUB leveleditor ()
-DECLARE SUB aKBinit ()
 DECLARE SUB deltaTime ()
 DECLARE SUB elfInit ()
 DECLARE SUB loadSprites (file$)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB spawnObject (x%, y%, object%, tags%, spawner%)
-DECLARE SUB aKBremove ()
 DECLARE SUB aSprite ()
 DECLARE FUNCTION tileRead% (x%, y%)
 DECLARE SUB destroyObject (index%)
@@ -74,8 +66,8 @@ DIM SHARED asmTilePan AS STRING
 DIM SHARED asmClearList AS STRING
 DIM SHARED asmUpdateTile AS STRING
 
-DIM SHARED KBoldseg AS INTEGER               'KB state save.
-DIM SHARED KBoldofs AS INTEGER
+DIM SHARED KBoldSeg AS INTEGER               'KB state save.
+DIM SHARED KBoldOfs AS INTEGER
 DIM SHARED Keyflags AS INTEGER
 
 '----------------------------------------------------------------------------
@@ -83,8 +75,6 @@ DIM SHARED Keyflags AS INTEGER
 '----------------------------------------------------------------------------
 'Sprite graphics bank
 DIM SHARED spriteBank AS STRING * 6400
-DIM SHARED spriteBankSeg AS INTEGER
-DIM SHARED spriteBankOfs AS INTEGER
 
 DIM SHARED tilemapReadX AS INTEGER              '0-7 scroll offset
 DIM SHARED tilemapReadY AS INTEGER              '0-3 scroll offset
@@ -94,10 +84,8 @@ DIM SHARED tileBuffer AS STRING * 11360         '7760 + 1600 + 2000
 DIM SHARED tileBufferSeg AS INTEGER
 DIM SHARED tileBufferOfs AS INTEGER
 DIM SHARED tileBankOfs AS INTEGER
-DIM SHARED tileMapOfs AS INTEGER
+DIM SHARED TileMapOfs AS INTEGER
 DIM SHARED tileBufferWrap AS INTEGER
-
-DIM SHARED hudBuffer AS STRING * 160
 
 TYPE charPair
  glyph1(32 TO 90) AS STRING * 1
@@ -130,39 +118,24 @@ DIM SHARED soundFreqTable(1 TO 96, 2) AS INTEGER
 
 DIM SHARED errorMessage$
 
-SUB aClearList (clearWord, listSeg, listOfs)
- 
- page = gfx.page
-
- p0% = gfx.videoWrap
- p1% = &HB800
- p2% = gfx.pageOfs(page) * 2
- p3% = clearWord
- p4% = listSeg
- p5% = listOfs
-
- DEF SEG = SSEG(asmClearList)
- CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, SADD(asmClearList))
- DEF SEG
-
-END SUB
-
 SUB aCopyTileAreas (page, listSeg, listOfs)
 
- p8% = gfx.WindowOfs(page)
-
- p0% = gfx.videoWrap
- p1% = &HB800
- p2% = gfx.pageOfs(page) * 2
- p3% = tileBufferWrap
- p4% = tileBufferSeg
- p5% = tileBufferOfs
- p6% = listSeg
- p7% = listOfs
+ 'p8% = gfx.WindowOfs(Page)
+ '
+ 'p0% = gfx.videoWrap
+ 'p1% = &HB800
+ 'p2% = gfx.pageOfs(Page)
+ 'p3% = tileBufferWrap
+ 'p4% = tileBufferSeg
+ 'p5% = tileBufferOfs
+ 'p6% = listSeg
+ 'p7% = listOfs
  
- DEF SEG = SSEG(asmCopyTileArea)
- CALL absolute(BYVAL p8%, BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, BYVAL p6%, BYVAL p7%, SADD(asmCopyTileArea))
- DEF SEG
+ 'DEF SEG = SSEG(asmCopyTileArea)
+ 'CALL absolute(BYVAL p8%, BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, BYVAL p6%, BYVAL p7%, SADD(asmCopyTileArea))
+ 'DEF SEG
+
+ aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, listSeg, listOfs
 
 END SUB
 
@@ -177,91 +150,14 @@ SUB aDrawTiles (area, forceOfs)
  p1% = area AND 3
  p2% = tileBufferSeg
  p3% = tileBufferOfs
- p4% = tileMapOfs
+ p4% = TileMapOfs
  p5% = tileBankOfs
 
- DEF SEG = SSEG(asmTile)
- CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, SADD(asmTile))
- DEF SEG
+ 'DEF SEG = SSEG(asmTile)
+ 'CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, SADD(asmTile))
+ 'DEF SEG
 
-END SUB
-
-SUB aKBinit
-
- DEF SEG = 0
- Keyflags = PEEK(&H417) AND &H70       'Save keyboard flags
- DEF SEG
-
- p2% = SSEG(asmKBroutine)
- p3% = SADD(asmKBroutine)
-
- DEF SEG = SSEG(asmKBinit)
- CALL absolute(KBoldseg, KBoldofs, BYVAL p2%, BYVAL p3%, SADD(asmKBinit))
-
- DEF SEG
-
-END SUB
-
-SUB aKBremove
- 
-p0% = KBoldseg
-p1% = KBoldofs
-
-DEF SEG = SSEG(asmKBremove)
-CALL absolute(BYVAL p0%, BYVAL p1%, SADD(asmKBremove))
-DEF SEG
-
-DEF SEG = 0
-POKE (&H417), Keyflags           'Restore old keyboard flags
-DEF SEG
-
-END SUB
-
-SUB aPageFlip
- 
- p0% = gfx.videoWrap
- p1% = VARSEG(hudBuffer)
- p2% = VARPTR(hudBuffer)
- p3% = gfx.pageOfs(gfx.page XOR 1)
- p4% = gfx.pageOfs(gfx.page)
-
-
- DEF SEG = SSEG(asmPageFlip)
- CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, SADD(asmPageFlip))
- DEF SEG
- 
- gfx.page = gfx.page XOR 1
-
-END SUB
-
-SUB aSprite
-
-p0% = gfx.videoWrap
-
-p1% = &HB800
-p2% = gfx.pageOfs(gfx.page) * 2
-
-p3% = spriteBankSeg
-p4% = spriteBankOfs
-
-p5% = VARSEG(spriteList(0, gfx.page).offset)
-p6% = VARPTR(spriteList(0, gfx.page).offset)
-
-DEF SEG = SSEG(asmSpriteList)
-CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, BYVAL p6%, SADD(asmSpriteList))
-DEF SEG
-
-END SUB
-
-SUB aTilePan (direction)
-
- p0% = direction
- p1% = tileBufferSeg
- p2% = tileBufferOfs
-
- DEF SEG = SSEG(asmTilePan)
- CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, SADD(asmTilePan))
- DEF SEG
+ aTileArea p0%, area AND 3, tileBufferSeg, tileBufferOfs, TileMapOfs, tileBankOfs
 
 END SUB
 
@@ -280,25 +176,15 @@ SUB aUpdateTile (x, y)
 
  p3% = tileBufferSeg
  p4% = tileBufferOfs
- p5% = tileMapOfs
+ p5% = TileMapOfs
  p6% = tileBankOfs
- 
- DEF SEG = SSEG(asmUpdateTile)
- CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, BYVAL p6%, SADD(asmUpdateTile))
- DEF SEG
 
-' FOR n = 0 TO 1
-'  xx = (X AND &HFFFC) - gfx.screenX(n)
-'  yy = (y AND &HFFF8) - gfx.screenY(n) '+ 4
-'  IF xx > 36 THEN xx = 36
-'  IF yy > 42 THEN yy = 42
-'  tileCopyList(0, n).X = xx
-'  tileCopyList(0, n).y = yy
-'  tileCopyList(0, n).w = 4
-'  tileCopyList(0, n).h = 8
-'  tileCopyList(1, n).y = 255
-'  aCopyTileAreas n, VARSEG(tileCopyList(0, n).offset), VARPTR(tileCopyList(0, n).offset)
-' NEXT n
+ aTileDraw p0%, p1%, p2%, p3%, p4%, p5%, p6%
+
+ 'DEF SEG = SSEG(asmUpdateTile)
+ 'CALL absolute(BYVAL p0%, BYVAL p1%, BYVAL p2%, BYVAL p3%, BYVAL p4%, BYVAL p5%, BYVAL p6%, SADD(asmUpdateTile))
+ 'DEF SEG
+
  
 END SUB
 
@@ -382,7 +268,7 @@ tileBufferWrap = CVI(a$)
 plong& = tileBufferOfs
 plong& = plong& + 9760
 a$ = MKL$(plong&)
-tileMapOfs = CVI(a$)                           'Tile map    = 1600  bytes
+TileMapOfs = CVI(a$)                           'Tile map    = 1600  bytes
                                                '              30x40 tiles
 plong& = tileBufferOfs
 plong& = plong& + 40                          'Offset tilebuffer by 40
@@ -449,7 +335,9 @@ FOR n = 0 TO 3
  tileCopyList(0, gfx.page).w = 40
  tileCopyList(0, gfx.page).h = 50
  tileCopyList(1, gfx.page).y = 255
- aClearList &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+ 
+ aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+ 
  gfx.pageOfs(0) = gfx.pageOfs(0) + 2000
 NEXT n
 
@@ -464,7 +352,14 @@ DEF SEG
 ' Preload data.
 '-----------------------------------------------------------------------
 
-aKBinit
+ DEF SEG = 0
+ Keyflags = PEEK(&H417) AND &H70       'Save keyboard flags
+ DEF SEG
+
+ p2% = SSEG(asmKBroutine)
+ p3% = SADD(asmKBroutine)
+
+ aKBinit KBoldSeg, KBoldOfs, p2%, p3%
 
 debugLog = 0
 
@@ -635,8 +530,6 @@ SUB handleScroll
  END IF
 
  gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) AND gfx.pageWrap
- 'IF gfx.windowOfs(gfx.page) > 7679 THEN gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) - 7680
- 'IF gfx.windowOfs(gfx.page) < 0 THEN gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + 7680
  
  IF gfx.WindowY(gfx.page) < 0 THEN
    gfx.WindowY(0) = gfx.WindowY(0) + 24
@@ -644,9 +537,9 @@ SUB handleScroll
    gfx.WindowOfs(0) = gfx.WindowOfs(0) + 1920
    gfx.WindowOfs(1) = gfx.WindowOfs(1) + 1920
    gfx.tileOfs = gfx.tileOfs - 60 'tilePosYlookUp(gfx.screenY(gfx.page)) - 60
-   'gfx.tileArea = gfx.tileArea - 1
-   'gfx.tileArea = gfx.tileArea AND 3
-   aTilePan 1
+
+   aTilePan 1, tileBufferSeg, tileBufferOfs
+
    aDrawTiles gfx.tileArea, gfx.tileOfs
  END IF
 
@@ -658,9 +551,9 @@ SUB handleScroll
    gfx.WindowOfs(1) = gfx.WindowOfs(1) - 1920
    
    gfx.tileOfs = gfx.tileOfs + 60 ' tilePosYlookUp(gfx.screenY(gfx.page)) - 60
-   'gfx.tileArea = gfx.tileArea + 1
-   'gfx.tileArea = gfx.tileArea AND 3
-   aTilePan 0
+
+   aTilePan 0, tileBufferSeg, tileBufferOfs
+
    aDrawTiles gfx.tileArea + 3, gfx.tileOfs + 180
  END IF
 
@@ -833,7 +726,7 @@ END SUB
 SUB loadAssembler
 
 
-OPEN "kbrou02.com" FOR BINARY AS #1          'Keyboard interrupt routine
+OPEN "kbint.bin" FOR BINARY AS #1          'Keyboard interrupt routine
  asmKBroutine = SPACE$(LOF(1))
  GET #1, , asmKBroutine
 CLOSE #1
@@ -1047,8 +940,13 @@ END SUB
 SUB quit
 
  IF debugLog = 1 THEN CLOSE #2
-
- aKBremove
+ 
+ aKBremove KBoldSeg, KBoldOfs
+ 
+ DEF SEG = 0
+ POKE (&H417), Keyflags           'Restore old keyboard flags
+ DEF SEG
+ 
 
  OUT &H43, &H34         'Return Timer to normal operation
  OUT &H40, 0            'Set low 8 bits of trigger to 0
@@ -1075,10 +973,6 @@ SUB quit
  PRINT gfx.listLen(0)
  PRINT gfx.listLen(1)
 
- PRINT
- FOR n = 4 TO 30
-  PRINT object(n).control; physics(n).x; physics(n).y; "|";
- NEXT n
 END
 
 END SUB
@@ -1129,8 +1023,9 @@ SUB screenResetPos (x%, y%)
  spriteList(0, gfx.page).h = 50
  aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
- aPageFlip
-
+ aPageFlip gfx.videoWrap, VARSEG(hudBuffer), VARPTR(hudBuffer), gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+ gfx.page = gfx.page XOR 1
+ 
  spriteList(1, gfx.page).y = 255
  spriteList(0, gfx.page).x = 0
  spriteList(0, gfx.page).y = 0
@@ -1158,7 +1053,7 @@ FUNCTION tileRead (x, y)
 
  DEF SEG = tileBufferSeg
 
- readOfs = 0& + tileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
+ readOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
  
  tileRead = PEEK(readOfs)
  
@@ -1171,7 +1066,7 @@ SUB tileWrite (x AS INTEGER, y AS INTEGER, index AS INTEGER)
 
     DEF SEG = tileBufferSeg
 
-    writeOfs = 0& + tileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
+    writeOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
 
     POKE writeOfs, index
 

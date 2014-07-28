@@ -1,0 +1,13 @@
+.model medium,basic
+
+.data
+
+.code
+
+PROC testArgs
+	
+testArgs ENDP
+
+public testArgs
+
+end
