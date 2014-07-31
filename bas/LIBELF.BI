@@ -6,8 +6,8 @@ DECLARE SUB aKBremove (BYVAL oldSeg%, BYVAL oldOfs%)
 DECLARE SUB aClearList (BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL ClearWord%, BYVAL sprListSeg%, BYVAL sprListOfs%)
 DECLARE SUB aRectList (BYVAL tileBufWindowOfs%, BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL tileBufWrap%, BYVAL tileBufSeg%, BYVAL tileBugOfs%, BYVAL sprListSeg%, BYVAL sprListOfs%)
 DECLARE SUB aSpriteList (BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL sprBankSeg%, BYVAL sprBankOfs%, BYVAL sprListSeg%, BYVAL sprListOfs%)
-DECLARE SUB aTileArea (BYVAL forceOfs%, BYVAL area%, BYVAL tileBufferSeg%, BYVAL tileBufferOfs%, BYVAL tileMapOfs%, BYVAL tileBankOfs%)
-DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%, BYVAL tileBufSeg%, BYVAL tileBufOfs%, BYVAL tileMapOfs%, BYVAL tileBankOfs%)
+DECLARE SUB aTileArea (BYVAL forceOfs%, BYVAL area%, BYVAL tileBufferSeg%, BYVAL tileBufferOfs%, BYVAL TileMapOfs%, BYVAL tileBankOfs%)
+DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%, BYVAL tileBufSeg%, BYVAL tileBufOfs%, BYVAL TileMapOfs%, BYVAL tileBankOfs%)
 DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
 
 '-------------------------------------------------------------------------
@@ -57,6 +57,12 @@ COMMON SHARED spriteHeight() AS INTEGER
 
 COMMON SHARED spriteBankSeg AS INTEGER
 COMMON SHARED spriteBankOfs AS INTEGER
+
+COMMON SHARED tileBufferSeg AS INTEGER
+COMMON SHARED tileBufferOfs AS INTEGER
+COMMON SHARED tileBankOfs AS INTEGER
+COMMON SHARED TileMapOfs AS INTEGER
+COMMON SHARED tileBufferWrap AS INTEGER
 
 
 TYPE physicsType
@@ -174,8 +180,8 @@ TYPE gfxType
 END TYPE
 
 TYPE angleType
- X(0 TO 31) AS INTEGER
- Y(0 TO 31) AS INTEGER
+ X(0 TO 63) AS INTEGER
+ Y(0 TO 63) AS INTEGER
 END TYPE
 
 COMMON SHARED gfx AS gfxType
@@ -229,4 +235,14 @@ COMMON SHARED playerObj AS INTEGER
 COMMON SHARED skippedFrame AS INTEGER
 
 COMMON SHARED angle AS angleType
+
+TYPE soundType
+ Queue(0 TO 63) AS INTEGER
+ readPos AS INTEGER
+ speakerOn AS INTEGER
+ speakerOff AS INTEGER
+ Track(0 TO 255) AS INTEGER
+END TYPE
+
+COMMON SHARED sounds AS soundType
 

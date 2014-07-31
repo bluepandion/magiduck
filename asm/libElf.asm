@@ -368,215 +368,456 @@ aClearList ENDP
 ;================================================================================	
 aRectList PROC
 
-;---------------------------------------------------------------------------
-; Rectangle Copy Routine v. 8.1
-;
-; 40x50 mode drawing. 2 Pixels per byte.
-;
-; Copies a set of rectangles from Tile Buffer to Video memory.
-;
-; Uses sprite lists to copy many rectangles within one call.
-;
-;---------------------------------------------------------------------------
-;
-; Sprite list format:
-; 00: 	Sprite offset		.....	
-; 02: 	X
-; 04: 	Y					.....		y 255 = END OF LIST
-; 06: 	W								w   0 = Skip this sprite
-; 08: 	H					.....		
+	;---------------------------------------------------------------------------
+	; Rectangle Copy Routine v. 8.1
+	;
+	; 40x50 mode drawing. 2 Pixels per byte.
+	;
+	; Copies a set of rectangles from Tile Buffer to Video memory.
+	;
+	; Uses sprite lists to copy many rectangles within one call.
+	;
+	;---------------------------------------------------------------------------
+	;
+	; Sprite list format:
+	; 00: 	Sprite offset		.....	
+	; 02: 	X
+	; 04: 	Y					.....		y 255 = END OF LIST
+	; 06: 	W								w   0 = Skip this sprite
+	; 08: 	H					.....		
 
-;---------------------------------------------------------------------------
-; Parameter stack offsets
-; Order is inverted from qbasic CALL ABSOLUTE parameter order
+	;---------------------------------------------------------------------------
+	; Parameter stack offsets
+	; Order is inverted from qbasic CALL ABSOLUTE parameter order
 
-;00 bp
-;02 Qbasic return segment
-;04 Qbasic return offset
+	;00 bp
+	;02 Qbasic return segment
+	;04 Qbasic return offset
 
-;06 Sprite list offset
-;08 Sprite list segment
-;10 Tile buffer offset
-;12 Tile buffer segment
-;14 Tile buffer Wrap
-;16 Video buffer offset
-;18 Video buffer segment
-;20 Video Wrap (CGA = 16384, EGA-> = 32768)
-;22 Tile buffer Window offset
+	;06 Sprite list offset
+	;08 Sprite list segment
+	;10 Tile buffer offset
+	;12 Tile buffer segment
+	;14 Tile buffer Wrap
+	;16 Video buffer offset
+	;18 Video buffer segment
+	;20 Video Wrap (CGA = 16384, EGA-> = 32768)
+	;22 Tile buffer Window offset
 
-;----------------------------------------------------------------------------
+	;----------------------------------------------------------------------------
 
-push bp				
-mov bp, sp				;Get stack pointer
+		push bp				
+		mov bp, sp				;Get stack pointer
 
-mov di, [bp + 16]		;Video buffer offset * 2
-shl di, 1
-mov [bp + 16], di
+		mov di, [bp + 16]		;Video buffer offset * 2
+		shl di, 1
+		mov [bp + 16], di
 
-mov si, [bp + 06]		;SI = sprite List read offset
-push si					;Push SI for routine logic
+		mov si, [bp + 06]		;SI = sprite List read offset
+		push si					;Push SI for routine logic
 
-;============================================================================
-; SPRITE LIST READ
-;============================================================================
-newRectangle:
+	;============================================================================
+	; SPRITE LIST READ
+	;============================================================================
+	newRectangle:
 
-mov ds, [bp + 08]		;DS = sprite List read segment
-pop si					;Pop SI, sprite list offset from stack
+		mov ds, [bp + 08]		;DS = sprite List read segment
+		pop si					;Pop SI, sprite list offset from stack
 
-lodsw					;AX = DS:[SI], [SI] + 2			Skip sprite offset
+		lodsw					;AX = DS:[SI], [SI] + 2			Skip sprite offset
 
-lodsw					;Sprite X
-xchg bx, ax
-lodsw					;Sprite Y
+		lodsw					;Sprite X
+		xchg bx, ax
+		lodsw					;Sprite Y
 
-cmp ax, 255				;Has list ended?
-JNZ continuelist		;
-exit:					;----------------------------------------------------
-pop bp					;		Pop BP
-retf 18					;		EXIT
-						;----------------------------------------------------
+		cmp ax, 255				;Has list ended?
+		JNZ continuelist		;
+	exit:					;----------------------------------------------------
+		pop bp					;		Pop BP
+		retf 18					;		EXIT
+							;----------------------------------------------------
 
-continuelist:
-xchg ah, al				;AX * 256
-or bx, ax				;BH = Sprite Y		BL = Sprite X
+	continuelist:
+		xchg ah, al				;AX * 256
+		or bx, ax				;BH = Sprite Y		BL = Sprite X
 
-lodsw					;Sprite W
-xchg cx, ax
-lodsw					;Sprite H
-xchg ah, al 			;AX * 256
-or cx, ax				;CH = Sprite H		CL = Sprite W
+		lodsw					;Sprite W
+		xchg cx, ax
+		lodsw					;Sprite H
+		xchg ah, al 			;AX * 256
+		or cx, ax				;CH = Sprite H		CL = Sprite W
 
-;----------------------------------------------------------------
+	;----------------------------------------------------------------
 
-push si					;Push Sprite list offset to stack										
+		push si					;Push Sprite list offset to stack										
 
-and cl, cl				;IF Width = 0, skip this list entry.
-jz newRectangle
+		and cl, cl				;IF Width = 0, skip this list entry.
+		jz newRectangle
 
-;============================================================================
-;============================================================================
-; write offset prep:
-;============================================================================
-;============================================================================
+	;============================================================================
+	;============================================================================
+	; write offset prep:
+	;============================================================================
+	;============================================================================
 
-mov di, [bp + 16]		;DI = video memory write offset
-mov si, [bp + 10]		;SI = tile buffer read offset
-	
-xor ax, ax
-mov al, bl
-
-add si, ax				;Add X to read offset
-
-shl ax, 1				;X * 2
-add di, ax				;Add X to write offset
+		mov di, [bp + 16]		;DI = video memory write offset
+		mov si, [bp + 10]		;SI = tile buffer read offset
 			
-				
-xchg bl, bh				;Move BH (y) to BL
-xor bh, bh
-	
-shl bx, 1				;+ Y * 16
-shl bx, 1
-shl bx, 1
-shl bx, 1
+		xor ax, ax
+		mov al, bl
 
-mov ax, bx
-shl bx, 1				;+ Y * 16 * 4
-shl bx, 1
-add bx, ax				;= Y * 80
-		
-add di, bx				;add Y * 80 to write offset
-inc di					;DI + 1, to hit the attribute byte.
+		add si, ax				;Add X to read offset
 
-and di, [bp + 20]		;		Wrap DI with video wrap offset.
-
-add si, bx				;add Y * 80 to read offset
-add si, [bp + 22]		;add Window offset to read offset
-
-;Store row change value to BX
-
-mov bx, 40				;BL = 40
-sub bl, cl				;BL = 40 - Width 
-shl bx, 1				;BL * 2
-
-mov dx, 80
-sub dl, cl				;DX = 80 - Width
-
-;============================================================================
-; COPY RECTANGLE
-;============================================================================
-
-mov ds, [bp + 12]		;DS = Tile Buffer segment
-mov es, [bp + 18]		;ES = video memory write segment (0xB800)
-
-push cx					;Check if video memory offset is
-mov cx, [bp + 20]		; safe for drawing without wrap check.
-sub cx, 4000
-cmp di, cx
-pop cx
-JA loopYwrap
-JMP loopYsafe
-;============================================================================
-
-loopYwrap:				;Rectangle requires Wrap checking.
-
-push cx					;Push CL=width, CH=height to stack
-mov ch, 0				;Height = 0, for X-loop
-
-;CMP si, [bp + 14]		;	IF (SI => BufferWrap) THEN
-;JB noBufferWrap			;	
-;	sub si, 7680		;		SI - 7680
-;noBufferWrap:			;	END IF
-	
-;-----------------------------------------------------------------------------
-loopXwrap:				;		
-
-movsb					;3		Store DS:[SI] to ES:[DI], SI + 1, DI + 1
-inc di					;2		DI + 1
-
-and di, [bp + 20]		;		Wrap DI with video wrap offset.
-
-loop loopXwrap
-;--------------------------------------------------------------------------
-
-add di, bx				;2		Change write line by BX
-add si, dx				;2		Change read line 
-
-and di, [bp + 20]		;		Wrap DI with video wrap offset.
-
-pop cx					;		Pop CL = Width, CH = Height
-
-dec ch					;2		Height - 1					;
-CMP ch, 0				;		IF Height = 0 {
-JZ backtolist			;		 GOTO backtolist }
-JMP loopYwrap			;		else { GOTO loopy }
-;============================================================================
-
-backtolist:
-JMP newRectangle
+		shl ax, 1				;X * 2
+		add di, ax				;Add X to write offset
+					
 						
-;============================================================================
-loopYsafe:				;No video wrap check.
+		xchg bl, bh				;Move BH (y) to BL
+		xor bh, bh
+			
+		shl bx, 1				;+ Y * 16
+		shl bx, 1
+		shl bx, 1
+		shl bx, 1
 
-push cx					;Push CL=width, CH=height to stack
-mov ch, 0				;Height = 0, for X-loop
+		mov ax, bx
+		shl bx, 1				;+ Y * 16 * 4
+		shl bx, 1
+		add bx, ax				;= Y * 80
+				
+		add di, bx				;add Y * 80 to write offset
+		inc di					;DI + 1, to hit the attribute byte.
 
-;-----------------------------------------------------------------------------
-loopXsafe:				;		
-movsb					;3		Store DS:[SI] to ES:[DI], SI + 1, DI + 1
-inc di					;2		DI + 1
-loop loopXsafe
-;--------------------------------------------------------------------------
+		and di, [bp + 20]		;		Wrap DI with video wrap offset.
 
-add di, bx				;2		Change write line by BX
-add si, dx				;2		Change read line 
+		add si, bx				;add Y * 80 to read offset
+		add si, [bp + 22]		;add Window offset to read offset
 
-pop cx					;		Pop CL = Width, CH = Height
+	;Store row change value to BX
 
-dec ch					;2		Height - 1					;
-CMP ch, 0				;		IF Height = 0 {
-JZ backtolist			;		 GOTO backtolist }
-JMP loopYsafe			;		else { GOTO loopy }
+		mov bx, 40				;BL = 40
+		sub bl, cl				;BL = 40 - Width 
+		shl bx, 1				;BL * 2
+
+		mov dx, 80
+		sub dl, cl				;DX = 80 - Width
+
+	;============================================================================
+	; COPY RECTANGLE
+	;============================================================================
+
+		mov ds, [bp + 12]		;DS = Tile Buffer segment
+		mov es, [bp + 18]		;ES = video memory write segment (0xB800)
+
+		push cx					;Check if video memory offset is
+		mov cx, [bp + 20]		; safe for drawing without wrap check.
+		sub cx, 4000
+		cmp di, cx
+		pop cx
+		JA loopYwrap
+		JMP loopYsafe
+	;============================================================================
+
+	loopYwrap:				;Rectangle requires Wrap checking.
+		
+		push cx				;Push CX...
+				
+		xchg ax, bx			;Move CR-value to AX
+		
+		mov bx, cx			;Get value for jump.
+		xor bh, bh			;Clear height-value from jump.
+		
+		mov cx, [bp + 20]	;...Store Wrap value to CX.
+		
+		shl bx, 1
+		jmp [rectWrap + bx]
+		rectWrap	dw	rwi00, rwi01, rwi02, rwi03, rwi04, rwi05, rwi06, rwi07, rwi08, rwi09, rwi10, rwi11, rwi12, rwi13, rwi14, rwi15, rwi16, rwi17, rwi18, rwi19, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi20, rwi40, rwi40, rwi40, rwi40, rwi40
+	;-----------------------------------------------------------------------------
+rwi40:
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+		movsb
+		inc di
+		and di, cx
+rwi20:
+		movsb
+		inc di
+		and di, cx
+rwi19:
+		movsb	
+		inc di	
+		and di, cx
+rwi18:
+		movsb	
+		inc di	
+		and di, cx
+rwi17:
+		movsb	
+		inc di	
+		and di, cx
+rwi16:
+		movsb	
+		inc di	
+		and di, cx
+rwi15:
+		movsb	
+		inc di	
+		and di, cx
+rwi14:
+		movsb	
+		inc di	
+		and di, cx
+rwi13:
+		movsb	
+		inc di	
+		and di, cx
+rwi12:
+		movsb	
+		inc di	
+		and di, cx
+rwi11:
+		movsb	
+		inc di	
+		and di, cx
+rwi10:
+		movsb					;3		Store DS:[SI] to ES:[DI], SI + 1, DI + 1
+		inc di					;2		DI + 1
+		and di, cx				;		Wrap DI with video wrap offset.
+rwi09:
+		movsb	
+		inc di	
+		and di, cx
+rwi08:
+		movsb	
+		inc di	
+		and di, cx
+rwi07:
+		movsb	
+		inc di	
+		and di, cx
+rwi06:
+		movsb	
+		inc di	
+		and di, cx
+rwi05:
+		movsb	
+		inc di	
+		and di, cx
+rwi04:
+		movsb	
+		inc di	
+		and di, cx
+rwi03:
+		movsb	
+		inc di	
+		and di, cx
+rwi02:
+		movsb	
+		inc di	
+		and di, cx
+rwi01:
+		movsb	
+		inc di	
+		and di, cx
+rwi00:
+		;--------------------------------------------------------------------------
+
+		add di, ax				;2		Change write line by BX
+		add si, dx				;2		Change read line by DX
+
+		and di, [bp + 20]		;		Wrap DI with video wrap offset.
+
+		pop cx					;		Pop CL = Width, CH = Height
+		
+		dec ch					;2		Height - 1, IF Height = 0 {
+		JZ backToRectList		;		 GOTO backtolist } ELSE
+		push cx					;		Push CX...
+		mov cx, [bp + 20]		; 		and store Wrap value there.
+		jmp [rectWrap + bx]		;		Draw next line.
+		;============================================================================
+
+	backToRectList:
+		JMP newRectangle
+							
+	;============================================================================
+	loopYsafe:				;No video wrap check.
+		
+		xchg ax, bx			;Move CR-value to AX
+		
+		mov bx, cx			;Get value for jump.
+		xor bh, bh			;Clear height-value from jump.
+		
+		shl bx, 1	
+		jmp [rectSafe + bx]
+		rectSafe	dw	ri00, ri01, ri02, ri03, ri04, ri05, ri06, ri07, ri08, ri09, ri10, ri11, ri12, ri13, ri14, ri15, ri16, ri17, ri18, ri19, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri20, ri40, ri40, ri40, ri40, ri40
+	;-----------------------------------------------------------------------------
+	ri40:
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+		movsb	
+		inc di
+	ri20:
+		movsb					
+		inc di					
+	ri19:
+		movsb	
+		inc di
+	ri18:
+		movsb	
+		inc di
+	ri17:
+		movsb	
+		inc di
+	ri16:
+		movsb	
+		inc di
+	ri15:
+		movsb	
+		inc di
+	ri14:
+		movsb	
+		inc di
+	ri13:
+		movsb	
+		inc di
+	ri12:
+		movsb	
+		inc di
+	ri11:
+		movsb	
+		inc di
+	ri10:
+		movsb					;3		Store DS:[SI] to ES:[DI], SI + 1, DI + 1
+		inc di					;2		DI + 1
+	ri09:
+		movsb	
+		inc di
+	ri08:
+		movsb	
+		inc di
+	ri07:
+		movsb	
+		inc di
+	ri06:
+		movsb	
+		inc di
+	ri05:
+		movsb	
+		inc di
+	ri04:
+		movsb	
+		inc di
+	ri03:
+		movsb	
+		inc di
+	ri02:
+		movsb	
+		inc di
+	ri01:
+		movsb	
+		inc di
+	ri00:
+	;--------------------------------------------------------------------------
+				
+		add di, ax				;2		Change write line by AX
+		add si, dx				;2		Change read line by DX
+		
+		dec ch					;2		Height - 1, if Zero
+		jz safeRectEnd 
+		jmp [rectSafe + bx]		;		draw next line, ELSE
+safeRectEnd:
+		jmp backToRectList		;		GOTO backtolist }
 
 ;--------------------------------------------------------------------------
 aRectList ENDP
@@ -619,9 +860,7 @@ aSpriteList PROC
 ;18 Screen buffer Wrap (CGA = 16383, EGA-> = 32767)
 
 ;----------------------------------------------------------------------------
-jmp begin
-jumpTable dw safe_00, safe_00, safe_00, safe_00, safe_00, safe_00, safe_00, safe_00, safe_00
-;----------------------------------------------------------------------------
+
 begin:
 				push bp				
 				mov bp, sp				;Get stack pointer
@@ -817,7 +1056,7 @@ heightOK:
 				add di, bx				;add Y * 80 from write offset
 				inc di					; + 1, to hit the attribute.
 
-				and di, [bp + 18]		;		Wrap DI with video wrap offset.
+				and di, [bp + 18]		;Wrap DI with video wrap offset.
 
 				;Store row change value to BX
 
@@ -850,21 +1089,89 @@ loopYwrap:								;Sprite requires Wrap check.
 
 				push cx					;Push CL=width, CH=height to stack
 				xor ch, ch				;Height = 0, for X-loop
-
+				
+				push bx
+				mov bx, cx
+				xor bh, bh
+				shl bx, 1	
+				jmp [spriteWrap + bx]
+spriteWrap	dw	swi00, swi01, swi02, swi03, swi04, swi05, swi06, swi07, swi08, swi09, swi10								
 ;-----------------------------------------------------------------------------
-loopXwrap:				;		
+swi10:
 
 				lodsw					;5		AX = DS:[SI], [SI] + 2
 				and ah, es:[di]			;2		AND canvas with mask
 				or al, ah				;2		OR canvas with sprite colour
 				stosb					;3		Store AL to ES:[DI], DI + 1
 				inc di					;2		DI + 1
-
 				and di, dx				;		Wrap DI with video wrap offset.
-
-loop loopXwrap
+swi09:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi08:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi07:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi06:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi05:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi04:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi03:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi02:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi01:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi00:
 ;--------------------------------------------------------------------------
-
+				pop bx
+				
 				add di, bx				;2		Change write line by BX
 				add si, bx				;2		Change read line by BX 
 
@@ -883,36 +1190,74 @@ JMP newsprite
 ;--------------------------------------------------------------------------
 
 loopYsafe:							
-				xchg bx, dx
+				mov dx, bx
 				mov bx, cx
 				xor bh, bh
-				shl bx, 1
-				mov bx, 2
-				;jmp [jumpTable + bx]
-				jmp newSprite
-				jmp [jumpTable]
-								
-safe_08:
-				; lodsw					;5		AX = DS:[SI], [SI] + 2
-				; and ah, es:[di]			;2		AND canvas with mask
-				; or al, ah				;2		OR canvas with sprite colour
-				; stosb					;3		Store AL to ES:[DI], DI + 1
-				; inc di					;2		DI + 1
-safe_07:
-				; lodsw					
-				; and ah, es:[di]			
-				; or al, ah				
-				; stosb					
-				; inc di					
-safe_06:
-safe_05:
-safe_04:
-safe_03:
-safe_02:
-safe_01:
-safe_00:
+				shl bx, 1	
+				jmp [spriteSafe + bx]
+spriteSafe	dw	si00, si01, si02, si03, si04, si05, si06, si07, si08, si09, si10								
+si10:
+				 lodsw					;5		AX = DS:[SI], [SI] + 2
+				 and ah, es:[di]		;2		AND canvas with mask
+				 or al, ah				;2		OR canvas with sprite colour
+				 stosb					;3		Store AL to ES:[DI], DI + 1
+				 inc di					;2		DI + 1
+si09:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si08:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si07:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si06:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si05:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si04:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si03:
+				 lodsw	
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si02:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si01:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si00:
 ;----------------------------------------------------------------------------------
-				jmp newSprite
 				add di, dx				;Change write line by BX
 				add si, dx				;Change read line by BX 
 
@@ -920,8 +1265,7 @@ safe_00:
 				jnz safeContinue
 				jmp newSprite
 safeContinue:					
-				jmp loopYsafe
-;jmp [jumpTable + bx]
+				jmp [spriteSafe + bx]
 				
 ;============================================================================
 ; STORE CLIPPED VALUES BACK TO SPRITE LIST
