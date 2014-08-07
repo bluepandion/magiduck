@@ -858,10 +858,7 @@ aSpriteList PROC
 ;14 Video offset
 ;16 Video segment
 ;18 Screen buffer Wrap (CGA = 16383, EGA-> = 32767)
-
 ;----------------------------------------------------------------------------
-
-begin:
 				push bp				
 				mov bp, sp				;Get stack pointer
 				

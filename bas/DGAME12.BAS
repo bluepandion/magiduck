@@ -427,7 +427,7 @@ SUB handleBehaviors
          physics(nn).y = y + angle.y(c) * object(nn).jump \ 10
         NEXT b
 
-        IF ABS(physics(nn).x - physics(2).x) < 8 AND ABS(physics(nn).y - physics(2).y + 8) < 6 THEN damagePlayer
+        IF ABS(physics(nn).x - physics(2).x) < 5 AND ABS(physics(nn).y - physics(2).y + 6) < 6 THEN damagePlayer
         
         'Lock explode
         CASE 98
@@ -480,35 +480,57 @@ SUB handleBehaviors
 
       flash = NOT object(n).flash AND 1
       object(n).flash = object(n).flash + (object(n).flash > 0)
-   
-      FOR animPart = object(n).animFrame TO object(n).animFrame + parts - 1
-        spriteIndex = animation(animPart).index(flipIndex)
-        x = physics(n).x + animation(animPart).x(flipIndex)
-        y = physics(n).y + animation(animPart).y
-        sx = x - screenX
-        sy = y - screenY
-   
-        IF spriteIndex AND sx > -8 AND sx < 40 AND sy > -15 AND sy < 50 THEN
-         IF flash THEN
-          spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
-          spriteList(spriteListIndex, gfx.page).x = sx + 20
-          spriteList(spriteListIndex, gfx.page).y = sy + 20
-          spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
-          spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
-          spriteListIndex = spriteListIndex + 1
-         END IF
-         ctype = physics(n).collider AND (animation(animPart).jump > 0)
-           IF ctype THEN
-            colCount(ctype) = colCount(ctype) + 1
-            colList(ctype, colCount(ctype)).index = n
-            colList(ctype, colCount(ctype)).x0 = x
-            colList(ctype, colCount(ctype)).y0 = y
-            colList(ctype, colCount(ctype)).x1 = x + spriteWidth(spriteIndex) - 1
-            colList(ctype, colCount(ctype)).y1 = y + spriteHeight(spriteIndex) - 1
-           END IF
-        END IF
-      NEXT animPart
 
+      xx = physics(n).x - screenX + 20
+      yy = physics(n).y - screenY + 20
+   
+      IF physics(n).collider THEN
+       FOR animPart = object(n).animFrame TO object(n).animFrame + parts - 1
+         spriteIndex = animation(animPart).index(flipIndex)
+         x = xx + animation(animPart).x(flipIndex)
+         y = yy + animation(animPart).y
+         'sx = x' - screenX
+         'sy = y' - screenY
+
+         IF spriteIndex AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
+          IF flash THEN
+           spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
+           spriteList(spriteListIndex, gfx.page).x = x' + 20
+           spriteList(spriteListIndex, gfx.page).y = y' + 20
+           spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
+           spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
+           spriteListIndex = spriteListIndex + 1
+          END IF
+          ctype = physics(n).collider AND (animation(animPart).jump > 0)
+            IF ctype THEN
+             colCount(ctype) = colCount(ctype) + 1
+             colList(ctype, colCount(ctype)).index = n
+             colList(ctype, colCount(ctype)).x0 = x
+             colList(ctype, colCount(ctype)).y0 = y
+             colList(ctype, colCount(ctype)).x1 = x + spriteWidth(spriteIndex) - 1
+             colList(ctype, colCount(ctype)).y1 = y + spriteHeight(spriteIndex) - 1
+            END IF
+         END IF
+       NEXT animPart
+      ELSE
+       IF flash THEN
+         FOR animPart = object(n).animFrame TO object(n).animFrame + parts - 1
+          spriteIndex = animation(animPart).index(flipIndex)
+          x = xx + animation(animPart).x(flipIndex)
+          y = yy + animation(animPart).y
+      
+          IF spriteIndex AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
+           spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
+           spriteList(spriteListIndex, gfx.page).x = x '+ 20
+           spriteList(spriteListIndex, gfx.page).y = y '+ 20
+           spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
+           spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
+           spriteListIndex = spriteListIndex + 1
+          END IF
+        NEXT animPart
+       END IF
+      END IF
+      
       IF dtAnims = 1 THEN
        object(n).animFrame = object(n).animFrame + parts
        IF animation(object(n).animFrame).jump < 0 THEN object(n).animFrame = object(n).animFrame + animation(object(n).animFrame).jump

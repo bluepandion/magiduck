@@ -169,23 +169,18 @@ FUNCTION collision (x0%, y0%, x1%, y1%, x2%, y2%, x3%, y3%)
 
 END FUNCTION
 
-SUB debugWrite (message$)
- IF debugLog = 1 THEN
-  PRINT #2, message$
- END IF
-END SUB
-
 SUB deltaTime
  dt = TIMER - dtCompare
  dtCompare = TIMER
 END SUB
 
 SUB destroyObject (index)
- n = index
 
- FOR a = 1 TO spawnIndex
-  IF objectIndex(a) = n THEN index = a: a = 999
- NEXT a
+ n = objectIndex(index)
+
+ 'FOR a = 1 TO spawnIndex
+ ' IF objectIndex(a) = n THEN index = a: a = 999
+ 'NEXT a
  
  object(n).exist = 0
  physics(n).collider = 0
@@ -197,7 +192,7 @@ SUB destroyObject (index)
  physics(n).speedX = 0
  physics(n).speedY = 0
 
- IF object(n).spawner THEN level.Wave(0).spawner(object(n).spawner).flags = 0
+ 'IF object(n).spawner THEN level.Wave(0).spawner(object(n).spawner).flags = 0
  
  spawnIndex = spawnIndex - 1
 
@@ -205,7 +200,7 @@ SUB destroyObject (index)
    objectIndex(a) = objectIndex(a + 1)
  NEXT a
 
- objectIndex(60) = 0
+ 'objectIndex(60) = 0
 
 END SUB
 
@@ -287,7 +282,7 @@ initLookUps
 PRINT "Binaries..."
 loadAssembler
 PRINT "Tiles..."
-loadTiles "duck1"
+loadTiles "ducktile"
 PRINT "Sprites..."
 loadSprites "ducks2"
 
@@ -420,7 +415,7 @@ SUB handleCollision
      IF collision(colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1, colList(2, b).x0, colList(2, b).y0, colList(2, b).x1, colList(2, b).y1) THEN
        n2 = colList(1, a).index
        object(n).life = 0
-       object(n2).flash = 40
+       object(n2).flash = 10
        object(n2).life = object(n2).life + 1
        'physics(n2).x = physics(n2).x + physics(n).speedX \ 10
        physics(n2).speedX = 0
