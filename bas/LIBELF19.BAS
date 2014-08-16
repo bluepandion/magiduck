@@ -1,3 +1,4 @@
+DECLARE SUB damagePlayer ()
 DECLARE SUB hudprint (x%, text$, colour1%, colour2%)
 DECLARE SUB syncPages ()
 DECLARE SUB setErrorMsg (msg$)
@@ -281,8 +282,6 @@ PRINT "Lookups..."
 initLookUps
 PRINT "Binaries..."
 loadAssembler
-PRINT "Tiles..."
-loadTiles "ducktile"
 PRINT "Sprites..."
 loadSprites "ducks2"
 
@@ -350,9 +349,9 @@ END FUNCTION
 SUB handleCamera
 ' n = 2
 
-' IF KBarray(80) THEN
-'  screenTargetY = physics(n).y + 1
-' END IF
+ IF KBarray(80) THEN
+  screenTargetY = physics(2).y - 8
+ END IF
 
 ' IF KBarray(72) THEN
 '  screenTargetY = physics(n).y - 20
@@ -389,54 +388,17 @@ NEXT n
 
 END SUB
 
-SUB handleCollision
-
-      'Collision lists
-      ' 1 = Affect Player
-      ' 2 = Affect Enemy
-      ' 3 = Affect Bullet
-
-  FOR a = 0 TO colCount(1)
-   n = colList(1, a).index
-   'IF collision(colList(1, 0).x0, colList(1, 0).y0, colList(1, 0).x1, colList(1, 0).y1, colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1) THEN
-   IF collision(physics(2).x - 2, physics(2).y - 8, physics(2).x + 2, physics(2).y - 2, colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1) THEN
-    'object(2).animFrame = 10
-    IF object(2).flash = 0 THEN
-     object(2).flash = 40
-     queueSound 0, 0
-    END IF
-    a = 9999
-   END IF
-  NEXT a
-
-  FOR b = 0 TO colCount(2)
-   n = colList(2, b).index
-   FOR a = 0 TO colCount(1)
-     IF collision(colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1, colList(2, b).x0, colList(2, b).y0, colList(2, b).x1, colList(2, b).y1) THEN
-       n2 = colList(1, a).index
-       object(n).life = 0
-       object(n2).flash = 10
-       object(n2).life = object(n2).life + 1
-       'physics(n2).x = physics(n2).x + physics(n).speedX \ 10
-       physics(n2).speedX = 0
-       queueSound 0, 0
-      END IF
-   NEXT a
-  NEXT b
-
-END SUB
-
 SUB handleKeyboard
  
  plustime = 0
- IF TIMER > dtKeys THEN dtKeys = TIMER + .2: plustime = 1
+ IF TIMER > dtKeys THEN dtKeys = TIMER + .1: plustime = 1
 
   FOR n = 0 TO 127
 
    IF kbDelta(n) > KBdelay(n) THEN
      kbDelta(n) = 9999
-     KBavail(n) = 1 AND kbArray(n)
-     IF kbArray(n) THEN kbDelta(n) = 0
+     KBavail(n) = 1 AND KBarray(n)
+     IF KBarray(n) THEN kbDelta(n) = 0
     ELSE
      kbDelta(n) = kbDelta(n) + plustime
      KBavail(n) = 0
@@ -702,8 +664,8 @@ OPEN "kbint.bin" FOR BINARY AS #1          'Keyboard interrupt routine
 CLOSE #1
 
 'Write KB array segment and offset into the KB routine.
-MID$(asmKBroutine, 5, 2) = MKI$(VARSEG(kbArray(0)))      'Segment
-MID$(asmKBroutine, 10, 2) = MKI$(VARPTR(kbArray(0)))    'Offset
+MID$(asmKBroutine, 5, 2) = MKI$(VARSEG(KBarray(0)))      'Segment
+MID$(asmKBroutine, 10, 2) = MKI$(VARPTR(KBarray(0)))    'Offset
 
 END SUB
 
@@ -790,6 +752,8 @@ SUB loadSprites (file$)
     INPUT #1, parts
     DO
        INPUT #1, a$
+       'PRINT a$
+       'DO: LOOP WHILE INKEY$ = ""
        INPUT #1, animation(n).index(0)
        INPUT #1, animation(n).x(0)
        INPUT #1, animation(n).y
@@ -1034,7 +998,7 @@ SUB switchAnim (objectIndex, anim)
 END SUB
 
 FUNCTION tileRead (x, y)
-
+ 
  DEF SEG = tileBufferSeg
 
  readOfs = 0& + tileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)

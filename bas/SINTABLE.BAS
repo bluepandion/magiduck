@@ -21,7 +21,7 @@ FOR a = 0 TO 63
  n = n + (2 * PI / 64)
  b = b + 1
  sint = INT(COS(n) * -20)
- cost = INT(SIN(n) * 20)
+ cost = INT(SIN(n) * 10)
  X = 160 + cost
  Y = 100 + sint
  PSET (X, Y), 1

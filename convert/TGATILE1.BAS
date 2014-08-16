@@ -6,9 +6,9 @@ DIM tileBank AS STRING * 2000
 tilebankseg = VARSEG(tileBank)
 tilebankofs = VARPTR(tileBank)
 
-inputfile$ = "ducktile.tga"
+inputfile$ = "logotile.tga"
 
-outputFile$ = "ducktile"
+outPutFile$ = "logotile"
 
 rawpixel$ = ""
 
@@ -104,16 +104,18 @@ PRINT "Converting to addressable tiles ..."
 PRINT
 PRINT "Saving... ";
 
-IF LEN(DIR$(outputFile$ + ".ctg")) THEN KILL outputFile$ + ".ctg"
+IF LEN(DIR$(outPutFile$ + ".ctg")) THEN KILL outPutFile$ + ".ctg"
 
 DEF SEG = VARSEG(tileBank)
-BSAVE outputFile$ + ".ctg", VARPTR(tileBank), 2000
+BSAVE outPutFile$ + ".ctg", VARPTR(tileBank), 2000
 
 'OPEN outputfile$ + ".ctg" FOR BINARY AS #1
 ' PUT #1, 1, tilebank
 'CLOSE #1
 
 PRINT "Done."
+
+SHELL "copy " + outPutFile$ + ".ctg ..\bas"
 
 n = 0
 FOR a = 1 TO LEN(compPixel$)

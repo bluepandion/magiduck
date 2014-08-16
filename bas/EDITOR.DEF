@@ -1,5 +1,5 @@
-"EGGWLK", 01
-"BUGLET", 02
+" EGGY ", 01
+"BOMBER", 02
 "SPIKER", 03
 "DROOLY", 04
 "KEYKPR", 05
@@ -25,3 +25,9 @@
 " INFO ", 61
 "CHECKP", 62
 " EXIT ", 63
+" KEY  ", 64
+"M CURS", 71
+"M NEWG", 72
+"M HISC", 73
+"M QUIT", 74
+"M LEVL", 75

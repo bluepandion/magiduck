@@ -152,6 +152,7 @@ TYPE playerType
  hasKey AS INTEGER
  wave AS INTEGER
  lvl AS INTEGER
+ hp AS INTEGER
 END TYPE
 
 TYPE spriteListType

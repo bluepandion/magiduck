@@ -423,11 +423,12 @@ SUB handleBehaviors
         y = physics(n).y
         FOR b = getObject + 1 TO getObject + 3
          nn = objectIndex(b)
-         physics(nn).x = x + angle.x(c) * object(nn).jump \ 20
-         physics(nn).y = y + angle.y(c) * object(nn).jump \ 10
+         physics(nn).x = x + angle.x(c) * object(n).jump \ 20
+         physics(nn).y = y + angle.y(c) * object(n).jump \ 20
+         d = d - 1
         NEXT b
 
-        IF ABS(physics(nn).x - physics(2).x) < 8 AND ABS(physics(nn).y - physics(2).y + 8) < 6 THEN damagePlayer
+        'IF ABS(physics(nn).x - physics(2).x) < 8 AND ABS(physics(nn).y - physics(2).y + 8) < 6 THEN damagePlayer
         
         'Lock explode
         CASE 98
@@ -796,6 +797,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
     n = getSpawnSlot
    NEXT p
     objectIndex(spawnIndex) = n
+    physics(n).collider = 1
     object(n).control = 0
     object(n).exist = 1
     object(n).spawner = spawner
