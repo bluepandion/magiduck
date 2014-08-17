@@ -153,6 +153,7 @@ TYPE playerType
  wave AS INTEGER
  lvl AS INTEGER
  hp AS INTEGER
+ hudLock AS INTEGER
 END TYPE
 
 TYPE spriteListType
