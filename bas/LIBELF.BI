@@ -257,3 +257,5 @@ COMMON SHARED sounds AS soundType
 CONST defaultVisX = 25
 CONST defaultVisY = 30
 
+COMMON SHARED randomOffset AS INTEGER
+

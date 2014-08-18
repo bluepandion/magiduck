@@ -2,7 +2,7 @@ DECLARE SUB initScreen ()
 DEFINT A-Z
 '$INCLUDE: 'libelf.bi'
 
-testString$ = ".,?! 0123456789  MAGIDUCK  WAVE  LIVES"
+testString$ = ".,?!'0123456789  MAGIDUCK  WAVE  LIVES"
 
 TYPE charPair
  letter1(32 TO 90) AS STRING * 1

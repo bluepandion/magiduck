@@ -1,0 +1,33 @@
+&H0000, " MAGIDUCK ALPHA 0.148                   ", &HE, &HC
+&H00A0, " NOW LOADING, PLEASE WAIT...            ", &HE, &HC
+&H0140, "                                        ", &HE, &HC
+&H01E0, "                                        ", &HE, &HC
+&H0280, "                                        ", &HE, &HC
+&H0320, "                                        ", &HE, &HC
+&H03C0, "                                        ", &HE, &HC
+&H0460, "                                        ", &HE, &HC
+&H0500, "                                        ", &HE, &HC
+&H05A0, "                                        ", &HE, &HC
+&H0640, "                                        ", &HE, &HC
+&H06E0, "                                        ", &HE, &HC
+&H0780, "                                        ", &HE, &HC
+&H0820, "                                        ", &HE, &HC
+&H08C0, "                                        ", &HE, &HC
+&H0960, "                                        ", &HE, &HC
+&H1000, "                                        ", &HE, &HC
+&H10A0, "                                        ", &HE, &HC
+&H1140, "                                        ", &HE, &HC
+&H11E0, "                                        ", &HE, &HC
+&H1280, "                                        ", &HE, &HC
+&H1320, "                                        ", &HE, &HC
+&H13C0, "                                        ", &HE, &HC
+&H1460, "                                        ", &HE, &HC
+&H1500, "                                        ", &HE, &HC
+&H15A0, "                                        ", &HE, &HC
+&H1640, "                                        ", &HE, &HC
+&H16E0, "                                        ", &HE, &HC
+&H1780, "                                        ", &HE, &HC
+&H1820, "                                        ", &HE, &HC
+&H18C0, "                                        ", &HE, &HC
+&H1960, "BYE!                                    ", &HE, &HC
+-1
