@@ -1,0 +1,28 @@
+Creatures:
+
+	Eggy
+	
+		Little critters that love to live under 
+		old egg shells and hop around causing trouble.
+	
+	Babat
+	
+		Long time residents in every castle. 
+		They panic easilly so watch your head!
+
+	Drooloplasm
+
+		Sometimes ectoplasm from the crypts condenses 
+		into these strange creatures. They spend their 
+		time reminiscing all the meals they ate when 
+		they were alive, which causes them to drool 
+		uncontrollably.
+
+
+Traps:
+
+	Spike balls
+	
+	Spikes
+	
+	Fire Grotesques

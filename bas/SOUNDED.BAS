@@ -87,6 +87,20 @@ DO
   LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
 
  d$ = INKEY$
+  IF d$ = CHR$(0) + CHR$(82) THEN
+   n = selection
+   DO
+    n = n + 1
+   LOOP UNTIL sounds.track(n) = 96
+   n = n - 1
+   FOR nn = n TO selection + 1 STEP -1
+    sounds.track(nn) = sounds.track(nn - 1)
+   NEXT nn
+   sounds.track(selection) = 0
+   GOTO reFresh
+  END IF
+
+ 
   IF d$ = CHR$(0) + CHR$(83) THEN
    n = selection
    DO
@@ -175,19 +189,30 @@ DO
 
 
  IF d$ = "+" THEN
-  LOCATE 1, 60: PRINT "Saved  "; TIME$
-  OPEN "sound.stk" FOR BINARY AS #1
-   PUT #1, 1, sounds
-  CLOSE #1
+  COLOR 15, 4
+  LOCATE 1, 50: INPUT "Save As Filename:", a$
+  IF LEN(a$) THEN
+   OPEN a$ + ".stk" FOR BINARY AS #1
+    PUT #1, 1, sounds
+   CLOSE #1
+   LOCATE 1, 50: PRINT "Saved   "; TIME$
+   ELSE
+   COLOR 7, 0
+   LOCATE 1, 50: PRINT "Cancel           "
+  END IF
  END IF
 
  IF d$ = "*" THEN
   COLOR 7, 0
-  LOCATE 1, 60: PRINT "Loaded "; TIME$
-
-  OPEN "sound.stk" FOR BINARY AS #1
-   GET #1, 1, sounds
-  CLOSE #1
+  LOCATE 1, 50: INPUT "Load Filename:", a$
+  IF LEN(a$) THEN
+   LOCATE 1, 50: PRINT "Loaded  "; TIME$
+   OPEN a$ + ".stk" FOR BINARY AS #1
+    GET #1, 1, sounds
+   CLOSE #1
+   ELSE
+   LOCATE 1, 50: PRINT "Cancel         "
+  END IF
 
   GOTO reFresh
  END IF
