@@ -1,3 +1,4 @@
+DECLARE SUB hudTextLoad (offset AS INTEGER)
 DECLARE FUNCTION randInt% ()
 DECLARE SUB hudUpdate (flags AS INTEGER)
 DECLARE SUB addScore (eventType%)
@@ -237,8 +238,10 @@ SUB handleBehaviors
                  queueSound 4, 22
                  queueSound 14, 23
                  queueSound 24, 25
-                 hudPrint 0, "          PRESS SPACE TO RESTART        ", &HC, &H5
+
+                 hudTextLoad &H140
                  player.hudLock = 999
+
                  player.score = 0
                  physics(2).x = 0
                  physics(2).y = 0
@@ -326,7 +329,7 @@ SUB handleBehaviors
               physics(n).speedY = 2
               object(n).flags = 0
               object(n).control = 200
-              object(n).life = 6
+              object(n).life = 4
               object(n).flash = 20
               switchAnim n, 130
               spawnObject physics(n).x, physics(n).y, 99, 0, 0
@@ -335,7 +338,7 @@ SUB handleBehaviors
               object(n).control = 0
               physics(n).speedX = 0
               physics(n).collider = 0
-              object(n).life = 7
+              object(n).life = 4
               switchAnim n, 110
               physics(n).speedY = -5
              END IF
@@ -736,7 +739,7 @@ SUB handleCollision
      IF collision(colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1, colList(2, b).x0, colList(2, b).y0, colList(2, b).x1, colList(2, b).y1) THEN
        n2 = colList(1, a).index
        physics(n).collider = 0
-       object(n).life = 8
+       object(n).life = 4
        physics(n).speedY = -5
        object(n).control = 0
        physics(n).speedX = 0
@@ -773,6 +776,14 @@ SUB handleSpawn
  
 END SUB
 
+SUB hudTextLoad (offset AS INTEGER)
+
+ OPEN "ducktext.ctt" FOR BINARY AS #1
+  GET #1, offset + 1, hudBuffer
+ CLOSE #1
+
+END SUB
+
 SUB hudUpdate (flags AS INTEGER)
 
  IF player.hudLock THEN
@@ -804,7 +815,8 @@ SUB hudUpdate (flags AS INTEGER)
  END IF
 
  IF flags AND 8 THEN
-  hudPrint 36, STR$(player.Time), &HF, &HE
+  a$ = STR$(player.time)
+  hudPrint 39 - LEN(a$), a$, &HF, &HE
  END IF
 
  IF flags AND 16 THEN
@@ -816,6 +828,9 @@ END SUB
 SUB initGame
 
 elfInit
+
+hudTextLoad &H0
+aPageFlip gfx.videoWrap, VARSEG(hudBuffer), VARPTR(hudBuffer), gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 
 loadTiles "ducktile"
 
@@ -837,6 +852,9 @@ END SUB
 
 SUB main
 
+ hudTextLoad &HA0
+ aPageFlip gfx.videoWrap, VARSEG(hudBuffer), VARPTR(hudBuffer), gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+
  loadLevel "level" + MID$(STR$(player.level), 2, 1)
 
  FOR n = 2 TO 60
@@ -854,7 +872,7 @@ SUB main
  colCount(3) = -1
  
  player.hp = 4
- player.Time = 300
+ player.time = 300
 
  object(2).exist = 1
  object(2).control = 255
@@ -885,8 +903,9 @@ SUB main
 
  handleSpawn
 
- hudPrint 0, "ARROW KEYS . CTRL . ALT . ESC . TO PLAY", &HF, &HE
- player.hudLock = 15
+ hudTextLoad &H1E0
+ 
+ player.hudLock = 10
  
  DO
       
@@ -917,7 +936,7 @@ SUB main
 
     updatetext = updatetext + 1
     IF updatetext = 24 THEN
-     player.Time = player.Time + (player.Time > 0)
+     player.time = player.time + (player.time > 0)
      deltaTime                     'Not needed!
      updatetext = 0
      fps = 192 / dt

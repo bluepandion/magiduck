@@ -1,15 +1,15 @@
 &H0000, " MAGIDUCK ALPHA 0.148                   ", &HE, &HC
-&H00A0, " NOW LOADING, PLEASE WAIT...            ", &HE, &HC
-&H0140, "                                        ", &HE, &HC
-&H01E0, "                                        ", &HE, &HC
-&H0280, "                                        ", &HE, &HC
-&H0320, "                                        ", &HE, &HC
-&H03C0, "                                        ", &HE, &HC
-&H0460, "                                        ", &HE, &HC
-&H0500, "                                        ", &HE, &HC
-&H05A0, "                                        ", &HE, &HC
-&H0640, "                                        ", &HE, &HC
-&H06E0, "                                        ", &HE, &HC
+&H00A0, " LOADING, PLEASE WAIT...                ", &HE, &HC
+&H0140, "         PRESS SPACE TO RESTART         ", &HC, &HC
+&H01E0, "          LEVEL 1 - THE LOBBY           ", &HE, &HC
+&H0280, "          LEVEL 2                       ", &HE, &HC
+&H0320, "          LEVEL 3                       ", &HE, &HC
+&H03C0, "          LEVEL 4                       ", &HE, &HC
+&H0460, "          LEVEL 5                       ", &HE, &HC
+&H0500, "          LEVEL 6                       ", &HE, &HC
+&H05A0, "          LEVEL 7                       ", &HE, &HC
+&H0640, "          LEVEL 8                       ", &HE, &HC
+&H06E0, "              MAIN MENU                 ", &HE, &HC
 &H0780, "                                        ", &HE, &HC
 &H0820, "                                        ", &HE, &HC
 &H08C0, "                                        ", &HE, &HC
