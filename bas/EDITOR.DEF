@@ -27,7 +27,7 @@
 " EXIT ", 63
 " KEY  ", 64
 "M CURS", 71
-"M NEWG", 72
+"M-ITEM", 72
 "M HISC", 73
 "M QUIT", 74
 "M LEVL", 75

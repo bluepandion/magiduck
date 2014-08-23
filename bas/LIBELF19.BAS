@@ -1,5 +1,5 @@
 DECLARE SUB damagePlayer ()
-DECLARE SUB hudprint (x%, text$, colour1%, colour2%)
+DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB syncPages ()
 DECLARE SUB setErrorMsg (msg$)
 DECLARE SUB aDrawTiles (area%, forceOfs%)
@@ -95,7 +95,7 @@ DIM SHARED w40char AS charPair
 ' Object related
 '---------------------------------------------------------------------------
 
-DIM SHARED tilePosXlookUp(-8 TO 87) AS INTEGER
+DIM SHARED tilePosXlookUp(-16 TO 95) AS INTEGER
 DIM SHARED tilePosYlookUp(-16 TO 655) AS INTEGER
 
 DIM SHARED spriteclipx(-20 TO 100) AS INTEGER
@@ -495,7 +495,7 @@ SUB handleScroll
 
 END SUB
 
-SUB hudprint (x, text$, colour1, colour2)
+SUB hudPrint (x, text$, colour1, colour2)
  
  DEF SEG = VARSEG(hudBuffer)
  writeOfs = 0& + VARPTR(hudBuffer) + x * 2
@@ -562,7 +562,7 @@ CLOSE #1
 
 c = 0
 x = 0
-FOR n = -8 TO 87
+FOR n = -16 TO 95
  tilePosXlookUp(n) = x
  IF n > -1 AND n < 79 THEN c = c + 1
  IF c = 4 THEN c = 0: x = x + 1
@@ -938,6 +938,11 @@ END SUB
 
 DEFSNG A-Z
 SUB screenResetPos (x%, y%)
+ 
+ IF x% < 0 THEN x% = 0
+ IF y% < 24 THEN y% = 24
+ IF x% > 40 THEN x% = 40
+ IF y% > 600 THEN y% = 600
 
  screenTargetX = x%
  screenTargetY = y%

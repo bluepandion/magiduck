@@ -6,7 +6,7 @@ DIM tileBank AS STRING * 2000
 tilebankseg = VARSEG(tileBank)
 tilebankofs = VARPTR(tileBank)
 
-inputfile$ = "ducktile.tga"
+inputfile$ = "..\convert\ducktile.tga"
 
 outPutFile$ = "ducktile"
 
@@ -114,8 +114,6 @@ BSAVE outPutFile$ + ".ctg", VARPTR(tileBank), 2000
 'CLOSE #1
 
 PRINT "Done."
-
-SHELL "copy " + outPutFile$ + ".ctg ..\bas"
 
 n = 0
 FOR a = 1 TO LEN(compPixel$)
