@@ -144,16 +144,20 @@ END TYPE
 TYPE playerType
  score AS LONG
  lives AS INTEGER
- level AS INTEGER
- time AS INTEGER
- shootDelay AS INTEGER
- spell AS INTEGER
- flying AS INTEGER
- hasKey AS INTEGER
- wave AS INTEGER
- lvl AS INTEGER
  hp AS INTEGER
+ time AS INTEGER
+ hasKey AS INTEGER
+ shootDelay AS INTEGER
+ flying AS INTEGER
+ level AS INTEGER
+ wave AS INTEGER
  hudLock AS INTEGER
+ mode AS INTEGER
+ menuTarget AS INTEGER
+ targetX AS INTEGER
+ targetY AS INTEGER
+ keyPrev AS INTEGER
+ keyRelease AS INTEGER
 END TYPE
 
 TYPE spriteListType

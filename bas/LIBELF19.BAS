@@ -1,3 +1,5 @@
+DECLARE SUB handleCamera ()
+DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
 DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB syncPages ()
@@ -97,12 +99,6 @@ DIM SHARED w40char AS charPair
 
 DIM SHARED tilePosXlookUp(-16 TO 95) AS INTEGER
 DIM SHARED tilePosYlookUp(-16 TO 655) AS INTEGER
-
-DIM SHARED spriteclipx(-20 TO 100) AS INTEGER
-DIM SHARED spriteclipy(-10 TO 30) AS INTEGER
-DIM SHARED spriteclipofsx(-20 TO 100) AS INTEGER
-
-DIM SHARED spriteclipofsy(-10 TO 30) AS INTEGER
 
 DIM SHARED soundFreqTable(1 TO 96, 2) AS INTEGER
 
@@ -285,8 +281,6 @@ loadAssembler
 PRINT "Sprites..."
 loadSprites "ducks2"
 
-PRINT "Video..."
-
 'DEF SEG = tileBufferSeg
 'FOR a& = tileBufferOfs TO 0& + tileBufferOfs + 7679
 ' POKE a&, &H19
@@ -329,10 +323,6 @@ DEF SEG
 
  aKBinit KBoldSeg, KBoldOfs, p2%, p3%
 
-debugLog = 0
-
-IF debugLog THEN OPEN "duck.log" FOR OUTPUT AS #2
-
 END SUB
 
 FUNCTION getSpawnSlot
@@ -348,10 +338,6 @@ END FUNCTION
 
 SUB handleCamera
 ' n = 2
-
- IF KBarray(80) THEN
-  screenTargetY = physics(2).y - 8
- END IF
 
 ' IF KBarray(72) THEN
 '  screenTargetY = physics(n).y - 20
@@ -576,35 +562,17 @@ FOR n = -16 TO 655
  IF c = 8 THEN c = 0: y = y + 20
 NEXT n
 
-FOR n = -20 TO 100
- spriteclipx(n) = 0
- spriteclipofsx(n) = 0
- IF n < 0 THEN spriteclipx(n) = ABS(n): spriteclipofsx(n) = ABS(n) * 2
- IF n > 79 THEN spriteclipx(n) = ABS(80 - n)
-NEXT n
-
-FOR n = -10 TO 30
- spriteclipy(n) = 0
- spriteclipofsy(n) = 0
- IF n < 1 THEN spriteclipy(n) = ABS(n - 1): spriteclipofsy(n) = ABS(n - 1) * 160
- IF n > 24 THEN spriteclipy(n) = ABS(24 - n)
-NEXT n
-
 END SUB
 
 SUB InitScreen
 
  gfx.adapter = 1
  gfx.glyphheight = 3
- gfx.rows = 50
+ gfx.rows = 49
 
  'Disable video
  OUT &H3D8, 1
-
- SCREEN 0
- WIDTH 40, 25
- CLS
-
+ 
  'Disable blink
  IF gfx.adapter <> 1 THEN
    b = INP(&H3DA)
@@ -614,24 +582,44 @@ SUB InitScreen
    b = b AND &HF7
    OUT &H3C0, b
  END IF
+
+ OUT &H3D4, &H0            'Horizontal total
+ OUT &H3D5, &H38
+
+ OUT &H3D4, &H1            'Horizontal displayed
+ OUT &H3D5, &H28
+
+ OUT &H3D4, &H2            'Horizontal sync pos
+ OUT &H3D5, &H2D
+
+ OUT &H3D4, &H3            'Horizontal sync width
+ OUT &H3D5, &HA
  
- OUT &H3D4, &H9
- OUT &H3D5, gfx.glyphheight
+ OUT &H3D4, &H4            'Vertical total
+ OUT &H3D5, &H3F           '(nearest 2^ to row count = 63)
 
- OUT &H3D4, &H4
- OUT &H3D5, gfx.rows
+ OUT &H3D4, &H5            'Vertical total adjust
+ OUT &H3D5, 6              '
 
- OUT &H3D4, &H6
- OUT &H3D5, gfx.rows
+ OUT &H3D4, &H6            'Vertical displayed
+ OUT &H3D5, 50             '
 
- OUT &H3D4, &H7
- OUT &H3D5, gfx.rows
+ OUT &H3D4, &H7            'Vertical sync position
+ OUT &H3D5, 56             'Row count + 6
+
+ OUT &H3D4, &H8            'Interlace mode
+ OUT &H3D5, 2
+ 
+ OUT &H3D4, &H9            'Maximum scan line address, or glyph height.
+ OUT &H3D5, 3
+
 
 'Enable video, Bit 0 = 0, for low resolution text mode.
 '              Bit 3 = 1, to enable video.
 '              Bit 5 = 1, to enable blink.
 
  OUT &H3D8, &H8   '&H8 = 40 column, &H9 = 80 column
+
 
 END SUB
 
@@ -682,7 +670,7 @@ SUB loadLevel (fileName AS STRING)
     GET #1, readOfs, level
    CLOSE #1
 
-   player.Wave = 0
+   player.wave = 0
 
 END SUB
 
@@ -793,25 +781,6 @@ SUB loadTiles (file$)
 
 END SUB
 
-SUB myAttrib (x%, y%, lenght%, colour%)
-
- EXIT SUB
-
- DEF SEG = screenBufferSeg
-
- writeOfs = screenBufferOfs + x * 2 + y * 160 + 1
- 
- IF x + a > 79 THEN a = a + (80 - (x + a))
-
- FOR n = 1 TO lenght%
-  POKE writeOfs, colour
-  writeOfs = writeOfs + 2
- NEXT n
-
- DEF SEG
-
-END SUB
-
 SUB myPrint (x, y, text$, colour1, colour2, overRideSeg, overRideOfs)
  IF x < 0 THEN EXIT SUB
 
@@ -900,23 +869,62 @@ SUB quit
  'Disconnect speaker from Timer 2
  OUT &H61, sounds.speakerOff
  
- SCREEN 0, 1, 0, 0
- WIDTH 80, 25
+ 'Disable video
+ OUT &H3D8, 1
+ 
+ OUT &H3D4, &H0            'Horizontal total
+ OUT &H3D5, &H71
+
+ OUT &H3D4, &H1            'Horizontal displayed
+ OUT &H3D5, &H50
+
+ OUT &H3D4, &H2            'Horizontal sync pos
+ OUT &H3D5, &H5A
+
+ OUT &H3D4, &H3            'Horizontal sync width
+ OUT &H3D5, &HA
+
+ OUT &H3D4, &H4            'Vertical total
+ OUT &H3D5, &H1F
+
+ OUT &H3D4, &H5            'Vertical total adjust
+ OUT &H3D5, 6              '
+
+ OUT &H3D4, &H6            'Vertical displayed
+ OUT &H3D5, &H19
+
+ OUT &H3D4, &H7            'Vertical sync position
+ OUT &H3D5, &H1C
+
+ OUT &H3D4, &H8            'Interlace mode
+ OUT &H3D5, 2
+
+ OUT &H3D4, &H9            'Maximum scan line address, or glyph height.
+ OUT &H3D5, 7
+
+
+'Enable video, Bit 0 = 0, for low resolution text mode.
+'              Bit 3 = 1, to enable video.
+'              Bit 5 = 1, to enable blink.
+
+ gfx.page = 0
+ gfx.pageOfs(0) = 0
+ tileCopylist(0, gfx.page).x = 0
+ tileCopylist(0, gfx.page).y = 0
+ tileCopylist(0, gfx.page).w = 40
+ tileCopylist(0, gfx.page).h = 50
+ tileCopylist(1, gfx.page).y = 255
+
+ aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &H7, VARSEG(tileCopylist(0, gfx.page).offset), VARPTR(tileCopylist(0, gfx.page).offset)
+
+ OUT &H3D8, &H9 OR 16
 
  SHELL "cls"
  PRINT errorMessage$
  PRINT FRE(-1)
  PRINT
- PRINT gfx.pageOfs(0); gfx.pageOfs(1)
- PRINT gfx.WindowOfs(0); gfx.WindowOfs(1)
- PRINT gfx.screenX(0); gfx.screenY(0); screenTargetX; screenTargetY
  PRINT "fps:"; fps
- FOR n = 0 TO 50
-  IF spriteList(n, gfx.page).y = 255 THEN PRINT "sprites:"; n: n = 999
- NEXT n
-
- PRINT gfx.listLen(0)
- PRINT gfx.listLen(1)
+ PRINT
 
 END
 
@@ -940,12 +948,14 @@ DEFSNG A-Z
 SUB screenResetPos (x%, y%)
  
  IF x% < 0 THEN x% = 0
- IF y% < 24 THEN y% = 24
  IF x% > 40 THEN x% = 40
- IF y% > 600 THEN y% = 600
 
  screenTargetX = x%
  screenTargetY = y%
+
+ IF y% < 24 THEN y% = 24
+ IF y% > 616 THEN y% = 616
+
 
  FOR n = 0 TO 1
   gfx.screenX(n) = x%
@@ -985,6 +995,11 @@ SUB screenResetPos (x%, y%)
  spriteList(0, gfx.page).h = 50
  'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
  aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+
+ FOR c = 0 TO 7
+  handleCamera
+  handleScroll
+ NEXT c
 
 END SUB
 

@@ -9,8 +9,8 @@
 &H0500, "          LEVEL 6                       ", &HE, &HC
 &H05A0, "          LEVEL 7                       ", &HE, &HC
 &H0640, "          LEVEL 8                       ", &HE, &HC
-&H06E0, "              MAIN MENU                 ", &HE, &HC
-&H0780, "                                        ", &HE, &HC
+&H06E0, "  ARROW KEYS TO MOVE . ENTER TO SELECT  ", &HE, &HC
+&H0780, "  ARE YOU SURE YOU WANT TO QUIT? Y / N  ", &HFC, &HFC
 &H0820, "                                        ", &HE, &HC
 &H08C0, "                                        ", &HE, &HC
 &H0960, "                                        ", &HE, &HC
