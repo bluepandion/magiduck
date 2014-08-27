@@ -17,6 +17,18 @@ Creatures:
 		time reminiscing all the meals they ate when 
 		they were alive, which causes them to drool 
 		uncontrollably.
+	
+	Croc
+		
+		Crocs get lost from their moats sometimes and
+		when they're not in their natural habitat they
+		get a little stressed and might bite people!
+	
+	Armoured Croc
+	
+		These guys are just like Crocs, but take their
+		jobs way more seriously. They have a shield that
+		protects their front and a spear to stab with.
 
 
 Traps:

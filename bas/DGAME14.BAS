@@ -1210,7 +1210,20 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
    physics(n).collider = 1
    object(n).animFrame = 60
    object(n).anim = 60
-   object(n).visX = 40
+   object(n).visX = 25
+   object(n).visY = 32
+   object(n).counter = 0
+   incSpawnIndex
+
+  CASE 2
+   'Croc
+   objectIndex(spawnIndex) = n
+   object(n).control = 2
+   object(n).exist = 1
+   object(n).life = -2
+   physics(n).collider = 1
+   object(n).animFrame = 60
+   object(n).visX = 25
    object(n).visY = 32
    object(n).counter = 0
    incSpawnIndex
