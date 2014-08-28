@@ -6,9 +6,9 @@ DIM tileBank AS STRING * 2000
 tilebankseg = VARSEG(tileBank)
 tilebankofs = VARPTR(tileBank)
 
-inputfile$ = "..\convert\logotile.tga"
+inputfile$ = "..\convert\ducktile.tga"
 
-outPutFile$ = "logotile"
+outPutFile$ = "ducktile"
 
 rawpixel$ = ""
 

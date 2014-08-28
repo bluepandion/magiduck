@@ -32,9 +32,16 @@ Creatures:
 
 
 Traps:
-
-	Spike balls
 	
 	Spikes
 	
+	Spike ball, rolling
+	
+	Spike ball, swinging
+	
+	Spike ball, bouncing
+	
+	Crusher
+		
 	Fire Grotesques
+	
