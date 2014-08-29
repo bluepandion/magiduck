@@ -24,7 +24,7 @@ Creatures:
 		when they're not in their natural habitat they
 		get a little stressed and might bite people!
 	
-	Armoured Croc
+	Sir Croc
 	
 		These guys are just like Crocs, but take their
 		jobs way more seriously. They have a shield that

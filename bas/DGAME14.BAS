@@ -93,7 +93,8 @@ END SUB
 SUB handleBehaviors
 
  STATIC playerFlying
-
+ STATIC jumpReleased
+ 
 ' entityCounter = 0
 ' entityVisibles = 0
 
@@ -131,7 +132,7 @@ SUB handleBehaviors
                 IF player.menutarget = 1 THEN
                   hudTextLoad &H0, 1
                   loadTiles "ducktile"
-                  player.level = 1
+                  player.level = 0
                   main
                 END IF
                END IF
@@ -196,26 +197,25 @@ SUB handleBehaviors
                   screenTargetYlock = physics(n).y - 46
                   IF physics(n).speedY > 0 THEN
                    soundEvent = 16
-                   IF c = 56 THEN damagePlayer
+                   IF c = 59 THEN damagePlayer
                   END IF
                   physics(n).speedY = 0
                   screenTargetY = screenTargetYlock
                   collisionFloor = 1
+                  IF kbArray(29) = 0 THEN jumpReleased = -1
                  ELSE
                   maxY = 30
                   speedMod = 10
                   friction = 5
                   IF player.ShootDelay < 6 THEN switchAnim n, 10
                   'physics(n).speedY = 20
-                  IF physics(n).speedY < 40 THEN
-                    IF kbArray(29) THEN
+                  IF kbArray(29) THEN
                       'IF physics(n).speedY > 1 THEN physics(n).speedY = 5
-                      physics(n).speedY = physics(n).speedY + 1
-                      maxY = 10
+                      physics(n).speedY = physics(n).speedY + 2
+                      maxY = 20
                      ELSE
-                      physics(n).speedY = physics(n).speedY + 10
-                    END IF
-                  END IF
+                      physics(n).speedY = physics(n).speedY + 15
+                   END IF
                   a = physics(n).y - 46 - screenTargetYlock
                   IF a > 0 OR a < -32 THEN
                    screenTargetYlock = -1
@@ -234,7 +234,7 @@ SUB handleBehaviors
                 IF c > 29 THEN
                  physics(n).y = (physics(n).y AND &HFFF8) + 8
                  physics(n).speedY = 0
-                 IF c = 57 THEN damagePlayer
+                 IF c = 59 THEN damagePlayer
                 END IF
 
                 IF c = 28 THEN
@@ -274,13 +274,12 @@ SUB handleBehaviors
 
                 object(n).jump = object(n).jump + (object(n).jump > 0)
 
-                IF kbArray(29) AND object(n).jump = 0 THEN
-                 IF collisionFloor THEN
-                     object(n).jump = 10
-                     physics(n).speedY = -35
-                     physics(n).y = physics(n).y - 2
-                     soundEvent = 0
-                 END IF
+                IF kbArray(29) AND object(n).jump = 0 AND jumpReleased THEN
+                 jumpReleased = 0
+                 object(n).jump = 10
+                 physics(n).speedY = -35
+                 physics(n).y = physics(n).y - 2
+                 soundEvent = 0
                 END IF
 
                 IF kbArray(75) THEN
@@ -381,7 +380,7 @@ SUB handleBehaviors
                  c = tileRead(physics(n).x - 2, physics(n).y - 5)
                  IF c > 29 THEN
                   physics(n).x = (physics(n).x AND &HFFFC) + 1
-                  IF c = 58 THEN damagePlayer
+                  IF c = 59 THEN damagePlayer
                  END IF
                  screenTargetX = physics(n).x - 19
                 END IF
@@ -625,7 +624,7 @@ SUB handleBehaviors
           spawnObject physics(n).x + 1, physics(n).y + 8, 104, 0, 0
         END IF
 
-        IF object(n).jump = 25 THEN
+        IF object(n).jump > 25 THEN
          object(n).jump = 0
          physics(n).speedX = object(n).counter
         END IF
@@ -1022,7 +1021,7 @@ SUB main
 
  handleSpawn
 
- screenResetPos physics(2).x - 20, physics(2).y - 30
+ screenResetPos physics(2).x - 20, physics(2).y - 46
 
  updatetext = 1
 

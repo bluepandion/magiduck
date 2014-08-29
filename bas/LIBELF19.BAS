@@ -367,7 +367,7 @@ FOR n = 0 TO 1
   IF diffY < 0 THEN speedY = speedY * -1
   gfx.screenY(n) = gfx.screenY(n) + speedY
   IF gfx.screenY(n) < 4 THEN gfx.screenY(n) = 4
-  IF gfx.screenY(n) > 580 THEN gfx.screenY(n) = 580
+  IF gfx.screenY(n) > 590 THEN gfx.screenY(n) = 590
  END IF
       
 NEXT n
@@ -533,6 +533,7 @@ FOR ff = 0 TO 9
  NEXT n
 NEXT ff
 CLOSE #1
+
 
 OPEN "freq.def" FOR INPUT AS #1
 FOR n = 1 TO 12
@@ -946,16 +947,18 @@ END SUB
 
 DEFSNG A-Z
 SUB screenResetPos (x%, y%)
- 
+
  IF x% < 0 THEN x% = 0
  IF x% > 40 THEN x% = 40
 
  screenTargetX = x%
  screenTargetY = y%
+ 
+ x% = x% AND &HFFFC
+ y% = y% AND &HFFF8
 
  IF y% < 24 THEN y% = 24
- IF y% > 616 THEN y% = 616
-
+ IF y% > 590 THEN y% = 590
 
  FOR n = 0 TO 1
   gfx.screenX(n) = x%
@@ -996,10 +999,10 @@ SUB screenResetPos (x%, y%)
  'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
  aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
- FOR c = 0 TO 7
-  handleCamera
-  handleScroll
- NEXT c
+' FOR c = 0 TO 7
+'  handleCamera
+'  handleScroll
+' NEXT c
 
 END SUB
 
