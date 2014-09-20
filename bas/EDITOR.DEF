@@ -7,7 +7,7 @@
 "FLAM L", 12
 "HCRUSH", 13
 "VCRUSH", 14
-" DRIP ", 15
+"SPKB B", 15
 "DUNNO ", 16
 "SPKB U", 17
 "SPKB+O", 18
@@ -19,8 +19,8 @@
 " GEM  ", 41
 "JEWEL ", 42
 "HEART ", 43
-"  500 ", 44
-"  100 ", 45
+" KEY  ", 44
+"CHEST ", 45
 "SUPER ", 46
 "SECR 0", 47
 "SECR 1", 48
@@ -29,7 +29,7 @@
 " INFO ", 61
 "CHECKP", 62
 " EXIT ", 63
-" KEY  ", 64
+"      ", 64
 "M CURS", 71
 "M-ITEM", 72
 "M HISC", 73
