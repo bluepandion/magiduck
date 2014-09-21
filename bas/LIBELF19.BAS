@@ -224,6 +224,9 @@ flags.animFinished = &H2
 flags.flash = &H4
 flags.jump = &H100
 
+hudBufferSeg = VARSEG(hudBuffer)
+hudBufferOfs = VARPTR(hudBuffer)
+
 spriteBankSeg = VARSEG(spriteBank)
 spriteBankOfs = VARPTR(spriteBank)
 
@@ -466,20 +469,21 @@ SUB handleScroll
 END SUB
 
 SUB hudPrint (X, text$, colour1, colour2)
- 
- DEF SEG = VARSEG(hudBuffer)
- writeOfs = 0& + VARPTR(hudBuffer) + X * 2
- writeOfs2 = 80& + VARPTR(hudBuffer) + X * 2
+ EXIT SUB
+ writeOfs = 0& + hudBufferOfs + X * 2
+ writeOfs2 = 80& + hudBufferOfs + X * 2
 
  FOR n = 1 TO LEN(text$)
   l = ASC(MID$(text$, n, 1))
 
+  DEF SEG = hudBufferSeg
   POKE writeOfs, ASC(w40char.glyph1(l))
   POKE writeOfs2, ASC(w40char.glyph2(l))
 
   writeOfs = writeOfs + 1
   writeOfs2 = writeOfs2 + 1
 
+  DEF SEG = hudBufferSeg
   POKE writeOfs, colour1
   POKE writeOfs2, colour2
 
@@ -662,8 +666,6 @@ SUB loadLevel (fileName AS STRING)
     readOfs = 1601
     GET #1, readOfs, level
    CLOSE #1
-
-   player.wave = 0
 
 END SUB
 

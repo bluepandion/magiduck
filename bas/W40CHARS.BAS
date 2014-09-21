@@ -4,6 +4,8 @@ DEFINT A-Z
 
 testString$ = ".,?!'0123456789  MAGIDUCK  WAVE  LIVES"
 
+DIM copy AS INTEGER
+
 TYPE charPair
  letter1(32 TO 90) AS STRING * 1
  letter2(32 TO 90) AS STRING * 1
@@ -48,7 +50,7 @@ FOR a = 1 TO 40
 NEXT a
 COLOR 7, 0
 
-updatescreen:
+updateScreen:
 LOCATE 11, 1: PRINT TIMER
 row = 1
 col = 1
@@ -76,14 +78,21 @@ DO
   CLOSE #1
   LOCATE 15, 1: PRINT "Saved "; TIMER
  END IF
- IF d$ = CHR$(0) + "K" AND editc > 32 THEN editc = editc - 1: GOTO updatescreen
- IF d$ = CHR$(0) + "M" AND editc < 90 THEN editc = editc + 1: GOTO updatescreen
+ IF d$ = CHR$(0) + "K" AND editc > 32 THEN editc = editc - 1: GOTO updateScreen
+ IF d$ = CHR$(0) + "M" AND editc < 90 THEN editc = editc + 1: GOTO updateScreen
 
- IF d$ = "q" AND ASC(w40Char.letter1(editc)) > 0 THEN w40Char.letter1(editc) = CHR$(ASC(w40Char.letter1(editc)) - 1): GOTO updatescreen
- IF d$ = "w" AND ASC(w40Char.letter1(editc)) < 255 THEN w40Char.letter1(editc) = CHR$(ASC(w40Char.letter1(editc)) + 1): GOTO updatescreen
- IF d$ = "a" AND ASC(w40Char.letter2(editc)) > 0 THEN w40Char.letter2(editc) = CHR$(ASC(w40Char.letter2(editc)) - 1): GOTO updatescreen
- IF d$ = "s" AND ASC(w40Char.letter2(editc)) < 255 THEN w40Char.letter2(editc) = CHR$(ASC(w40Char.letter2(editc)) + 1): GOTO updatescreen
+ IF d$ = "q" AND ASC(w40Char.letter1(editc)) > 0 THEN w40Char.letter1(editc) = CHR$(ASC(w40Char.letter1(editc)) - 1): GOTO updateScreen
+ IF d$ = "w" AND ASC(w40Char.letter1(editc)) < 255 THEN w40Char.letter1(editc) = CHR$(ASC(w40Char.letter1(editc)) + 1): GOTO updateScreen
+ IF d$ = "a" AND ASC(w40Char.letter2(editc)) > 0 THEN w40Char.letter2(editc) = CHR$(ASC(w40Char.letter2(editc)) - 1): GOTO updateScreen
+ IF d$ = "s" AND ASC(w40Char.letter2(editc)) < 255 THEN w40Char.letter2(editc) = CHR$(ASC(w40Char.letter2(editc)) + 1): GOTO updateScreen
  
+ IF d$ = "c" THEN copy = editc
+ IF d$ = "v" AND copy > 32 THEN
+  w40Char.letter1(editc) = w40Char.letter1(copy)
+  w40Char.letter2(editc) = w40Char.letter2(copy)
+  GOTO updateScreen
+ END IF
+
  IF d$ = "t" THEN
   COLOR 7, 0
   row = 18
