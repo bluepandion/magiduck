@@ -156,6 +156,7 @@ TYPE playerType
  targetY AS INTEGER
  keyPrev AS INTEGER
  keyRelease AS INTEGER
+ jumpRelease AS INTEGER
 END TYPE
 
 TYPE spriteListType

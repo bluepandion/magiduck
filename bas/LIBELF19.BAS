@@ -334,6 +334,9 @@ DEF SEG
 
  aKBinit KBoldSeg, KBoldOfs, p2%, p3%
 
+ OPEN "debug.txt" FOR OUTPUT AS #2
+  PRINT #2, "Debug start"
+ CLOSE #2
 END SUB
 
 FUNCTION getSpawnSlot
@@ -469,21 +472,21 @@ SUB handleScroll
 END SUB
 
 SUB hudPrint (X, text$, colour1, colour2)
- EXIT SUB
+
+ DEF SEG = hudBufferSeg
+
  writeOfs = 0& + hudBufferOfs + X * 2
  writeOfs2 = 80& + hudBufferOfs + X * 2
 
  FOR n = 1 TO LEN(text$)
   l = ASC(MID$(text$, n, 1))
 
-  DEF SEG = hudBufferSeg
   POKE writeOfs, ASC(w40char.glyph1(l))
   POKE writeOfs2, ASC(w40char.glyph2(l))
 
   writeOfs = writeOfs + 1
   writeOfs2 = writeOfs2 + 1
 
-  DEF SEG = hudBufferSeg
   POKE writeOfs, colour1
   POKE writeOfs2, colour2
 
@@ -656,6 +659,8 @@ END SUB
 
 SUB loadLevel (fileName AS STRING)
 
+   'debugwrite "Level load " + fileName
+
    OPEN fileName + ".lvl" FOR BINARY AS #1
     
     FOR n = 1 TO 1600
@@ -666,6 +671,8 @@ SUB loadLevel (fileName AS STRING)
     readOfs = 1601
     GET #1, readOfs, level
    CLOSE #1
+
+   'debugwrite "OK"
 
 END SUB
 
@@ -848,8 +855,6 @@ END SUB
 
 SUB quit
 
- IF debugLog = 1 THEN CLOSE #2
- 
  aKBremove KBoldSeg, KBoldOfs
  
  DEF SEG = 0
@@ -989,7 +994,7 @@ SUB screenResetPos (X%, y%)
  'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
  aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
- aPageFlip gfx.videoWrap, VARSEG(hudBuffer), VARPTR(hudBuffer), gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+ aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
  gfx.page = gfx.page XOR 1
  
  spriteList(1, gfx.page).y = 255
@@ -1000,18 +1005,9 @@ SUB screenResetPos (X%, y%)
  'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
  aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
-' FOR c = 0 TO 7
-'  handleCamera
-'  handleScroll
-' NEXT c
-
 END SUB
 
 DEFINT A-Z
-SUB setErrorMsg (msg$)
- errorMessage$ = msg$
-END SUB
-
 SUB switchAnim (objectIndex, anim)
 
  IF object(objectIndex).anim = anim THEN EXIT SUB

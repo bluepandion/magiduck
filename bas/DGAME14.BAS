@@ -98,9 +98,11 @@ END SUB
 
 SUB handleBehaviors
 
- STATIC jumpAzimuth
- STATIC jumpReleased
- STATIC dropCompare
+ STATIC minY
+ STATIC maxY
+ STATIC speedMod
+ STATIC friction
+ STATIC collisionFloor
 
  entityCounter = 0
 ' entityVisibles = 0
@@ -121,8 +123,8 @@ SUB handleBehaviors
   colCount(1) = -1
   colCount(2) = -1
   colCount(3) = -1
- 
-              n = objectIndex(2)
+
+  n = objectIndex(2)
               
   SELECT CASE object(2).control
 
@@ -188,16 +190,11 @@ SUB handleBehaviors
                IF kbArray(57) THEN
                 sounds.queue(sounds.readpos) = 0
                 playSounds
-                main
+                object(n).control = 259
                END IF
 
       'Normal player
       CASE 255
-
-                'IF physics(2).speedY > -1 THEN
-                '  IF jumpAzimuth = 9999 THEN jumpAzimuth = physics(2).y AND &HFFF8
-                'END IF
-
                 minY = -30
                 
                 c = tileRead(physics(2).x, physics(2).y)
@@ -216,10 +213,10 @@ SUB handleBehaviors
 
                   collisionFloor = 1
 
-                  IF physics(n).speedY > 0 THEN soundEvent = 16
+                  IF physics(n).speedY > 0 THEN soundEvent = 16: physics(n).speedY = 0
 
                   screenTargetY = screenTargetYlock
-                  IF kbArray(29) = 0 THEN jumpReleased = -1
+                  IF kbArray(29) = 0 THEN player.jumpRelease = -1
 
                  ELSE
 
@@ -242,7 +239,7 @@ SUB handleBehaviors
                   END IF
 
                   IF c = 27 OR c = 26 THEN
-                    IF kbArray(29) = 0 THEN jumpReleased = -1
+                    IF kbArray(29) = 0 THEN player.jumpRelease = -1
                     collisionFloor = 2
                     maxY = 5
                     IF c = 27 THEN minY = -15
@@ -279,9 +276,8 @@ SUB handleBehaviors
                  physics(n).speedX = physics(n).speedX + friction
                 END IF
 
-                IF kbArray(29) AND jumpReleased THEN
-                 'jumpAzimuth = 9999
-                 jumpReleased = 0
+                IF kbArray(29) AND player.jumpRelease THEN
+                 player.jumpRelease = 0
                  physics(n).speedY = -35
                  physics(n).y = physics(n).y - 2
                  soundEvent = 0
@@ -335,7 +331,7 @@ SUB handleBehaviors
                  player.score = 0
                  physics(2).x = 0
                  physics(2).y = 0
-                 jumpReleased = -1
+                 player.jumpRelease = -1
                 END IF
 
                 IF physics(n).speedX > 10 THEN physics(n).speedX = 10
@@ -367,6 +363,7 @@ SUB handleBehaviors
  screenX = gfx.screenX(gfx.page)
  screenY = gfx.screenY(gfx.page)
  
+
  FOR getObject = 2 TO spawnIndex
 
  n = objectIndex(getObject)
@@ -851,6 +848,7 @@ SUB handleBehaviors
   END IF 'exist check
  NEXT getObject
 
+
  IF dtAnims > 3 THEN
   dtAnims = 0
   mainCounter2 = (mainCounter2 + 1) AND 63
@@ -881,7 +879,7 @@ SUB handleBehaviors
  'hudPrint 7, STR$(entityCounter) + " ", 15, 15
  'hudPrint 10, STR$(killY) + " ", 15, 15
 
-
+ 
 END SUB
 
 SUB handleCollision
@@ -960,13 +958,11 @@ SUB handleSpawn
 END SUB
 
 SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
-EXIT SUB
-'ON ERROR GOTO quitme
-' OPEN "ducktext.ctt" FOR BINARY AS #1
-'  GET #1, offset + 1, hudBuffer
-' CLOSE #1
- 'IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-'EXIT SUB
+
+ OPEN "ducktext.ctt" FOR BINARY AS #1
+  GET #1, offset + 1, hudBuffer
+ CLOSE #1
+IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 
 END SUB
 
@@ -1033,15 +1029,17 @@ END SUB
 
 SUB initMainMenu
 
-hudTextLoad &H0, 1
+ hudTextLoad &H0, 1
 
-loadTiles "logotile"
+ loadTiles "logotile"
 
-player.level = 8
+ player.level = 8
 
-randomOffset = 0
+ randomOffset = 0
 
-main
+ DO
+  main
+ LOOP
 
 END SUB
 
@@ -1050,8 +1048,6 @@ SUB main
  hudTextLoad &HA0, 1
  
  loadLevel "level" + MID$(STR$(player.level), 2, 1)
-
- player.wave = 0
 
  FOR n = 2 TO 60
   objectIndex(n) = n
@@ -1070,6 +1066,8 @@ SUB main
  player.hp = 4
  player.time = 300
  player.hasKey = 0
+ player.jumpRelease = -1
+ player.wave = 0
 
  object(2).exist = 1
  object(2).control = 255
@@ -1128,6 +1126,8 @@ SUB main
       handleScroll
 
       aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+
+      IF object(2).control = 259 THEN EXIT SUB
 
       IF object(2).control = 255 THEN
        IF kbArray(1) THEN
@@ -1430,7 +1430,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
     n = getSpawnSlot
    NEXT p
     objectIndex(spawnIndex) = n
-    'physics(n).collider = 1
+    physics(n).collider = 1
     physics(n).x = x
     physics(n).y = y
     object(n).counter = x
