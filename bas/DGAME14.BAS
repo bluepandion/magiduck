@@ -86,7 +86,7 @@ END SUB
 SUB damagePlayer
 
     IF object(2).flash = 0 THEN
-     player.hp = player.hp + (player.hp > 0)
+     'player.hp = player.hp + (player.hp > 0)
      object(2).flash = 40
      queueSound 0, 4
      hudUpdate 2
@@ -100,7 +100,7 @@ SUB handleBehaviors
  STATIC jumpReleased
  STATIC dropCompare
  
-' entityCounter = 0
+ entityCounter = 0
 ' entityVisibles = 0
 
  scoreDelta = player.score
@@ -209,11 +209,8 @@ SUB handleBehaviors
                   IF c = 59 THEN damagePlayer
                   
                   physics(2).y = (physics(2).y AND &HFFF8)
-                  'IF screenTargetYlock = -1 THEN
                   screenTargetYlock = physics(2).y - 46
-                  'ELSE
-                  ' IF physics(2).y - 46 < screenTargetYlock - 16 THEN screenTargetYlock = physics(2).y - 46
-                  'END IF
+                  killY = screenTargetYlock
 
                   collisionFloor = 1
 
@@ -368,6 +365,7 @@ SUB handleBehaviors
 
  screenX = gfx.screenX(gfx.page)
  screenY = gfx.screenY(gfx.page)
+ killY = screenTargetYlock + 68
 
  FOR getObject = 2 TO spawnIndex
 
@@ -376,9 +374,8 @@ SUB handleBehaviors
   '-------------------------------------------------------------------------
   IF object(n).exist > 0 THEN
 
-      'entityCounter = entityCounter + 1
-
-
+      entityCounter = entityCounter + 1
+      
       visDeltaX = ABS(screenX + 20 - physics(n).x)
       visDeltaY = ABS(screenY + 24 - physics(n).y)
 
@@ -448,16 +445,17 @@ SUB handleBehaviors
         physics(n).x = level.wave(player.wave).spawner(object(n).spawner).x + multiplyTable(object(n).jump, angle.x(c))
         physics(n).y = level.wave(player.wave).spawner(object(n).spawner).y + multiplyTable(object(n).jump, angle.y(c))
 
-       'SPIKE BALL O
        CASE 18
+       'SPIKE BALL O+
         physics(n).x = level.wave(player.wave).spawner(object(n).spawner).x + multiplyTable(object(n).jump, angle.x(mainCounter0))
         physics(n).y = level.wave(player.wave).spawner(object(n).spawner).y + multiplyTable(object(n).jump, angle.y(mainCounter0))
+       
       END SELECT
 
       IF gfx.page > 0 AND object(n).control THEN
 
       playerDeltaX = ABS(physics(n).x - physics(2).x)
-      playerDeltaY = ABS(physics(n).y - physics(2).y + 2)
+      playerDeltaY = ABS(physics(n).y - (physics(2).y - 6))
       
       SELECT CASE object(n).control
        
@@ -504,7 +502,7 @@ SUB handleBehaviors
 
        'Chest
        CASE 45
-         IF playerDeltaX < 4 AND playerDeltaY < 5 AND player.hasKey THEN
+         IF playerDeltaX < 5 AND playerDeltaY < 10 AND player.hasKey THEN
           player.hasKey = 0
           FOR a = 4 TO 60
            IF object(a).exist = 2 THEN object(a).life = 0
@@ -522,7 +520,7 @@ SUB handleBehaviors
 
        'Enemy bullet
        CASE 102
-         IF playerDeltaX < 4 AND playerDeltaY < 5 THEN
+         IF playerDeltaX < 4 AND playerDeltaY < 6 THEN
           damagePlayer
           object(n).life = 0
          END IF
@@ -728,28 +726,12 @@ SUB handleBehaviors
 
        'CHECKPOINT
        CASE 62
-          IF object(n).life < 3 AND object(n).life > 0 THEN
+          IF playerDeltaY < 15 THEN
             player.wave = player.wave + 1
             handleSpawn
             object(n).life = 0
           END IF
 
-          IF player.hp = 0 THEN
-           IF playerDeltaX < 10 AND playerDeltaY < 20 THEN
-            player.hasKey = 0
-            FOR xx = 4 TO 60
-             object(xx).life = 0
-            NEXT xx
-
-            object(n).life = 10
-
-            spawnObject physics(n).x + 1, physics(n).y + 4 AND &HFFF8, 98, -1, 0
-            spawnObject physics(n).x + 2, physics(n).y + 4 AND &HFFF8, 98, 1, 0
-            spawnObject physics(n).x + 1, physics(n).y + 10 AND &HFFF8, 98, -1, 0
-            spawnObject physics(n).x + 2, physics(n).y + 10 AND &HFFF8, 98, 1, 0
-            spawnObject physics(n).x + 3, physics(n).y, 10, 88, 0
-           END IF
-          END IF
 
         'EXIT
         CASE 63
@@ -854,6 +836,9 @@ SUB handleBehaviors
        n = objectIndex(getObject)
        object(n).animFrame = object(n).animFrame + animation(object(n).animFrame).jump
        IF animation(object(n).animFrame).jump < 0 THEN object(n).animFrame = object(n).animFrame + animation(object(n).animFrame).jump
+       IF physics(n).y > killY THEN
+        IF n <> 2 AND screenTargetYlock > -1 THEN object(n).control = 0: object(n).life = 0
+       END IF
       NEXT getObject
  END IF
 
@@ -871,7 +856,7 @@ SUB handleBehaviors
 
  mainCounter0 = (mainCounter0 + 1) AND 63
 
- 'hudPrint 7, STR$(entityCounter) + " ", 15, 15
+ hudPrint 7, STR$(entityCounter) + " ", 15, 15
  'hudPrint 10, STR$(entityVisibles) + " ", 15, 15
 
 
@@ -887,24 +872,32 @@ SUB handleCollision
       ' 3 = Affect Bullet
 
  IF object(2).control = 255 AND object(2).flash = 0 THEN
-  px0 = physics(2).x - gfx.screenX(gfx.page) + 20 - 2
-  py0 = physics(2).y - gfx.screenY(gfx.page) + 20 - 8
-  px1 = px0 + 3
-  py1 = py0 + 5
+  'px0 = physics(2).x - gfx.screenX(gfx.page) + 20 - 2
+  'py0 = physics(2).y - gfx.screenY(gfx.page) + 20 - 8
+  'px1 = px0 + 3
+  'py1 = py0 + 5
+  px = physics(2).x - gfx.screenX(gfx.page) + 20
+  py = physics(2).y - gfx.screenY(gfx.page) + 14
 
   FOR a = 0 TO colCount(1)
    n = colList(1, a).index
-   IF collision(px0, py0, px1, py1, colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1) THEN
+   'IF collision(px0, py0, px1, py1, colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1) THEN
    'IF px0 > colList(1, a).x0 AND px0 < colList(1, a).x1 AND py0 > colList(1, a).y0 AND py0 < colList(1, a).y1 THEN
+   IF px > colList(1, a).x0 - 2 AND px < colList(1, a).x1 + 2 AND py > colList(1, a).y0 - 3 AND py < colList(1, a).y1 + 3 THEN
     damagePlayer
     a = 9999
    END IF
   NEXT a
  END IF
+
   FOR b = 0 TO colCount(2)
    n = colList(2, b).index
+   px = physics(n).x - gfx.screenX(gfx.page) + 20
+   py = physics(n).y - gfx.screenY(gfx.page) + 20
    FOR a = 0 TO colCount(1)
-     IF collision(colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1, colList(2, b).x0, colList(2, b).y0, colList(2, b).x1, colList(2, b).y1) THEN
+
+     'IF collision(colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1, colList(2, b).x0, colList(2, b).y0, colList(2, b).x1, colList(2, b).y1) THEN
+     IF px > colList(1, a).x0 - 2 AND px < colList(1, a).x1 + 2 AND py > colList(1, a).y0 - 3 AND py < colList(1, a).y1 + 3 THEN
        n2 = colList(1, a).index
        physics(n).collider = 0
        object(n).life = 4
@@ -946,12 +939,12 @@ END SUB
 
 SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 
-ON ERROR GOTO quitme
+'ON ERROR GOTO quitme
  OPEN "ducktext.ctt" FOR BINARY AS #1
   GET #1, offset + 1, hudBuffer
  CLOSE #1
  IF show THEN aPageFlip gfx.videoWrap, VARSEG(hudBuffer), VARPTR(hudBuffer), gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-EXIT SUB
+'EXIT SUB
 
 END SUB
 
@@ -971,11 +964,11 @@ SUB hudUpdate (flags AS INTEGER)
  END IF
 
  IF flags AND 2 THEN
-  cc = &HCE
-   FOR n = 1 TO 4
-    IF n > player.hp THEN cc = &H5
-    hudPrint 18 + n * 2, CHR$(33) + CHR$(34), cc, cc
-   NEXT n
+  'cc = &HCE
+  ' FOR n = 1 TO 4
+  '  IF n > player.hp THEN cc = &H5
+  '  hudPrint 18 + n * 2, CHR$(33) + CHR$(34), cc, cc
+  ' NEXT n
  END IF
 
  IF flags AND 4 THEN
@@ -1388,7 +1381,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
     n = getSpawnSlot
    NEXT p
     objectIndex(spawnIndex) = n
-    physics(n).collider = 1
+    'physics(n).collider = 1
     physics(n).x = x
     physics(n).y = y
     object(n).control = c

@@ -338,7 +338,7 @@ FUNCTION getSpawnSlot
  FOR n = 4 TO 60
   IF object(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
  NEXT n
-
+ 
 END FUNCTION
 
 SUB handleCamera
