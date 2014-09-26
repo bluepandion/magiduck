@@ -6,8 +6,8 @@ DECLARE SUB hudUpdate (flags AS INTEGER)
 DECLARE SUB addScore (eventType%)
 DECLARE FUNCTION collision% (x0%, y0%, w0%, h0%, x1%, y1%, w1%, h1%)
 DECLARE SUB damagePlayer ()
-DECLARE SUB hudPrint (X%, text$, colour1%, colour2%)
-DECLARE SUB aUpdateTile (X%, Y%)
+DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
+DECLARE SUB aUpdateTile (x%, y%)
 
 DECLARE SUB queueSound (offset%, Position%)
 DECLARE SUB playSounds ()
@@ -15,7 +15,7 @@ DECLARE SUB playSounds ()
 
 DECLARE SUB handleCollision ()
 
-DECLARE SUB screenResetPos (X%, Y%)
+DECLARE SUB screenResetPos (x%, y%)
 
 '$INCLUDE: 'libelf.bi'
 
@@ -34,12 +34,12 @@ DECLARE SUB loadSprites (file$)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
 
-DECLARE FUNCTION tileRead (X%, Y%)
-DECLARE SUB tileWrite (X AS INTEGER, Y AS INTEGER, index AS INTEGER)
+DECLARE FUNCTION tileRead (x%, y%)
+DECLARE SUB tileWrite (x AS INTEGER, y AS INTEGER, index AS INTEGER)
 
 DECLARE SUB switchAnim (objectIndex%, anim%)
 
-DECLARE SUB spawnObject (X%, Y%, object%, spawnerFlags%, spawner)
+DECLARE SUB spawnObject (x%, y%, object%, spawnerFlags%, spawner)
 DECLARE SUB handleBehaviors ()
 DECLARE SUB main ()
 
@@ -60,8 +60,13 @@ TYPE scoreType
  score AS LONG
 END TYPE
 
-DIM SHARED objOldX AS INTEGER
-DIM SHARED objOldY AS INTEGER
+quitme:
+DEF SEG = &HB800
+FOR n = 1 TO 16383 STEP 2
+ POKE n, 7
+NEXT n
+aKBremove KBoldSeg, KBoldOfs
+END
 
 SUB addScore (eventType)
 
@@ -98,18 +103,6 @@ SUB handleBehaviors
  STATIC speedMod
  STATIC friction
  STATIC collisionFloor
- STATIC X
- STATIC Y
- STATIC xx
- STATIC yy
- STATIC screenX
- STATIC screenY
- STATIC flash
- STATIC flipIndex
- STATIC parts
- STATIC spriteIndex
- STATIC cType
- STATIC spriteListIndex
 
  entityCounter = 0
 ' entityVisibles = 0
@@ -175,8 +168,8 @@ SUB handleBehaviors
                  IF level.wave(player.wave).spawner(s).object = 72 OR level.wave(player.wave).spawner(s).object = 71 THEN
                   IF level.wave(player.wave).spawner(s).flags = player.menutarget THEN
                    Find = 1
-                   player.targetX = level.wave(player.wave).spawner(s).X
-                   player.targetY = level.wave(player.wave).spawner(s).Y
+                   player.targetX = level.wave(player.wave).spawner(s).x
+                   player.targetY = level.wave(player.wave).spawner(s).y
                    s = 999
                   END IF
                  END IF
@@ -185,10 +178,10 @@ SUB handleBehaviors
                 menuFind = 0
                END IF
 
-               physics(2).speedX = speedDiff%(physics(2).X, player.targetX)
-               physics(2).speedY = speedDiff%(physics(2).Y, player.targetY)
+               physics(2).speedX = speedDiff%(physics(2).x, player.targetX)
+               physics(2).speedY = speedDiff%(physics(2).y, player.targetY)
                
-               screenTargetY = physics(2).Y - 34
+               screenTargetY = physics(2).y - 34
                handleCamera
 
       'Wait after death
@@ -203,10 +196,8 @@ SUB handleBehaviors
       'Normal player
       CASE 255
                 minY = -30
-                objOldX = physics(2).X
-                objOldY = physics(2).Y
-
-                c = tileRead(physics(2).X, physics(2).Y)
+                
+                c = tileRead(physics(2).x, physics(2).y)
                 
                 IF c > 29 THEN
                   IF physics(n).speedX = 0 AND player.ShootDelay < 6 THEN switchAnim n, 5
@@ -216,9 +207,9 @@ SUB handleBehaviors
 
                   IF c = 59 THEN damagePlayer
                   
-                  physics(2).Y = (physics(2).Y AND &HFFF8)
-                  screenTargetYlock = physics(2).Y - 46
-                  killY = physics(2).Y - 16
+                  physics(2).y = (physics(2).y AND &HFFF8)
+                  screenTargetYlock = physics(2).y - 46
+                  killY = physics(2).y - 16
 
                   collisionFloor = 1
 
@@ -242,7 +233,7 @@ SUB handleBehaviors
                   END IF
 
                   
-                  IF physics(2).Y > killY + 24 THEN player.hp = 0: killY = killY + 32
+                  IF physics(2).y > killY + 24 THEN player.hp = 0: killY = killY + 32
                   IF a < -32 THEN  'a>0
                    screenTargetYlock = -1
                   END IF
@@ -257,9 +248,9 @@ SUB handleBehaviors
                   END IF
                 END IF
 
-                c = tileRead(physics(n).X, physics(n).Y - 8)
+                c = tileRead(physics(n).x, physics(n).y - 8)
                 IF c > 29 THEN
-                 physics(n).Y = (physics(n).Y AND &HFFF8) + 8
+                 physics(n).y = (physics(n).y AND &HFFF8) + 8
                  physics(n).speedY = 0
                  IF c = 59 THEN damagePlayer
                 END IF
@@ -267,11 +258,11 @@ SUB handleBehaviors
                 IF c = 28 THEN
                   addScore 998
                   soundEvent = 92
-                  X = (physics(2).X) AND &HFFFC
-                  Y = (physics(2).Y - 8) AND &HFFF8
-                  tileWrite X, Y, 0
-                  aUpdateTile X, Y
-                  spawnObject X, Y, 99, 0, 0
+                  x = (physics(2).x) AND &HFFFC
+                  y = (physics(2).y - 8) AND &HFFF8
+                  tileWrite x, y, 0
+                  aUpdateTile x, y
+                  spawnObject x, y, 99, 0, 0
                 END IF
 
                 d = physics(n).speedX
@@ -288,7 +279,7 @@ SUB handleBehaviors
                 IF kbArray(29) AND player.jumpRelease THEN
                  player.jumpRelease = 0
                  physics(n).speedY = -35
-                 physics(n).Y = physics(n).Y - 2
+                 physics(n).y = physics(n).y - 2
                  soundEvent = 0
                 END IF
 
@@ -309,13 +300,13 @@ SUB handleBehaviors
                  END IF
                 END IF
                 IF kbArray(80) THEN
-                 screenTargetY = physics(2).Y - 8
+                 screenTargetY = physics(2).y - 8
                 END IF
 
                 player.ShootDelay = player.ShootDelay + (player.ShootDelay > 0)
                 IF kbArray(56) AND player.ShootDelay = 0 THEN
                  player.ShootDelay = 10
-                 spawnObject physics(2).X, physics(2).Y - 6, 100, object(n).flags AND flags.flip, 0
+                 spawnObject physics(2).x, physics(2).y - 6, 100, object(n).flags AND flags.flip, 0
                  soundEvent = 55
                  switchAnim n, 30
                 END IF
@@ -327,9 +318,9 @@ SUB handleBehaviors
                  physics(n).speedX = 0
                  physics(n).speedY = 0
                  FOR b = 0 TO 63 STEP 8
-                  xs = angle.X(b) \ 2
-                  ys = angle.Y(b) \ 2
-                  spawnObject physics(n).X, physics(n).Y, 257, xs, ys
+                  xs = angle.x(b) \ 2
+                  ys = angle.y(b) \ 2
+                  spawnObject physics(n).x, physics(n).y, 257, xs, ys
                  NEXT b
                  queueSound 4, 22
                  queueSound 14, 23
@@ -338,8 +329,8 @@ SUB handleBehaviors
                  player.hudLock = 999
 
                  player.score = 0
-                 physics(2).X = 0
-                 physics(2).Y = 0
+                 physics(2).x = 0
+                 physics(2).y = 0
                  player.jumpRelease = -1
                 END IF
 
@@ -351,28 +342,23 @@ SUB handleBehaviors
                 'physics(n).x = physics(n).x + fakeFloat(physics(n).speedX, floatC)
                 'physics(n).y = physics(n).y + fakeFloat(physics(n).speedY, floatC)
 
-                c = tileRead(physics(n).X + 2, physics(n).Y - 4)
+                c = tileRead(physics(n).x + 2, physics(n).y - 4)
                   IF c > 29 THEN
-                   physics(n).X = (physics(n).X AND &HFFFC) + 2
+                   physics(n).x = (physics(n).x AND &HFFFC) + 2
                    IF c = 59 THEN damagePlayer
                   END IF
-                c = tileRead(physics(n).X - 2, physics(n).Y - 4)
+                c = tileRead(physics(n).x - 2, physics(n).y - 4)
                   IF c > 29 THEN
-                   physics(n).X = (physics(n).X AND &HFFFC) + 1
+                   physics(n).x = (physics(n).x AND &HFFFC) + 1
                    IF c = 59 THEN damagePlayer
                   END IF
 
-                screenTargetX = physics(n).X - 19
+                screenTargetX = physics(n).x - 19
                 handleCamera
                 IF screenTargetYlock = -1 THEN
-                  screenTargetY = physics(2).Y - 28
+                  screenTargetY = physics(2).y - 28
                 END IF
-
-       '         physics(2).Xlocal = physics(2).Xlocal + (physics(2).x - objOldX)
-       '         physics(2).Ylocal = physics(2).Ylocal + (physics(2).y - objOldY)
-
   END SELECT
-
 
  screenX = gfx.screenX(gfx.page)
  screenY = gfx.screenY(gfx.page)
@@ -387,35 +373,34 @@ SUB handleBehaviors
 
       'entityCounter = entityCounter + 1
       
-      visDeltaX = ABS(screenX + 20 - physics(n).X)
-      visDeltaY = ABS(screenY + 24 - physics(n).Y)
+      visDeltaX = ABS(screenX + 20 - physics(n).x)
+      visDeltaY = ABS(screenY + 24 - physics(n).y)
 
       IF visDeltaX < object(n).visX AND visDeltaY < object(n).visY THEN
 
        'entityVisibles = entityVisibles + 1
 
-       physics(n).Xlocal = physics(n).Xlocal + fakeFloat(physics(n).speedX, floatC)
-       physics(n).Ylocal = physics(n).Ylocal + fakeFloat(physics(n).speedY, floatC)
+       'spdX = fakeFloat(physics(n).speedX, floatC)
+       'spdY = fakeFloat(physics(n).speedY, floatC)
+       IF object(n).exist > 1 THEN
+         physics(n).x = physics(object(n).exist).x + physics(n).childX
+         physics(n).y = physics(object(n).exist).y + physics(n).childY
+         physics(n).childX = physics(n).childX + fakeFloat(physics(n).speedX, floatC)
+         physics(n).childY = physics(n).childY + fakeFloat(physics(n).speedY, floatC)
+       ELSE
+         physics(n).x = physics(n).x + fakeFloat(physics(n).speedX, floatC)
+         physics(n).y = physics(n).y + fakeFloat(physics(n).speedY, floatC)
+       END IF
 
-       'physics(n).x = physics(object(n).exist).x + physics(n).Xlocal
-       'physics(n).y = physics(object(n).exist).y + physics(n).Ylocal
-
-       physics(n).X = physics(n).X + fakeFloat(physics(n).speedX, floatC)
-       physics(n).Y = physics(n).Y + fakeFloat(physics(n).speedY, floatC)
-
-       IF physics(n).Y < 32 THEN physics(n).Y = 32
-       IF physics(n).Y > 630 THEN physics(n).Y = 630
-       IF physics(n).X < -7 THEN physics(n).X = -7
-       IF physics(n).X > 85 THEN physics(n).X = 85
-
-       'objOldX = physics(n).X
-       'objOldY = physics(n).Y
-
+        IF physics(n).y < 32 THEN physics(n).y = 32
+        IF physics(n).y > 630 THEN physics(n).y = 630
+        IF physics(n).x < -7 THEN physics(n).x = -7
+        IF physics(n).x > 85 THEN physics(n).x = 85
       
       '-------------------------------------------------------------------
       'Player Bullet
       IF object(n).control = 100 THEN
-            c = tileRead(physics(n).X, physics(n).Y)
+            c = tileRead(physics(n).x, physics(n).y)
             IF c > 29 THEN
              IF c = 38 THEN
               IF dtAnims = 1 THEN
@@ -424,10 +409,10 @@ SUB handleBehaviors
                 t = 0
               END IF
               addScore 999
-              tileWrite physics(n).X, physics(n).Y, t
-              aUpdateTile physics(n).X AND &HFFFC, physics(n).Y AND &HFFF8
-              physics(n).X = physics(n).X AND &HFFFC
-              physics(n).Y = physics(n).Y AND &HFFF8
+              tileWrite physics(n).x, physics(n).y, t
+              aUpdateTile physics(n).x AND &HFFFC, physics(n).y AND &HFFF8
+              physics(n).x = physics(n).x AND &HFFFC
+              physics(n).y = physics(n).y AND &HFFF8
               physics(n).speedX = 0
               physics(n).speedY = 2
               object(n).flags = 0
@@ -435,7 +420,7 @@ SUB handleBehaviors
               object(n).life = 4
               object(n).flash = 20
               switchAnim n, 130
-              spawnObject physics(n).X, physics(n).Y, 99, 0, 0
+              spawnObject physics(n).x, physics(n).y, 99, 0, 0
              ELSE
               object(n).flags = 0
               object(n).control = 0
@@ -453,21 +438,21 @@ SUB handleBehaviors
       SELECT CASE object(n).control
        'SPIKE BALL U
        CASE 17
-        c = angle.Y(mainCounter0) + 32
-        physics(n).X = object(n).counter + multiplyTable(object(n).jump, angle.X(c))
-        physics(n).Y = object(n).direction + multiplyTable(object(n).jump, angle.Y(c))
+        c = angle.y(mainCounter0) + 32
+        physics(n).x = object(n).counter + multiplyTable(object(n).jump, angle.x(c))
+        physics(n).y = object(n).direction + multiplyTable(object(n).jump, angle.y(c))
 
        CASE 18
        'SPIKE BALL O+
-        physics(n).X = object(n).counter + multiplyTable(object(n).jump, angle.X(mainCounter0))
-        physics(n).Y = object(n).direction + multiplyTable(object(n).jump, angle.Y(mainCounter0))
+        physics(n).x = object(n).counter + multiplyTable(object(n).jump, angle.x(mainCounter0))
+        physics(n).y = object(n).direction + multiplyTable(object(n).jump, angle.y(mainCounter0))
        
       END SELECT
 
       IF gfx.page > 0 AND object(n).control THEN
 
-      playerDeltaX = ABS(physics(n).X - physics(2).X)
-      playerDeltaY = ABS(physics(n).Y - (physics(2).Y - 6))
+      playerDeltaX = ABS(physics(n).x - physics(2).x)
+      playerDeltaY = ABS(physics(n).y - (physics(2).y - 6))
       
       SELECT CASE object(n).control
        
@@ -477,12 +462,12 @@ SUB handleBehaviors
        
        'Pickup
        CASE 41
-            c = tileRead(physics(n).X, physics(n).Y)
+            c = tileRead(physics(n).x, physics(n).y)
             IF physics(n).speedY < 30 THEN physics(n).speedY = physics(n).speedY + 4
             
-            IF c > 29 AND physics(n).Y > object(n).counter THEN
+            IF c > 29 AND physics(n).y > object(n).counter THEN
              IF physics(n).speedY > 15 THEN
-               physics(n).Y = physics(n).Y AND &HFFF8
+               physics(n).y = physics(n).y AND &HFFF8
                physics(n).speedY = (NOT physics(n).speedY) \ 2
                soundEvent = 32
               ELSE
@@ -499,11 +484,11 @@ SUB handleBehaviors
                object(n).control = 0
                physics(n).speedX = 0
                physics(n).speedY = 0
-               physics(n).Xlocal = 0
-               physics(n).Ylocal = -11
+               physics(n).childX = 0
+               physics(n).childY = -11
               ELSE
                player.score = player.score + 25
-               physics(n).Y = physics(n).Y - 3
+               physics(n).y = physics(n).y - 3
                physics(n).speedY = 0
                object(n).flash = 0
                object(n).life = 9
@@ -519,11 +504,11 @@ SUB handleBehaviors
           FOR a = 4 TO 60
            IF object(a).exist = 2 THEN object(a).life = 0
           NEXT a
-          spawnObject physics(n).X - 6, physics(n).Y - 12, 41, 98, 0
-          spawnObject physics(n).X - 4, physics(n).Y - 14, 41, 98, 0
-          spawnObject physics(n).X, physics(n).Y - 16, 41, 88, 0
-          spawnObject physics(n).X + 4, physics(n).Y - 15, 41, 98, 0
-          spawnObject physics(n).X + 6, physics(n).Y - 14, 41, 98, 0
+          spawnObject physics(n).x - 6, physics(n).y - 12, 41, 98, 0
+          spawnObject physics(n).x - 4, physics(n).y - 14, 41, 98, 0
+          spawnObject physics(n).x, physics(n).y - 16, 41, 88, 0
+          spawnObject physics(n).x + 4, physics(n).y - 15, 41, 98, 0
+          spawnObject physics(n).x + 6, physics(n).y - 14, 41, 98, 0
           object(n).life = 5
           object(n).animFrame = 195
           physics(n).speedY = -5
@@ -554,31 +539,31 @@ SUB handleBehaviors
            physics(n).speedY = 20
            IF object(n).spawner = 2 THEN
              IF object(n).counter < 0 AND object(n).counter > -8 THEN
-               physics(n).speedY = angle.Y(object(n).jump)
+               physics(n).speedY = angle.y(object(n).jump)
                object(n).jump = (object(n).jump + 2) AND 63
-               c = tileRead(physics(n).X, physics(n).Y - 8)
-               IF c > 29 THEN physics(n).speedY = 0: physics(n).Y = physics(n).Y AND &HFFF8 + 7
+               c = tileRead(physics(n).x, physics(n).y - 8)
+               IF c > 29 THEN physics(n).speedY = 0: physics(n).y = physics(n).y AND &HFFF8 + 7
               ELSE
                object(n).jump = 0
              END IF
             ELSE
              IF object(n).counter < 0 AND object(n).counter > -5 THEN
-               physics(n).speedY = angle.Y(object(n).jump)
+               physics(n).speedY = angle.y(object(n).jump)
                object(n).jump = (object(n).jump + 4) AND 63
-               c = tileRead(physics(n).X, physics(n).Y - 8)
-               IF c > 29 THEN physics(n).speedY = 0: physics(n).Y = physics(n).Y AND &HFFF8 + 7
+               c = tileRead(physics(n).x, physics(n).y - 8)
+               IF c > 29 THEN physics(n).speedY = 0: physics(n).y = physics(n).y AND &HFFF8 + 7
               ELSE
                object(n).jump = 0
              END IF
            END IF
 
             IF physics(n).speedY > -1 THEN
-             c = tileRead(physics(n).X, physics(n).Y)
+             c = tileRead(physics(n).x, physics(n).y)
              IF c > 29 THEN
                physics(n).speedX = 0
                object(n).animFrame = 60
                physics(n).speedY = 0
-               physics(n).Y = physics(n).Y AND &HFFF8
+               physics(n).y = physics(n).y AND &HFFF8
                IF object(n).counter = 0 AND object(n).jump = 0 THEN
                 object(n).animFrame = 62
                 physics(n).speedX = 5 + (object(n).flags > 0) * 10
@@ -602,11 +587,11 @@ SUB handleBehaviors
            s = 2
            p = 3
          END IF
-         c = tileRead(physics(n).X + s, physics(n).Y - 1)
+         c = tileRead(physics(n).x + s, physics(n).y - 1)
          IF c > 29 THEN
             object(n).flags = object(n).flags XOR 1
             physics(n).speedX = 0
-            physics(n).X = (physics(n).X AND &HFFFC) + p
+            physics(n).x = (physics(n).x AND &HFFFC) + p
          END IF
 
        'Croc
@@ -614,32 +599,32 @@ SUB handleBehaviors
         s = 4
         IF playerDeltaY < 8 THEN
           s = 8
-          object(n).flags = 1 + (physics(2).X > physics(n).X)
+          object(n).flags = 1 + (physics(2).x > physics(n).x)
         END IF
 
-        IF tileRead(physics(n).X, physics(n).Y) < 30 THEN
+        IF tileRead(physics(n).x, physics(n).y) < 30 THEN
            physics(n).speedY = 20
            physics(n).speedX = 0
          ELSE
-           physics(n).Y = physics(n).Y AND &HFFF8
+           physics(n).y = physics(n).y AND &HFFF8
            physics(n).speedY = 0
            IF object(n).flags THEN
              IF physics(n).speedX > -s THEN physics(n).speedX = physics(n).speedX - 2
-             c = tileRead(physics(n).X - 2, physics(n).Y - 2)
-             c2 = tileRead(physics(n).X - 2, physics(n).Y + 2)
+             c = tileRead(physics(n).x - 2, physics(n).y - 2)
+             c2 = tileRead(physics(n).x - 2, physics(n).y + 2)
               IF c > 29 OR c2 < 30 THEN
                object(n).flags = 0
                physics(n).speedX = 4
-               physics(n).X = physics(n).X AND &HFFFC + 2
+               physics(n).x = physics(n).x AND &HFFFC + 2
               END IF
            ELSE
              IF physics(n).speedX < s THEN physics(n).speedX = physics(n).speedX + 2
-             c = tileRead(physics(n).X + 2, physics(n).Y - 2)
-             c2 = tileRead(physics(n).X + 2, physics(n).Y + 2)
+             c = tileRead(physics(n).x + 2, physics(n).y - 2)
+             c2 = tileRead(physics(n).x + 2, physics(n).y + 2)
               IF c > 29 OR c2 < 30 THEN
                object(n).flags = 1
                physics(n).speedX = -4
-               physics(n).X = physics(n).X AND &HFFFC - 2
+               physics(n).x = physics(n).x AND &HFFFC - 2
               END IF
            END IF
         END IF
@@ -647,9 +632,9 @@ SUB handleBehaviors
        'Drooly
        CASE 4
         IF physics(n).speedX THEN
-          c = tileRead(physics(n).X + physics(n).speedX, physics(n).Y + 1)
+          c = tileRead(physics(n).x + physics(n).speedX, physics(n).y + 1)
           IF c < 30 THEN physics(n).speedX = physics(n).speedX * -1
-          c = tileRead(physics(n).X + physics(n).speedX, physics(n).Y - 2)
+          c = tileRead(physics(n).x + physics(n).speedX, physics(n).y - 2)
           IF c > 29 THEN physics(n).speedX = physics(n).speedX * -1
         END IF
 
@@ -658,7 +643,7 @@ SUB handleBehaviors
         IF object(n).jump = 15 THEN
           object(n).counter = physics(n).speedX
           physics(n).speedX = 0
-          spawnObject physics(n).X + 1, physics(n).Y + 8, 104, 0, 0
+          spawnObject physics(n).x + 1, physics(n).y + 8, 104, 0, 0
         END IF
 
         IF object(n).jump > 25 THEN
@@ -675,24 +660,24 @@ SUB handleBehaviors
             IF playerDeltaX < 16 AND playerDeltaY < 32 THEN
              object(n).counter = 1
              object(n).animFrame = 52
-             object(n).jump = physics(2).X
+             object(n).jump = physics(2).x
             END IF
 
          CASE 1
-            IF physics(n).Y < physics(2).Y THEN
+            IF physics(n).y < physics(2).y THEN
                physics(n).speedY = 5
-               IF physics(n).X < physics(2).X THEN physics(n).speedX = physics(n).speedX + 1
-               IF physics(n).X > physics(2).X THEN physics(n).speedX = physics(n).speedX - 1
+               IF physics(n).x < physics(2).x THEN physics(n).speedX = physics(n).speedX + 1
+               IF physics(n).x > physics(2).x THEN physics(n).speedX = physics(n).speedX - 1
             ELSE
               physics(n).speedY = 10
               physics(n).speedX = 0
               object(n).counter = 2
-              object(n).jump = physics(2).Y - 40
-              object(n).direction = physics(2).X
+              object(n).jump = physics(2).y - 40
+              object(n).direction = physics(2).x
             END IF
          
          CASE 2
-          IF physics(n).Y > object(n).jump + 5 THEN
+          IF physics(n).y > object(n).jump + 5 THEN
             physics(n).speedY = physics(n).speedY - 5
            ELSE
             object(n).counter = 3
@@ -710,17 +695,25 @@ SUB handleBehaviors
          IF physics(n).speedX > 10 THEN physics(n).speedX = 10
          IF physics(n).speedX < -10 THEN physics(n).speedX = -10
 
+         'physics(n).y = object(n).direction + angle.y(mainCounter1 AND 63) \ 2
+
+         'c = tileRead(physics(n).x + 2, physics(n).y - 8)
+         'IF c > 29 THEN physics(n).x = (physics(n).x AND &HFFFC): physics(n).speedX = -1
+         'c = tileRead(physics(n).x - 2, physics(n).y - 8)
+         'IF c > 29 THEN physics(n).x = (physics(n).x AND &HFFFC) + 2: physics(n).speedX = 1
+
+
        'FIRE BREATH
        CASE 11
-         X = (mainCounter1 + physics(n).Y) AND 31
-         IF X > 10 THEN
-          IF X = 11 THEN
+         x = (mainCounter1 + physics(n).y) AND 31
+         IF x > 10 THEN
+          IF x = 11 THEN
            object(n).animFrame = 152: soundEvent = 66
           END IF
-          IF X = 15 THEN
-           spawnObject physics(n).X + 2, physics(n).Y - 2, 111, object(n).flags, -10
-           spawnObject physics(n).X + 2, physics(n).Y - 2, 111, object(n).flags, 0
-           spawnObject physics(n).X + 2, physics(n).Y - 2, 111, object(n).flags, 10
+          IF x = 15 THEN
+           spawnObject physics(n).x + 2, physics(n).y - 2, 111, object(n).flags, -10
+           spawnObject physics(n).x + 2, physics(n).y - 2, 111, object(n).flags, 0
+           spawnObject physics(n).x + 2, physics(n).y - 2, 111, object(n).flags, 10
           END IF
          ELSE
            object(n).animFrame = 150
@@ -728,9 +721,9 @@ SUB handleBehaviors
 
        'SPIKE BALL BOUNCE
        CASE 15
-        c = tileRead(physics(n).X, physics(n).Y + 6)
+        c = tileRead(physics(n).x, physics(n).y + 6)
         IF c > 29 THEN
-          physics(n).Y = physics(n).Y AND &HFFF8 - 6
+          physics(n).y = physics(n).y AND &HFFF8 - 6
           physics(n).speedY = -30
           sounds.queue(sounds.readpos) = 40
          ELSE
@@ -740,11 +733,11 @@ SUB handleBehaviors
 
        'SPAWNER
        CASE 16
-        IF physics(2).Y - physics(n).Y > 40 THEN
+        IF physics(2).y - physics(n).y > 40 THEN
           object(n).counter = object(n).counter + 1
           IF object(n).counter > 23 THEN
            object(n).counter = 0
-           spawnObject physics(n).X, physics(n).Y, object(n).jump, 0, 0
+           spawnObject physics(n).x, physics(n).y, object(n).jump, 0, 0
           END IF
          ELSE
           object(n).life = 0
@@ -761,18 +754,15 @@ SUB handleBehaviors
         'EXIT
         CASE 63
          IF (mainCounter1 AND 3) = 2 THEN
-          X = physics(n).X - 4 + INT(RND * 10)'(randInt AND 7)
-          Y = physics(n).Y - 22 + INT(RND * 15)' (randInt AND 15)
-          spawnObject X, Y, 93, 0, 0
+          x = physics(n).x - 4 + INT(RND * 10)'(randInt AND 7)
+          y = physics(n).y - 22 + INT(RND * 15)' (randInt AND 15)
+          spawnObject x, y, 93, 0, 0
          END IF
 
        END SELECT
 
       END IF 'Page check
         '-------------------------------------------------------------------
-
-      'physics(n).Xlocal = physics(n).Xlocal + (physics(n).x - objOldX)
-      'physics(n).Ylocal = physics(n).Ylocal + (physics(n).y - objOldY)
 
       parts = animation(object(n).animFrame).jump
       
@@ -781,32 +771,34 @@ SUB handleBehaviors
       flash = NOT object(n).flash AND 1
       object(n).flash = object(n).flash + (object(n).flash > 0)
 
-      xx = physics(n).X - screenX + 20
-      yy = physics(n).Y - screenY + 20
+      xx = physics(n).x - screenX + 20
+      yy = physics(n).y - screenY + 20
    
       IF physics(n).collider THEN
        FOR animPart = object(n).animFrame TO object(n).animFrame + parts - 1
          spriteIndex = animation(animPart).index(flipIndex)
-         X = xx + animation(animPart).X(flipIndex)
-         Y = yy + animation(animPart).Y
+         x = xx + animation(animPart).x(flipIndex)
+         y = yy + animation(animPart).y
+         'sx = x' - screenX
+         'sy = y' - screenY
 
-         IF spriteIndex AND X > 12 AND X < 60 AND Y > 5 AND Y < 70 THEN
+         IF spriteIndex AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
           IF flash THEN
            spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
-           spriteList(spriteListIndex, gfx.page).X = X' + 20
-           spriteList(spriteListIndex, gfx.page).Y = Y' + 20
+           spriteList(spriteListIndex, gfx.page).x = x' + 20
+           spriteList(spriteListIndex, gfx.page).y = y' + 20
            spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
            spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
            spriteListIndex = spriteListIndex + 1
           END IF
-          cType = physics(n).collider AND (animation(animPart).jump > 0)
-            IF cType THEN
-             colCount(cType) = colCount(cType) + 1
-             colList(cType, colCount(cType)).index = n
-             colList(cType, colCount(cType)).x0 = X
-             colList(cType, colCount(cType)).y0 = Y
-             colList(cType, colCount(cType)).x1 = X + spriteWidth(spriteIndex) - 1
-             colList(cType, colCount(cType)).y1 = Y + spriteHeight(spriteIndex) - 1
+          ctype = physics(n).collider AND (animation(animPart).jump > 0)
+            IF ctype THEN
+             colCount(ctype) = colCount(ctype) + 1
+             colList(ctype, colCount(ctype)).index = n
+             colList(ctype, colCount(ctype)).x0 = x
+             colList(ctype, colCount(ctype)).y0 = y
+             colList(ctype, colCount(ctype)).x1 = x + spriteWidth(spriteIndex) - 1
+             colList(ctype, colCount(ctype)).y1 = y + spriteHeight(spriteIndex) - 1
             END IF
          END IF
        NEXT animPart
@@ -814,21 +806,20 @@ SUB handleBehaviors
        IF flash THEN
          FOR animPart = object(n).animFrame TO object(n).animFrame + parts - 1
           spriteIndex = animation(animPart).index(flipIndex)
-          X = xx + animation(animPart).X(flipIndex)
-          Y = yy + animation(animPart).Y
+          x = xx + animation(animPart).x(flipIndex)
+          y = yy + animation(animPart).y
       
-          IF spriteIndex AND X > 12 AND X < 60 AND Y > 5 AND Y < 70 THEN
+          IF spriteIndex AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
            spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
-           spriteList(spriteListIndex, gfx.page).X = X '+ 20
-           spriteList(spriteListIndex, gfx.page).Y = Y '+ 20
+           spriteList(spriteListIndex, gfx.page).x = x '+ 20
+           spriteList(spriteListIndex, gfx.page).y = y '+ 20
            spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
            spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
-           spriteListIndex = spriteListIndex + 1
+           spriteListIndex = (spriteListIndex + 1) AND 31
           END IF
         NEXT animPart
        END IF
       END IF
-
   END IF 'visibility check
 
    IF gfx.page THEN
@@ -842,18 +833,18 @@ SUB handleBehaviors
           object(n).flash = 4
           physics(n).speedX = 0
           physics(n).speedY = -20
-          physics(n).Y = physics(n).Y - 2
+          physics(n).y = physics(n).y - 2
           physics(n).collider = 0
           object(n).life = 113
           object(n).animFrame = 98
-          object(n).counter = physics(n).Y - 6
+          object(n).counter = physics(n).y - 6
       ELSE
           destroyObject getObject
           getObject = getObject - 1
      END IF
     END IF
    END IF
-   
+
   END IF 'exist check
  NEXT getObject
 
@@ -865,7 +856,7 @@ SUB handleBehaviors
        n = objectIndex(getObject)
        object(n).animFrame = object(n).animFrame + animation(object(n).animFrame).jump
        IF animation(object(n).animFrame).jump < 0 THEN object(n).animFrame = object(n).animFrame + animation(object(n).animFrame).jump
-       IF physics(n).Y - object(n).visY > killY THEN
+       IF physics(n).y - object(n).visY > killY THEN
         IF n <> 2 THEN object(n).control = 0: object(n).life = 0
        END IF
       NEXT getObject
@@ -873,7 +864,9 @@ SUB handleBehaviors
 
  IF gfx.page THEN mainCounter1 = (mainCounter1 + 1) AND 63
 
- spriteList(spriteListIndex, gfx.page).Y = 255
+ 'dtAnims = dtAnims AND 3
+
+ spriteList(spriteListIndex, gfx.page).y = 255
 
  IF soundEvent > -1 THEN queueSound 0, soundEvent
 
@@ -883,9 +876,8 @@ SUB handleBehaviors
 
  mainCounter0 = (mainCounter0 + 1) AND 63
 
- hudPrint 7, STR$(spriteListIndex) + " ", 15, 15
- hudPrint 10, STR$(screenX) + " ", 15, 15
- hudPrint 15, STR$(screenY) + " ", 15, 15
+ 'hudPrint 7, STR$(entityCounter) + " ", 15, 15
+ 'hudPrint 10, STR$(killY) + " ", 15, 15
 
  
 END SUB
@@ -904,8 +896,8 @@ SUB handleCollision
   'py0 = physics(2).y - gfx.screenY(gfx.page) + 20 - 8
   'px1 = px0 + 3
   'py1 = py0 + 5
-  px = physics(2).X - gfx.screenX(gfx.page) + 20
-  py = physics(2).Y - gfx.screenY(gfx.page) + 14
+  px = physics(2).x - gfx.screenX(gfx.page) + 20
+  py = physics(2).y - gfx.screenY(gfx.page) + 14
 
   FOR a = 0 TO colCount(1)
    n = colList(1, a).index
@@ -920,8 +912,8 @@ SUB handleCollision
 
   FOR b = 0 TO colCount(2)
    n = colList(2, b).index
-   px = physics(n).X - gfx.screenX(gfx.page) + 20
-   py = physics(n).Y - gfx.screenY(gfx.page) + 20
+   px = physics(n).x - gfx.screenX(gfx.page) + 20
+   py = physics(n).y - gfx.screenY(gfx.page) + 20
    FOR a = 0 TO colCount(1)
 
      'IF collision(colList(1, a).x0, colList(1, a).y0, colList(1, a).x1, colList(1, a).y1, colList(2, b).x0, colList(2, b).y0, colList(2, b).x1, colList(2, b).y1) THEN
@@ -939,7 +931,7 @@ SUB handleCollision
         object(n2).life = object(n2).life + 1
        END IF
        IF object(n2).life > -1 THEN
-         physics(n).X = physics(n2).X
+         physics(n).x = physics(n2).x
          object(n).animFrame = 195
          soundEvent = 44
         ELSE
@@ -958,7 +950,7 @@ SUB handleSpawn
 
  FOR n = 1 TO 16
   IF level.wave(player.wave).spawner(n).object THEN
-    spawnObject level.wave(player.wave).spawner(n).X, level.wave(player.wave).spawner(n).Y, level.wave(player.wave).spawner(n).object, level.wave(player.wave).spawner(n).flags, n
+    spawnObject level.wave(player.wave).spawner(n).x, level.wave(player.wave).spawner(n).y, level.wave(player.wave).spawner(n).object, level.wave(player.wave).spawner(n).flags, n
     'level.wave(player.wave).spawner(n).flags = level.wave(player.wave).spawner(n).flags XOR &H1
    END IF
  NEXT n
@@ -1031,11 +1023,6 @@ elfInit
 
 loadSounds "sound"
 
-physics(1).X = 0
-physics(1).Y = 0
-physics(1).Xlocal = 0
-physics(1).Ylocal = 0
-
 initMainMenu
 
 END SUB
@@ -1085,10 +1072,8 @@ SUB main
  object(2).exist = 1
  object(2).control = 255
  object(2).life = -3
- physics(2).X = level.PlayerX
- physics(2).Y = level.PlayerY
- physics(2).Xlocal = level.PlayerX
- physics(2).Ylocal = level.PlayerY
+ physics(2).x = level.PlayerX
+ physics(2).y = level.PlayerY
  physics(2).collider = 0
 
  object(2).animFrame = 10
@@ -1106,7 +1091,7 @@ SUB main
 
  handleSpawn
 
- screenResetPos physics(2).X - 20, physics(2).Y - 46
+ screenResetPos physics(2).x - 20, physics(2).y - 46
 
  updatetext = 1
 
@@ -1141,7 +1126,6 @@ SUB main
       handleScroll
 
       aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
-
 
       IF object(2).control = 259 THEN EXIT SUB
 
@@ -1189,7 +1173,7 @@ FUNCTION randInt
  randInt = r
 END FUNCTION
 
-SUB spawnObject (X, Y, object, spawnerFlags, spawner)
+SUB spawnObject (x, y, object, spawnerFlags, spawner)
  
  'n = getSpawnSlot
  n = 0
@@ -1202,10 +1186,8 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
  object(n).counter = 0
  object(n).flags = 0
  object(n).life = -999
- physics(n).X = X
- physics(n).Y = Y
- physics(n).Xlocal = X
- physics(n).Ylocal = Y
+ physics(n).x = x
+ physics(n).y = y
  physics(n).speedX = 0
  physics(n).speedY = 0
  physics(n).collider = 0
@@ -1376,10 +1358,10 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).exist = 1
    object(n).spawner = spawner
    object(n).life = -3
-   object(n).direction = Y
+   object(n).direction = y
    physics(n).collider = 1
    object(n).animFrame = 50
-   object(n).visX = 40
+   object(n).visX = 30
    object(n).visY = 50
    object(n).counter = 0
    incSpawnIndex
@@ -1431,10 +1413,10 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    c = object
    FOR p = 0 TO 1
     objectIndex(spawnIndex) = n
-    physics(n).X = X
-    physics(n).Y = Y
-    object(n).counter = X
-    object(n).direction = Y
+    physics(n).x = x
+    physics(n).y = y
+    object(n).counter = x
+    object(n).direction = y
     object(n).control = c
     object(n).exist = 1
     object(n).spawner = spawner
@@ -1449,10 +1431,10 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    NEXT p
     objectIndex(spawnIndex) = n
     physics(n).collider = 1
-    physics(n).X = X
-    physics(n).Y = Y
-    object(n).counter = X
-    object(n).direction = Y
+    physics(n).x = x
+    physics(n).y = y
+    object(n).counter = x
+    object(n).direction = y
     object(n).control = c
     object(n).exist = 1
     object(n).spawner = spawner
@@ -1471,7 +1453,7 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).exist = 1
    object(n).spawner = spawner
    object(n).life = 113
-   object(n).counter = Y
+   object(n).counter = y
    physics(n).speedY = -20
    object(n).animFrame = spawnerFlags
    object(n).anim = spawnerFlags
@@ -1532,20 +1514,18 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(2).flash = 0
    object(2).control = 258
    object(2).exist = 1
-   physics(2).X = X
-   physics(2).Y = Y
-   physics(2).Xlocal = X
-   physics(2).Ylocal = Y
+   physics(2).x = x
+   physics(2).y = y
    physics(2).speedX = 0
    physics(2).speedY = 0
    object(2).anim = 10
    object(2).animFrame = 10
    object(2).flags = 0
-   screenResetPos X - 20, physics(2).Y
+   screenResetPos x - 20, physics(2).y
    player.menutarget = 0
    player.mode = 0
-   player.targetX = X
-   player.targetY = Y
+   player.targetX = x
+   player.targetY = y
    object(2).counter = 0
 
  END SELECT
