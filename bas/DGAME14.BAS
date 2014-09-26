@@ -411,6 +411,7 @@ SUB handleBehaviors
               addScore 999
               tileWrite physics(n).x, physics(n).y, t
               aUpdateTile physics(n).x AND &HFFFC, physics(n).y AND &HFFF8
+              physics(n).collider = 0
               physics(n).x = physics(n).x AND &HFFFC
               physics(n).y = physics(n).y AND &HFFF8
               physics(n).speedX = 0
