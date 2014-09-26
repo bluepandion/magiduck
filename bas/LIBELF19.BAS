@@ -334,9 +334,6 @@ DEF SEG
 
  aKBinit KBoldSeg, KBoldOfs, p2%, p3%
 
- OPEN "debug.txt" FOR OUTPUT AS #2
-  PRINT #2, "Debug start"
- CLOSE #2
 END SUB
 
 FUNCTION getSpawnSlot
