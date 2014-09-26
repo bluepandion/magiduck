@@ -73,8 +73,8 @@ TYPE physicsType
  speedX AS INTEGER
  speedY AS INTEGER
  collider AS INTEGER
- childX AS INTEGER
- childY AS INTEGER
+ Xlocal AS INTEGER
+ Ylocal AS INTEGER
   'h0 Hit Player
   'h1 Hit Enemy
   'h2 Hit Bullet
@@ -183,8 +183,8 @@ TYPE gfxType
  windowY(0 TO 1) AS INTEGER
  screenX(0 TO 1) AS INTEGER
  screenY(0 TO 1) AS INTEGER
- screenoldx(0 TO 1) AS INTEGER
- screenoldy(0 TO 1) AS INTEGER
+ screenOldX(0 TO 1) AS INTEGER
+ screenOldY(0 TO 1) AS INTEGER
  pageOfs(0 TO 1) AS INTEGER
  page AS INTEGER
  listLen(0 TO 1) AS INTEGER
@@ -193,6 +193,14 @@ END TYPE
 TYPE angleType
  X(0 TO 63) AS INTEGER
  Y(0 TO 63) AS INTEGER
+END TYPE
+
+TYPE soundType
+ Queue(0 TO 63) AS INTEGER
+ readPos AS INTEGER
+ speakerOn AS INTEGER
+ speakerOff AS INTEGER
+ Track(0 TO 255) AS INTEGER
 END TYPE
 
 COMMON SHARED gfx AS gfxType
@@ -207,10 +215,10 @@ COMMON SHARED player AS playerType
 
 COMMON SHARED flags AS flagsType
 
-DIM physics(0 TO 60) AS physicsType
+DIM physics(1 TO 60) AS physicsType
 COMMON SHARED physics()  AS physicsType
 
-DIM object(0 TO 60) AS behaviorType
+DIM object(1 TO 60) AS behaviorType
 COMMON SHARED object()  AS behaviorType
 
 COMMON SHARED level AS levelType              'Level object data
@@ -235,8 +243,8 @@ COMMON SHARED playerOldY AS INTEGER
 
 COMMON SHARED screenX AS INTEGER                        'Screen position
 COMMON SHARED screenY AS INTEGER                        'in Tile Map.
-COMMON SHARED screenoldx AS INTEGER
-COMMON SHARED screenoldy AS INTEGER
+COMMON SHARED screenOldX AS INTEGER
+COMMON SHARED screenOldY AS INTEGER
 COMMON SHARED screenTargetX AS INTEGER
 COMMON SHARED screenTargetY AS INTEGER
 COMMON SHARED screenTargetYlock AS INTEGER
@@ -247,18 +255,11 @@ COMMON SHARED skippedFrame AS INTEGER
 
 COMMON SHARED angle AS angleType
 
-TYPE soundType
- Queue(0 TO 63) AS INTEGER
- readPos AS INTEGER
- speakerOn AS INTEGER
- speakerOff AS INTEGER
- Track(0 TO 255) AS INTEGER
-END TYPE
-
 COMMON SHARED sounds AS soundType
+
+COMMON SHARED randomOffset AS INTEGER
 
 CONST defaultVisX = 25
 CONST defaultVisY = 30
 
-COMMON SHARED randomOffset AS INTEGER
 
