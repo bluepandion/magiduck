@@ -925,6 +925,15 @@ SUB quit
  PRINT
  PRINT "fps:"; fps
  PRINT
+
+ c = 1
+
+ FOR n = 1 TO 128
+  c = c + 4
+  COLOR (n AND 1) + 7
+  PRINT HEX$(spawnerEnabler(n)); TAB(c);
+  IF ((n - 1) AND 15) = 15 THEN PRINT : c = 1
+ NEXT n
 END
 
 END SUB

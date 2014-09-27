@@ -229,6 +229,9 @@ COMMON SHARED colList() AS collisionType
 DIM objectIndex(0 TO 65) AS INTEGER
 COMMON SHARED objectIndex() AS INTEGER
 
+DIM spawnerEnabler(0 to 128) AS INTEGER
+COMMON SHARED spawnerEnabler() AS INTEGER
+
 COMMON SHARED spriteCount AS INTEGER
 COMMON SHARED objCount AS INTEGER
 

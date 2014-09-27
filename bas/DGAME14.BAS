@@ -1,3 +1,4 @@
+DECLARE SUB initTestGame ()
 DECLARE SUB initMainMenu ()
 DECLARE FUNCTION speedDiff% (x0%, x1%)
 DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
@@ -25,7 +26,7 @@ DECLARE SUB elfInit ()
 
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
-DECLARE SUB handleSpawn ()
+DECLARE SUB handleSpawn (wave)
 
 DECLARE SUB incSpawnIndex ()
 
@@ -63,14 +64,6 @@ END TYPE
 DIM SHARED spriteClipX(-10 TO 50) AS INTEGER
 DIM SHARED spriteClipY(-20 TO 70) AS INTEGER
 DIM SHARED spriteClipYofs(-20 TO 70) AS INTEGER
-
-quitme:
-DEF SEG = &HB800
-FOR n = 1 TO 16383 STEP 2
- POKE n, 7
-NEXT n
-aKBremove KBoldSeg, KBoldOfs
-END
 
 SUB addScore (eventType)
 
@@ -179,12 +172,12 @@ SUB handleBehaviors
 
                IF menuFind THEN
                 Find = 0
-                FOR s = 1 TO 16
-                 IF level.wave(player.wave).spawner(s).object = 72 OR level.wave(player.wave).spawner(s).object = 71 THEN
-                  IF level.wave(player.wave).spawner(s).flags = player.menutarget THEN
+                FOR s = 4 TO 60
+                 IF object(s).control = 72 THEN
+                  IF object(s).flags = player.menutarget THEN
                    Find = 1
-                   player.targetX = level.wave(player.wave).spawner(s).x
-                   player.targetY = level.wave(player.wave).spawner(s).y
+                   player.targetX = physics(s).x
+                   player.targetY = physics(s).y
                    s = 999
                   END IF
                  END IF
@@ -409,7 +402,7 @@ SUB handleBehaviors
   '-------------------------------------------------------------------------
   IF object(n).exist > 0 THEN
 
-      'entityCounter = entityCounter + 1
+      entityCounter = entityCounter + 1
       
       visDeltaX = ABS(screenX + 20 - physics(n).x)
       visDeltaY = ABS(screenY + 24 - physics(n).y)
@@ -562,8 +555,11 @@ SUB handleBehaviors
                physics(n).speedY = 0
              END IF
             END IF
+
             IF object(n).life < 37 AND object(n).anim <> 90 THEN object(n).flash = 36
+
             IF playerDeltaX < 5 AND ABS(physics(2).y - physics(n).y) < 8 THEN
+            spawnerEnabler(object(n).spawner) = 0
             soundEvent = 34
              IF object(n).anim = 90 THEN
                player.score = player.score + 500
@@ -597,6 +593,7 @@ SUB handleBehaviors
           object(n).animFrame = 195
           physics(n).speedY = -5
           soundEvent = 104
+          spawnerEnabler(object(n).spawner) = 0
          END IF
 
        'Enemy bullet
@@ -621,7 +618,7 @@ SUB handleBehaviors
        'Eggy
        CASE 1
            physics(n).speedY = 20
-           IF object(n).spawner = 2 THEN
+           IF object(n).direction = 2 THEN
              IF object(n).counter < 0 AND object(n).counter > -8 THEN
                physics(n).speedY = angle.y(object(n).jump)
                object(n).jump = (object(n).jump + 2) AND 63
@@ -660,8 +657,8 @@ SUB handleBehaviors
             IF object(n).counter < -10 AND c > 29 THEN
              object(n).counter = 0
              object(n).jump = 0
-             object(n).spawner = object(n).spawner + 1
-             IF object(n).spawner > 2 THEN object(n).spawner = 0
+             object(n).direction = object(n).direction + 1
+             IF object(n).direction > 2 THEN object(n).direction = 0
             END IF
 
          IF object(n).flags THEN
@@ -682,8 +679,8 @@ SUB handleBehaviors
        CASE 2
         s = 4
         IF playerDeltaY < 8 THEN
-          s = 8
-          object(n).flags = 1 + (physics(2).x > physics(n).x)
+          's = 8
+          'object(n).flags = 1 + (physics(2).x > physics(n).x)
         END IF
 
         IF tileRead(physics(n).x, physics(n).y) < 30 THEN
@@ -779,15 +776,7 @@ SUB handleBehaviors
          IF physics(n).speedY < -20 THEN physics(n).speedY = -20
          IF physics(n).speedX > 10 THEN physics(n).speedX = 10
          IF physics(n).speedX < -10 THEN physics(n).speedX = -10
-
-         'physics(n).y = object(n).direction + angle.y(mainCounter1 AND 63) \ 2
-
-         'c = tileRead(physics(n).x + 2, physics(n).y - 8)
-         'IF c > 29 THEN physics(n).x = (physics(n).x AND &HFFFC): physics(n).speedX = -1
-         'c = tileRead(physics(n).x - 2, physics(n).y - 8)
-         'IF c > 29 THEN physics(n).x = (physics(n).x AND &HFFFC) + 2: physics(n).speedX = 1
-
-
+       
        'FIRE BREATH
        CASE 11
          x = (mainCounter1 + physics(n).y) AND 31
@@ -816,24 +805,21 @@ SUB handleBehaviors
           IF physics(n).speedY > 20 THEN physics(n).speedY = 20
         END IF
 
-       'SPAWNER
-       CASE 16
-        IF physics(2).y - physics(n).y > 40 THEN
-          object(n).counter = object(n).counter + 1
-          IF object(n).counter > 23 THEN
-           object(n).counter = 0
-           spawnObject physics(n).x, physics(n).y, object(n).jump, 0, 0
-          END IF
-         ELSE
-          object(n).life = 0
-        END IF
-
        'CHECKPOINT
        CASE 62
-          IF playerDeltaY < 15 THEN
-            player.wave = player.wave + 1
-            handleSpawn
-            object(n).life = 0
+          IF playerDeltaY < 10 AND player.wave <> object(n).flags THEN
+            spawnerEnabler(object(n).spawner) = spawnerEnabler(object(n).spawner) AND &HFFF
+            player.wave = object(n).flags
+            FOR nn = 4 TO 60
+             IF ABS(physics(nn).y - physics(2).y) > 40 THEN
+              IF object(nn).control > 0 AND object(nn).control < 63 THEN
+               spawnerEnabler(object(nn).spawner) = spawnerEnabler(object(nn).spawner) AND &HFFF
+              END IF
+              object(nn).control = 0
+              object(nn).life = 0
+             END IF
+            NEXT nn
+            handleSpawn player.wave
           END IF
 
         'EXIT
@@ -854,9 +840,9 @@ SUB handleBehaviors
       END IF 'Page check
         '-------------------------------------------------------------------
 
-      parts = animation(object(n).animFrame).jump
+      parts = animation(object(n).animFrame).jump AND object(n).animFrame > 0
       
-      flipIndex = ABS((object(n).flags AND flags.flip) <> 0)
+      flipIndex = object(n).flags AND 1 'abs((object(n).flags AND flags.flip) <> 0)
 
       flash = NOT object(n).flash AND 1
       object(n).flash = object(n).flash + (object(n).flash > 0)
@@ -913,9 +899,12 @@ SUB handleBehaviors
   END IF 'visibility check
 
    IF gfx.page THEN
-    'IF physics(n).y - physics(2).y > 40 THEN object(n).life = 0
     object(n).life = object(n).life + (object(n).life > 0)
     IF object(n).life = 0 THEN
+     IF object(n).control > 0 AND object(n).control < 63 THEN
+      spawnerEnabler(object(n).spawner) = 0
+      'spawnerEnabler(object(n).spawner) = spawnerEnabler(object(n).spawner) AND &HFFF
+     END IF
      IF object(n).control > 0 AND object(n).control < 11 THEN
           object(n).exist = 1
           object(n).flags = 0
@@ -971,8 +960,8 @@ SUB handleBehaviors
 
  mainCounter0 = (mainCounter0 + 1) AND 63
 
- 'hudPrint 7, STR$(entityCounter) + " ", 15, 15
- 'hudPrint 10, STR$(killY) + " ", 15, 15
+ hudPrint 7, STR$(entityCounter) + " ", 15, 15
+ hudPrint 10, STR$(player.wave) + " ", 15, 15
 
  
 END SUB
@@ -1041,13 +1030,18 @@ SUB handleCollision
 
 END SUB
 
-SUB handleSpawn
-
+SUB handleSpawn (wave)
+ 
  FOR n = 1 TO 16
-  IF level.wave(player.wave).spawner(n).object THEN
-    spawnObject level.wave(player.wave).spawner(n).x, level.wave(player.wave).spawner(n).y, level.wave(player.wave).spawner(n).object, level.wave(player.wave).spawner(n).flags, n
-    'level.wave(player.wave).spawner(n).flags = level.wave(player.wave).spawner(n).flags XOR &H1
-   END IF
+  nn = wave * 16 + n
+  o = level.wave(wave).spawner(n).object
+  IF spawnerEnabler(nn) > 0 THEN o = spawnerEnabler(nn)
+
+  IF o THEN
+    spawnObject level.wave(wave).spawner(n).x, level.wave(wave).spawner(n).y, o, level.wave(wave).spawner(n).flags, nn
+    spawnerEnabler(nn) = o OR &HF000
+    level.wave(wave).spawner(n).object = 0
+  END IF
  NEXT n
  
 END SUB
@@ -1118,7 +1112,9 @@ elfInit
 
 loadSounds "sound"
 
-initMainMenu
+initTestGame
+
+'initMainMenu
 
 END SUB
 
@@ -1138,11 +1134,29 @@ SUB initMainMenu
 
 END SUB
 
+SUB initTestGame
+
+ loadTiles "tileset0"
+
+ player.level = 1
+
+ randomOffset = 0
+
+ DO
+  main
+ LOOP
+
+END SUB
+
 SUB main
 
  hudTextLoad &HA0, 1
  
  loadLevel "level" + MID$(STR$(player.level), 2, 1)
+ 
+ FOR n = 0 TO 128
+  spawnerEnabler(n) = 0
+ NEXT n
 
  FOR n = 2 TO 60
   objectIndex(n) = n
@@ -1190,7 +1204,7 @@ SUB main
 
  killY = 999
 
- handleSpawn
+ handleSpawn 0
 
  screenResetPos physics(2).x - 20, physics(2).y - 46
 
@@ -1240,7 +1254,8 @@ SUB main
           playSounds
          END IF
          IF kbArray(21) THEN
-          initMainMenu
+          quit
+          EXIT SUB
          END IF
         LOOP WHILE kbArray(49) = 0
         queueSound 0, 76
@@ -1441,7 +1456,6 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
    'Eggy
    objectIndex(spawnIndex) = n
    object(n).flags = spawnerFlags
-   object(n).spawner = 0
    object(n).control = 1
    object(n).exist = 1
    object(n).life = -2
@@ -1615,7 +1629,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
    objectIndex(spawnIndex) = n
    object(n).control = 62
    object(n).exist = 1
-   object(n).spawner = spawner
+   object(n).flags = spawnerFlags
    object(n).life = -3
    object(n).animFrame = 0
    object(n).anim = 0
@@ -1654,6 +1668,16 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
    player.targetX = x
    player.targetY = y
    object(2).counter = 0
+
+  CASE 72
+   'MENU ITEM
+   objectIndex(spawnIndex) = n
+   object(n).control = 72
+   object(n).exist = 1
+   object(n).life = 999
+   object(n).animFrame = 0
+   object(n).flags = spawnerFlags
+   incSpawnIndex
 
  END SELECT
  
