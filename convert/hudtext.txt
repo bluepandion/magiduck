@@ -1,0 +1,33 @@
+&H0000, " MAGIDUCK ALPHA 0.148                   ", &HE, &HC
+&H00A0, " LOADING, PLEASE WAIT...                ", &HE, &HC
+&H0140, "         PRESS SPACE TO RESTART         ", &HC, &HC
+&H01E0, "          LEVEL 1 - THE LOBBY           ", &HE, &HC
+&H0280, "          LEVEL 2                       ", &HE, &HC
+&H0320, "          LEVEL 3                       ", &HE, &HC
+&H03C0, "          LEVEL 4                       ", &HE, &HC
+&H0460, "          LEVEL 5                       ", &HE, &HC
+&H0500, "          LEVEL 6                       ", &HE, &HC
+&H05A0, "          LEVEL 7                       ", &HE, &HC
+&H0640, "          LEVEL 8                       ", &HE, &HC
+&H06E0, "  ARROW KEYS TO MOVE . ENTER TO SELECT  ", &HE, &HC
+&H0780, "  ARE YOU SURE YOU WANT TO QUIT? Y / N  ", &HFC, &HFC
+&H0820, "                                        ", &HE, &HC
+&H08C0, "                                        ", &HE, &HC
+&H0960, "                                        ", &HE, &HC
+&H1000, "                                        ", &HE, &HC
+&H10A0, "                                        ", &HE, &HC
+&H1140, "                                        ", &HE, &HC
+&H11E0, "                                        ", &HE, &HC
+&H1280, "                                        ", &HE, &HC
+&H1320, "                                        ", &HE, &HC
+&H13C0, "                                        ", &HE, &HC
+&H1460, "                                        ", &HE, &HC
+&H1500, "                                        ", &HE, &HC
+&H15A0, "                                        ", &HE, &HC
+&H1640, "                                        ", &HE, &HC
+&H16E0, "                                        ", &HE, &HC
+&H1780, "                                        ", &HE, &HC
+&H1820, "                                        ", &HE, &HC
+&H18C0, "                                        ", &HE, &HC
+&H1960, "BYE!                                    ", &HE, &HC
+-1

@@ -1,0 +1,37 @@
+" EGGY ", 01
+" CROC ", 02
+"K-CROC", 03
+"DROOLY", 04
+"BABAT ", 05
+"FLAM R", 11
+"FLAM L", 12
+"HCRUSH", 13
+"VCRUSH", 14
+"SPKB B", 15
+"SPAWN ", 16
+"SPKB U", 17
+"SPKB+O", 18
+"SPKB-O", 19
+"WIND R", 21
+"WIND D", 22
+"WIND L", 23
+"WIND U", 24
+" GEM  ", 41
+"JEWEL ", 42
+"HEART ", 43
+" KEY  ", 44
+"CHEST ", 45
+"SUPER ", 46
+"SECR 0", 47
+"SECR 1", 48
+"H PLAT", 51
+"V PLAT", 52
+" INFO ", 61
+"CHECKP", 62
+" EXIT ", 63
+"      ", 64
+"M CURS", 71
+"M-ITEM", 72
+"M HISC", 73
+"M QUIT", 74
+"M LEVL", 75
