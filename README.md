@@ -1,4 +1,0 @@
-magiduck
-========
-
-MagiDuck (MS-DOS)
