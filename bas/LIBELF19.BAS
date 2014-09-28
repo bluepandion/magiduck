@@ -514,7 +514,7 @@ OPEN "sincos.def" FOR BINARY AS #1
 CLOSE #1
 
 OPEN "floats.def" FOR INPUT AS #1
-FOR ff = 0 TO 9
+FOR ff = 1 TO 10
  FOR n = 0 TO 9
   INPUT #1, v
   FOR f = 0 TO 3

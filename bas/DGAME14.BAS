@@ -677,20 +677,26 @@ SUB handleBehaviors
 
        'Croc
        CASE 2
-        s = 4
-        IF playerDeltaY < 8 THEN
-          's = 8
-          'object(n).flags = 1 + (physics(2).x > physics(n).x)
-        END IF
-
-        IF tileRead(physics(n).x, physics(n).y) < 30 THEN
-           physics(n).speedY = 20
-           physics(n).speedX = 0
+        c = tileRead(physics(n).x, physics(n).y)
+        IF c > 30 THEN
+          physics(n).y = physics(n).y AND &HFFF8
+          physics(n).speedY = 0
          ELSE
-           physics(n).y = physics(n).y AND &HFFF8
-           physics(n).speedY = 0
+          physics(n).speedX = 0
+          physics(n).speedY = 20
+        END IF
+        IF object(n).life > -50 THEN
+         physics(n).y = physics(n).y - 6
+         object(n).life = -50
+         object(n).counter = 32
+         physics(n).collider = 0
+         object(n).direction = physics(n).speedX
+         physics(n).speedX = 0
+        END IF
+   IF object(n).counter = 0 THEN
+        IF c > 30 THEN
            IF object(n).flags THEN
-             IF physics(n).speedX > -s THEN physics(n).speedX = physics(n).speedX - 2
+             physics(n).speedX = -4
              c = tileRead(physics(n).x - 2, physics(n).y - 2)
              c2 = tileRead(physics(n).x - 2, physics(n).y + 2)
               IF c > 29 OR c2 < 30 THEN
@@ -699,16 +705,25 @@ SUB handleBehaviors
                physics(n).x = physics(n).x AND &HFFFC + 2
               END IF
            ELSE
-             IF physics(n).speedX < s THEN physics(n).speedX = physics(n).speedX + 2
+             physics(n).speedX = 4
              c = tileRead(physics(n).x + 2, physics(n).y - 2)
              c2 = tileRead(physics(n).x + 2, physics(n).y + 2)
               IF c > 29 OR c2 < 30 THEN
                object(n).flags = 1
                physics(n).speedX = -4
-               physics(n).x = physics(n).x AND &HFFFC - 2
+               physics(n).x = physics(n).x AND &HFFFC + 2
               END IF
            END IF
         END IF
+   ELSE
+        object(n).counter = object(n).counter - 1
+        object(n).animFrame = 222
+        IF object(n).counter = 0 THEN
+         object(n).animFrame = 215
+         physics(n).collider = 1
+         physics(n).speedX = object(n).direction
+        END IF
+   END IF
 
        'Drooly
        CASE 4
@@ -1472,10 +1487,11 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
    objectIndex(spawnIndex) = n
    object(n).control = 2
    object(n).exist = 1
-   object(n).life = -2
+   object(n).life = -50
    physics(n).collider = 1
-   object(n).animFrame = 200
+   object(n).animFrame = 215
    object(n).counter = 0
+   object(n).visY = 35
    incSpawnIndex
 
   CASE 4
@@ -1674,7 +1690,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
    objectIndex(spawnIndex) = n
    object(n).control = 72
    object(n).exist = 1
-   object(n).life = 999
+   object(n).life = -999
    object(n).animFrame = 0
    object(n).flags = spawnerFlags
    incSpawnIndex

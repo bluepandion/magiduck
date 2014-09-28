@@ -198,6 +198,14 @@ TYPE angleType
  Y(0 TO 63) AS INTEGER
 END TYPE
 
+TYPE soundType
+ Queue(0 TO 63) AS INTEGER
+ readPos AS INTEGER
+ speakerOn AS INTEGER
+ speakerOff AS INTEGER
+ Track(0 TO 255) AS INTEGER
+END TYPE
+
 COMMON SHARED gfx AS gfxType
 
 DIM spriteList(0 TO 31, 0 TO 1) AS spriteListType         'Sprite list = 600 bytes
@@ -252,14 +260,6 @@ COMMON SHARED playerObj AS INTEGER
 COMMON SHARED skippedFrame AS INTEGER
 
 COMMON SHARED angle AS angleType
-
-TYPE soundType
- Queue(0 TO 63) AS INTEGER
- readPos AS INTEGER
- speakerOn AS INTEGER
- speakerOff AS INTEGER
- Track(0 TO 255) AS INTEGER
-END TYPE
 
 COMMON SHARED sounds AS soundType
 
