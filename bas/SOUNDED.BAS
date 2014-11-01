@@ -190,23 +190,23 @@ DO
 
  IF d$ = "+" THEN
   COLOR 15, 4
-  LOCATE 1, 50: INPUT "Save As Filename:", a$
+  LOCATE 1, 50: INPUT "Save Filename:", a$
   IF LEN(a$) THEN
    OPEN a$ + ".stk" FOR BINARY AS #1
     PUT #1, 1, sounds
    CLOSE #1
-   LOCATE 1, 50: PRINT "Saved   "; TIME$
+   LOCATE 1, 50: PRINT "Save "; TIME$
    ELSE
    COLOR 7, 0
-   LOCATE 1, 50: PRINT "Cancel           "
+   LOCATE 1, 50: PRINT "Cancel       "
   END IF
  END IF
 
  IF d$ = "*" THEN
   COLOR 7, 0
-  LOCATE 1, 50: INPUT "Load Filename:", a$
+   LOCATE 1, 50: INPUT "Load Filename:", a$
   IF LEN(a$) THEN
-   LOCATE 1, 50: PRINT "Loaded  "; TIME$
+   LOCATE 1, 50: PRINT "Load "; TIME$
    OPEN a$ + ".stk" FOR BINARY AS #1
     GET #1, 1, sounds
    CLOSE #1

@@ -1,3 +1,4 @@
+DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
@@ -62,7 +63,7 @@ DIM SHARED readOfs AS LONG                ' Read/Write variables
 DIM SHARED storeOfs AS LONG
 DIM SHARED pageOfs AS INTEGER
 
-DIM SHARED loadstr AS STRING * 1            'General purpose file read
+DIM SHARED loadStr AS STRING * 1            'General purpose file read
 DIM SHARED loadint AS INTEGER               ' variables
 
 DIM SHARED asmKBinit AS STRING
@@ -71,7 +72,7 @@ DIM SHARED asmKBremove AS STRING
 
 DIM SHARED asmPageFlip AS STRING
 
-DIM SHARED asmTile AS STRING                'Assembler routine storage
+DIM SHARED asmTile AS STRING                'Assembly routine storage
 DIM SHARED asmCopyTileArea AS STRING
 DIM SHARED asmSpriteList AS STRING
 DIM SHARED asmTilePan AS STRING
@@ -82,10 +83,6 @@ DIM SHARED KBoldSeg AS INTEGER               'KB state save.
 DIM SHARED KBoldOfs AS INTEGER
 DIM SHARED Keyflags AS INTEGER
 
-'----------------------------------------------------------------------------
-' Graphics storage and screen buffer related
-'----------------------------------------------------------------------------
-'Sprite graphics bank
 DIM SHARED spriteBank AS STRING * 6401
 
 DIM SHARED tilemapReadX AS INTEGER              '0-7 scroll offset
@@ -93,16 +90,6 @@ DIM SHARED tilemapReadY AS INTEGER              '0-3 scroll offset
 DIM SHARED tileMapReadOfs AS INTEGER            'Tilemap read offset
 
 DIM SHARED tileBuffer AS STRING * 11361         '7760 + 1600 + 2000
-
-TYPE charPair
- glyph1(32 TO 90) AS STRING * 1
- glyph2(32 TO 90) AS STRING * 1
-END TYPE
-DIM SHARED w40char AS charPair
-
-'---------------------------------------------------------------------------
-' Object related
-'---------------------------------------------------------------------------
 
 DIM SHARED tilePosXlookUp(-16 TO 95) AS INTEGER
 DIM SHARED tilePosYlookUp(-16 TO 655) AS INTEGER
@@ -292,6 +279,10 @@ loadAssembler
 PRINT "Sprites..."
 loadSprites "ducks2"
 
+w40char.seg = VARSEG(w40char.glyph1(32))
+w40char.ofs = VARPTR(w40char.glyph1(32))
+
+
 'DEF SEG = tileBufferSeg
 'FOR a& = tileBufferOfs TO 0& + tileBufferOfs + 7679
 ' POKE a&, &H19
@@ -320,6 +311,17 @@ FOR a& = 16000 TO 16382 STEP 2
  POKE a&, 222
 NEXT a&
 DEF SEG
+
+'DO
+'loadText 160, 0
+'loadText 640, &HA0
+'loadText 1280, &H140
+'LOOP WHILE INKEY$ = ""
+
+'w40char.text = "ABCDEFGHIJKLMN 0123456789|||"
+'aPrint &HFFFF, &H1F1F, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+'aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+'DO: LOOP WHILE INKEY$ = ""
 
 '-----------------------------------------------------------------------
 ' Preload data.
@@ -529,10 +531,10 @@ OPEN "sincos.def" FOR BINARY AS #1
 CLOSE #1
 
 OPEN "floats.def" FOR INPUT AS #1
-FOR ff = 1 TO 10
+FOR ff = 0 TO 9
  FOR n = 0 TO 9
   INPUT #1, v
-  FOR f = 0 TO 3
+   FOR f = 0 TO 3
    fakeFloat(f * 10 + ff, n) = f + v
    fakeFloat(f * -10 - ff, n) = (f + v) * -1
   NEXT f
@@ -542,8 +544,11 @@ CLOSE #1
 
 m# = .2
 FOR n = 1 TO 20                        '2  = 0.4
- FOR a = -20 TO 20                     '4  = 0.8
-  multiplyTable(n, a) = INT(m# * a)    '8  = 1.6
+ multiplyTable(n, 0) = 0
+ FOR a = 1 TO 20                       '4  = 0.8
+  v = INT(m# * a)
+  multiplyTable(n, a) = v              '8  = 1.6
+  multiplyTable(n, -a) = -v
  NEXT a                                '12 = 2.4
  m# = m# + .2                          '16 = 3.2
 NEXT n
@@ -679,8 +684,8 @@ SUB loadLevel (fileName AS STRING)
    OPEN fileName + ".lvl" FOR BINARY AS #1
     
     FOR n = 1 TO 1600
-     GET #1, n, loadstr
-     MID$(tileBuffer, 9760 + n, 1) = loadstr
+     GET #1, n, loadStr
+     MID$(tileBuffer, 9760 + n, 1) = loadStr
     NEXT n
 
     readOfs = 1601
@@ -775,6 +780,26 @@ SUB loadSprites (file$)
 
 END SUB
 
+SUB loadText (screenOfs, textOfs)
+ 
+ DEF SEG = &HB800
+
+ OPEN "ducktext.ctt" FOR BINARY AS #1
+  FOR n = 1 TO 160
+
+   textOfs = textOfs + 1
+   GET #1, textOfs, loadStr
+
+   POKE screenOfs, ASC(loadStr)
+   screenOfs = screenOfs + 1
+
+  NEXT n
+ CLOSE #1
+
+ DEF SEG
+   
+END SUB
+
 SUB loadTiles (file$)
 
  DEF SEG = tileBufferSeg
@@ -789,8 +814,8 @@ SUB loadTiles (file$)
   IF LOF(1) < 2000 THEN quit
 
   FOR a = 1 TO 2000
-   GET #1, a, loadstr
-   MID$(tileBuffer, 7760 + a, 1) = loadstr
+   GET #1, a, loadStr
+   MID$(tileBuffer, 7760 + a, 1) = loadStr
   NEXT a
  CLOSE #1
  
@@ -949,6 +974,19 @@ SUB quit
   PRINT HEX$(spawnerEnabler(n)); TAB(c);
   IF ((n - 1) AND 15) = 15 THEN PRINT : c = 1
  NEXT n
+
+COLOR 1
+FOR n = -9 TO 9
+   PRINT n;
+NEXT n
+PRINT
+COLOR 7
+FOR nn = 0 TO 9
+ FOR n = -9 TO 9
+   PRINT fakeFloat(n, nn);
+ NEXT n
+ PRINT
+NEXT nn
 END
 
 END SUB
@@ -987,8 +1025,11 @@ SUB screenResetPos (X%, Y%)
  X% = X% AND &HFFFC
  Y% = Y% AND &HFFF8
 
- IF Y% < 24 THEN Y% = 24
- IF Y% > 590 THEN Y% = 590
+ 'IF Y% < 24 THEN Y% = 24
+ 'IF Y% > 590 THEN Y% = 590
+ IF Y% < 0 THEN Y% = 0
+ IF Y% > 615 THEN Y% = 615
+
 
  FOR n = 0 TO 1
   gfx.screenX(n) = X%

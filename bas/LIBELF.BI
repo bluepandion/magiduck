@@ -9,6 +9,7 @@ DECLARE SUB aSpriteList (BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL
 DECLARE SUB aTileArea (BYVAL forceOfs%, BYVAL area%, BYVAL tileBufferSeg%, BYVAL tileBufferOfs%, BYVAL TileMapOfs%, BYVAL tileBankOfs%)
 DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%, BYVAL tileBufSeg%, BYVAL tileBufOfs%, BYVAL TileMapOfs%, BYVAL tileBankOfs%)
 DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
+DECLARE SUB aPrint (BYVAL wrapOfs%, BYVAL attributes%, BYVAL TextSeg%, BYVAL TextOfs%, BYVAL Column%, BYVAL Row%, BYVAL writeSeg%, BYVAL writeOfs%)
 
 '-------------------------------------------------------------------------
 ' Variables and types
@@ -160,6 +161,7 @@ TYPE playerType
  bouncing AS INTEGER
  speedX AS INTEGER
  speedY AS INTEGER
+ walkCounter AS INTEGER
 END TYPE
 
 TYPE spriteListType
@@ -237,7 +239,7 @@ COMMON SHARED colList() AS collisionType
 DIM objectIndex(0 TO 65) AS INTEGER
 COMMON SHARED objectIndex() AS INTEGER
 
-DIM spawnerEnabler(0 to 128) AS INTEGER
+DIM spawnerEnabler(0 TO 128) AS INTEGER
 COMMON SHARED spawnerEnabler() AS INTEGER
 
 COMMON SHARED spriteCount AS INTEGER
@@ -267,4 +269,13 @@ CONST defaultVisX = 25
 CONST defaultVisY = 30
 
 COMMON SHARED randomOffset AS INTEGER
+
+TYPE w40textType
+ glyph1(32 TO 90) AS STRING * 1
+ glyph2(32 TO 90) AS STRING * 1
+ text AS STRING * 45
+ seg AS INTEGER
+ ofs AS INTEGER
+END TYPE
+COMMON SHARED w40char AS w40textType
 

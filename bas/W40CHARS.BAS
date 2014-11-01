@@ -48,7 +48,12 @@ FOR a = 1 TO 40
  LOCATE 23, a: PRINT CHR$(221)
  LOCATE 24, a: PRINT CHR$(222)
 NEXT a
+
 COLOR 7, 0
+LOCATE 20, 1
+FOR n = 32 TO 255
+ PRINT CHR$(n);
+NEXT n
 
 updateScreen:
 LOCATE 11, 1: PRINT TIMER
@@ -93,9 +98,10 @@ DO
   GOTO updateScreen
  END IF
 
- IF d$ = "t" THEN
+ IF d$ = "t" OR d$ = "i" THEN
+  IF d$ = "i" THEN testString$ = STR$(ASC(w40Char.letter1(editc))) + STR$(ASC(w40Char.letter2(editc)))
   COLOR 7, 0
-  row = 18
+  row = 15
   col = 1
   FOR n = 1 TO LEN(testString$)
    c = ASC(MID$(testString$, n, 1))

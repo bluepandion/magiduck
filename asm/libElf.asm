@@ -1634,6 +1634,142 @@ retf 4
 
 aKBremove ENDP
 ;================================================================================	
+aPrint PROC
+
+;============================================================================
+;
+; Print routine 1.0
+;
+; 40x50 mode drawing. Characters consist of two half-height glyphs.
+;
+; Uses a 58+58 byte lookup table for glyph-pairs. 
+;
+; Can print one 40-character line of text.
+;
+;============================================================================
+
+; Parameter stack offsets
+; Order is inverted from qbasic CALL ABSOLUTE parameter order
+
+;00 bp
+;02 Qbasic return segment
+;04 Qbasic return offset
+
+;06 Write offset
+;08 Write segment
+;10 Row
+;12 Column
+;14 Text data offset
+;16 Text data segment
+;18 Color attributes
+;20 Buffer wrap
+
+;============================================================================
+
+	push bp
+	mov bp,sp
+
+;---------------------------------------------------------------------------
+	mov dx, [bp + 20]				;DX = Buffer wrap
+	
+	mov es, [bp + 08]				;ES = Write seg
+	mov di, [bp + 06]				;DI = Write ofs
+
+	mov ax, [bp + 10]				;AX = Row	Add row and column to write offset
+	xchg ah, al						;AX * 256
+	shr ax, 1						;AX = Row * 128
+	shr ax, 1						;AX = Row * 64
+	mov bx, ax						
+	shr ax, 1						;AX = Row * 32
+	shr ax, 1						;AX = Row * 16
+	add ax, bx						;AX = Row * 80
+	add ax, [bp + 12]				;AX += Column * 2
+	add ax, [bp + 12]
+	add di, ax						;Add AX to write offset
+	and di, dx						;DI Buffer wrap
+		
+	mov ds, [bp + 16]				;DS = Text seg
+	
+	mov bx, [bp + 14]				;BX = Glyph lookup ofs
+	
+;------------------------------------------------------------------------------	
+	push di							;Push DI, current write offset for next row
+	
+	mov si, [bp + 14]				;SI = Text ofs + 118 to read text string.
+	add si, 118						
+	
+	xor ax, ax						;AX = 0
+	
+	mov ch, [bp + 18] 				;CH = Color attribute 1
+	
+printLoop1:							;Print Glpyh row 1 ------------------------
+	lodsb							;AL = Character from text
+	
+	cmp al, 124						;EOL?
+	je printPrep2
+
+	push si							;Push Text string read offset
+	mov si, bx						;SI = Glyph lookup offset
+	
+	add si, ax						;Add character - 32 to offset
+	sub si, 32						
+	
+	lodsb							;AL = DS:SI		Get glyph from lookup
+
+	mov ah, ch						;AH = Color attribute
+	stosw							;ES:DI 	Print glyph and attribute, DI+2
+	and di, dx						;DI Buffer wrap
+	xor ax, ax						;AX = 0
+	
+	pop si							;Pop SI = Text string read offset
+
+jmp printLoop1						;Next character     -----------------------
+
+printPrep2:
+	pop di							;Restore DI
+	add di, 80						;DI Next row.
+	
+	mov si, [bp + 14]				;SI = Text ofs + 118 to read text string.
+	add si, 118						
+	
+	add bx, 59						;BX = Glyph 2 lookUp offset
+		
+	mov ch, [bp + 19] 				;CH = Color attribute 2
+	
+printLoop2:							;Print Glpyh row 1 ------------------------
+	lodsb							;AL = Character from text
+	
+	cmp al, 124						;EOL?
+	je exit
+
+	push si							;Push Text string read offset
+	mov si, bx						;SI = Glyph lookup offset
+	
+	add si, ax						;Add character - 32 to offset
+	sub si, 32						
+	
+	lodsb							;AL = DS:SI		Get glyph from lookup
+
+	mov ah, ch						;AH = Color attribute
+	stosw							;ES:DI 	Print glyph and attribute, DI+2
+	and di, dx						;DI Buffer wrap
+	xor ax, ax						;AX = 0
+	
+	pop si							;Pop SI = Text string read offset
+
+jmp printLoop2						;Next character     -----------------------
+
+exit:
+;------------------------------------------------------------------------------
+
+	pop bp
+	retf 16
+
+;================================================================================	
+aPrint ENDP
+;================================================================================	
+
+public aPrint
 
 public aKBremove
 

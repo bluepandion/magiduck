@@ -30,6 +30,21 @@ Creatures:
 		jobs way more seriously. They have a shield that
 		protects their front and a spear to stab with.
 
+	Ancestral Skull
+		
+		Your ancestors were totally awesome dinosaurs!
+		The only downside is, they really like to haunt
+		their descendants. Their immortal skulls float
+		around the castle halls, apparently having a 
+		great deal of fun making life difficult for the
+		living.
+	
+	Dragon Guardian
+	
+		
+		
+	Sharpie
+		
 
 Traps:
 	
@@ -44,4 +59,6 @@ Traps:
 	Crusher
 		
 	Fire Grotesques
+	
+	Cannon
 	
