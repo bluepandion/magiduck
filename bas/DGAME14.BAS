@@ -1,3 +1,4 @@
+DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB screenFakePos (y%)
 DECLARE SUB initTestGame ()
 DECLARE SUB initMainMenu ()
@@ -114,6 +115,7 @@ SUB handleBehaviors
  STATIC speedMod
  STATIC friction
  STATIC collisionFloor
+ STATIC scoreDelta AS LONG
 
  entityCounter = 0
 ' entityVisibles = 0
@@ -139,44 +141,147 @@ SUB handleBehaviors
               
   SELECT CASE object(2).control
 
-      'Level Clear Wait
-      CASE 261
-
-               IF physics(2).x < 40 THEN physics(2).x = physics(2).x + 1: object(2).flags = 0
-               IF physics(2).x > 40 THEN physics(2).x = physics(2).x - 1: object(2).flags = 1
-               'IF physics(2).y < 22 THEN physics(2).y = physics(2).y + 2
-               IF physics(2).y > 22 THEN physics(2).y = physics(2).y - 1
+      'Level Clear Score Count
+      CASE 262
 
                pageOfs = gfx.pageOfs(gfx.page) * 2
 
-               'w40char.text = "LEVEL CLEAR|"
-               'aPrint gfx.videoWrap, &HF0F, w40char.seg, w40char.ofs, 1, 4, &HB800, pageOfs
-            
-               IF kbArray(57) THEN
-                sounds.queue(sounds.readPos) = 0
-                playSounds
-                object(n).control = 259
+               SELECT CASE object(2).jump
+                CASE 0 TO 1
+                  
+                   myPrint 2, 22, "LEVEL SCORE", &H171E
+                   myPrint 2, 28, "TIME   BONUS          X 30", &H1D1D
+                   myPrint 2, 32, "LIFE   BONUS          X 2000", &H1D1D
+                   myPrint 2, 36, "SECRET BONUS          X 2500", &H1D1D
+
+                   object(2).jump = object(2).jump + 1
+
+                CASE 2 TO 3
+
+                   w40char.text = "         |"
+                   a$ = STR$(0& + player.score - player.scoreBase)
+                   MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
+
+                   aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 30, 22, &HB800, pageOfs
+
+                   object(2).jump = object(2).jump + 1
+
+                   player.scoreCounter = 0
+                   player.scoreCounterInc = 10
+                   player.scoreCounterTarget = player.time
+                   player.scoreCounterMode = 0
+                   player.scoreCounterMul = 300
+
+                CASE 4 TO 6
+
+                   w40char.text = "        |"
+                   a$ = STR$(0& + player.scoreCounter)
+                   MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
+                   aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 16, 28 + player.scoreCounterMode * 4, &HB800, pageOfs
+                   IF player.scoreCounter >= player.scoreCounterTarget THEN
+                     player.scoreCounter = player.scoreCounterTarget
+                     object(2).jump = object(2).jump + 1
+                    ELSE
+                     player.scoreCounter = 0& + player.scoreCounter + player.scoreCounterInc
+                     player.score = 0& + player.score + player.scoreCounterMul
+                   END IF
+
+                   IF dtAnims = 1 THEN soundEvent = 52
+
+                CASE 7 TO 16
+                   IF object(2).jump = 7 THEN
+                    soundEvent = 0
+                    w40char.text = "         |"
+                    a$ = STR$(0& + player.scoreCounter * player.scoreCounterMul / player.scoreCounterInc)
+                    MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
+                   END IF
+                   
+                   aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 30, 28 + player.scoreCounterMode * 4, &HB800, pageOfs
+
+                   object(2).jump = object(2).jump + 1
+
+                CASE 17
+                   player.scoreCounterMode = player.scoreCounterMode + 1
+                   SELECT CASE player.scoreCounterMode
+                    CASE 1
+                     player.scoreCounter = 0
+                     player.scoreCounterInc = 1
+                     player.scoreCounterTarget = player.hp
+                     player.scoreCounterMul = 1000
+                     object(2).jump = 4
+                    CASE 2
+                     object(2).jump = 99
+                     soundEvent = 92
+                   END SELECT
+
+                 CASE 99
+                  myPrint 12, 43, "#$ GAME SAVED #$", &H1D1D
+                  myPrint 8, 46, "PRESS SPACE TO CONTINUE", &H1717
+                  IF kbArray(57) THEN object(2).jump = 999
+
+                 CASE 999 TO 1000
+                  object(2).jump = object(2).jump + 1
+                  object(2).animFrame = 0
+                  tileCopyList(0, gfx.page).x = 0
+                  tileCopyList(0, gfx.page).y = 0
+                  tileCopyList(0, gfx.page).w = 40
+                  tileCopyList(0, gfx.page).h = 50
+                  tileCopyList(1, gfx.page).y = 255
+                  aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+
+                 CASE 1001
+                  sounds.queue(sounds.readPos) = 0
+                  playSounds
+                  object(n).control = 259
+               END SELECT
+               
+      'Level Clear Wait
+      CASE 261
+               
+               IF physics(2).x < 40 THEN physics(2).x = physics(2).x + 1: object(2).flags = 0
+               IF physics(2).x > 40 THEN physics(2).x = physics(2).x - 1: object(2).flags = 1
+               'IF physics(2).y < 22 THEN physics(2).y = physics(2).y + 2
+               IF physics(2).y > 22 THEN physics(2).y = physics(2).y - 2
+
+               IF physics(2).x = 40 AND physics(2).y <= 22 THEN
+                FOR delObj = 4 TO 60
+                 object(delObj).exist = 0
+                 object(delObj).control = 0
+                NEXT delObj
+                object(2).counter = 0
+                object(2).jump = 0
+                object(2).direction = 0
+                object(2).control = 262
+                player.hudLock = 0
+                hudUpdate 255
                END IF
 
                screenTargetX = physics(2).x - 19
                handleCamera
-               screenTargetY = physics(2).y - 46
+               screenTargetY = physics(2).y - 36
                
 
       'Level Clear
       CASE 260
           switchAnim n, 10
-          screenFakePos 64
-          DEF SEG = tileBufferSeg
-          FOR n = 0 TO 159
-           writeOfs = 0& + TileMapOfs + n
-           POKE writeOfs, 0
-          NEXT n
-          DEF SEG
-          object(2).control = 261
+
           screenTargetX = physics(2).x - 19
           handleCamera
-          screenTargetY = physics(2).y - 46
+          screenTargetY = physics(2).y - 36
+
+          IF gfx.screenY(0) = screenTargetY AND gfx.screenY(1) = screenTargetY THEN object(2).counter = object(2).counter + 1
+
+          IF object(2).counter > 2 THEN
+           screenFakePos 80
+           DEF SEG = tileBufferSeg
+           FOR n = 0 TO 199
+            writeOfs = 0& + TileMapOfs + n
+            POKE writeOfs, 0
+           NEXT n
+           DEF SEG
+           soundEvent = 220
+           object(2).control = 261
+          END IF
                
       'Menu cursor
       CASE 258
@@ -408,7 +513,7 @@ SUB handleBehaviors
                  hudTextLoad &H140, 0
                  player.hudLock = 999
 
-                 player.score = 0
+                 player.score = player.scoreBase
                  physics(2).x = 0
                  physics(2).y = 0
                  player.jumpRelease = -1
@@ -619,7 +724,7 @@ SUB handleBehaviors
                object(n).life = 8
                object(n).flash = 16
               ELSE
-               addScore object(n).anim
+               addScore object(n).animFrame
                physics(n).y = physics(n).y - 3
                physics(n).speedY = 0
                object(n).flash = 0
@@ -915,7 +1020,12 @@ SUB handleBehaviors
          END IF
 
          IF playerDeltaX < 16 AND playerDeltaY < 10 THEN
-          IF kbArray(72) THEN object(2).control = 260
+          IF kbArray(72) THEN
+           object(2).control = 260
+           object(2).counter = 0
+           object(n).control = 0
+           object(n).exist = 0
+          END IF
          END IF
 
         'TILE FX
@@ -1048,8 +1158,8 @@ SUB handleBehaviors
 
  mainCounter0 = (mainCounter0 + 1) AND 63
 
- w40char.text = STR$(entityCounter) + STR$(player.wave) + "|"
- aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
+' w40char.text = STR$(entityCounter) + STR$(player.wave) + "|"
+' aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
  
 END SUB
 
@@ -1179,7 +1289,7 @@ SUB hudUpdate (flags AS INTEGER)
   a$ = MID$(a$, 2, c)
 
   w40char.text = a$ + "|"
-  aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 18 - c, 0, hudBufferSeg, hudBufferOfs
+  aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 18 - c, 0, hudBufferSeg, hudBufferOfs
 
   'hudPrint 18 - C, a$, &HE, &HC
  END IF
@@ -1281,6 +1391,7 @@ SUB main
  player.hasKey = 0
  player.jumpRelease = -1
  player.wave = 0
+ player.scoreBase = player.score
 
  object(2).exist = 1
  object(2).control = 255
@@ -1366,9 +1477,10 @@ SUB main
         player.hudLock = 0
         hudUpdate 255
        END IF
+
         updatetext = updatetext + 1
         IF updatetext = 24 THEN
-         player.time = player.time + (player.time > 0)
+         IF object(2).control = 255 THEN player.time = player.time + (player.time > 0)
          deltaTime                     'Not needed!
          updatetext = 0
          fps = 192 / dt

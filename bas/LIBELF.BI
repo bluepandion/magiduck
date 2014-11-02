@@ -142,6 +142,8 @@ END TYPE
 
 TYPE playerType
  score AS LONG
+ scoreBase AS LONG
+ secrets AS INTEGER
  lives AS INTEGER
  hp AS INTEGER
  time AS INTEGER
@@ -162,6 +164,12 @@ TYPE playerType
  speedX AS INTEGER
  speedY AS INTEGER
  walkCounter AS INTEGER
+ scoreCounter AS LONG
+ scoreCounterTarget AS LONG
+ scoreCounterInc AS INTEGER
+ scoreCounterMode AS INTEGER
+ scoreCounterSound AS INTEGER
+ scoreCounterMul AS INTEGER
 END TYPE
 
 TYPE spriteListType

@@ -17,7 +17,7 @@ DECLARE SUB loadLevel (fileName AS STRING)
 
 DECLARE SUB handleKeyboard ()
 
-DECLARE SUB myPrint (x%, y%, text$, colour1%, colour2%, overRideSeg%, overRideOfs%)
+DECLARE SUB myPrint (x%, y%, text$, attributes%)
 
 DECLARE SUB deltaTime ()
 
@@ -796,39 +796,10 @@ SUB loadTiles (file$)
 
 END SUB
 
-SUB myPrint (x, y, text$, colour1, colour2, overRideSeg, overRideOfs)
- IF x < 0 THEN EXIT SUB
+SUB myPrint (x, y, text$, attributes)
 
- slen = LEN(text$)
- sOfs = 1
- IF x + slen > 39 THEN slen = slen + (40 - (x + slen))
- 
- IF slen < 1 THEN EXIT SUB
- IF sOfs > slen THEN EXIT SUB
-
- IF overRideSeg = 0 THEN
-  DEF SEG = &HB800
-  writeOfs = gfx.pageOfs(gfx.page) * 2 + x * 2 + y * 80
- ELSE
-  DEF SEG = overRideSeg
-  writeOfs = overRideOfs + x * 2 + y * 80
- END IF
-
- writeOfs2 = writeOfs + 80
-
- FOR n = sOfs TO slen
-  writeOfs = writeOfs AND gfx.videoWrap
-  writeOfs2 = writeOfs2 AND gfx.videoWrap
-  l = ASC(MID$(text$, n, 1))
-  POKE writeOfs, ASC(w40char.glyph1(l))
-  POKE writeOfs + 1, colour1
-  POKE writeOfs2, ASC(w40char.glyph2(l))
-  POKE writeOfs2 + 1, colour2
-  writeOfs = writeOfs + 2
-  writeOfs2 = writeOfs2 + 2
- NEXT n
-
- DEF SEG
+ w40char.text = text$ + "|"
+ aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
 
 END SUB
 
@@ -1004,6 +975,14 @@ diffY = y - gfx.screenY(gfx.page)
   'gfx.windowX(n) = gfx.windowX(gfx.page)
   'gfx.windowY(n) = 0
  NEXT n
+
+ IF gfx.windowY(gfx.page) < 24 THEN
+
+ END IF
+
+ IF gfx.windowY(gfx.page) > 23 AND gfx.windowY(gfx.page) < 48 THEN
+   aDrawTiles 0, gfx.tileOfs
+ END IF
 
  gfx.windowOfs(gfx.page XOR 1) = gfx.windowOfs(gfx.page)
  gfx.windowY(gfx.page XOR 1) = gfx.windowY(gfx.page)
