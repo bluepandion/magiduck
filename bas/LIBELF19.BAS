@@ -2,7 +2,7 @@ DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
-DECLARE SUB hudPrint (X%, text$, colour1%, colour2%)
+DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB setErrorMsg (msg$)
 DECLARE SUB aDrawTiles (area%, forceOfs%)
 
@@ -17,7 +17,7 @@ DECLARE SUB loadLevel (fileName AS STRING)
 
 DECLARE SUB handleKeyboard ()
 
-DECLARE SUB myPrint (X%, Y%, text$, colour1%, colour2%, overRideSeg%, overRideOfs%)
+DECLARE SUB myPrint (x%, y%, text$, colour1%, colour2%, overRideSeg%, overRideOfs%)
 
 DECLARE SUB deltaTime ()
 
@@ -31,7 +31,7 @@ DECLARE SUB loadSounds (file$)
 DECLARE SUB loadAssembler ()
 DECLARE SUB quit ()
 
-DECLARE FUNCTION tileRead% (X%, Y%)
+DECLARE FUNCTION tileRead% (x%, y%)
 
 DECLARE SUB destroyObject (index%)
 
@@ -120,33 +120,33 @@ SUB aDrawTiles (area, forceOfs)
 
 END SUB
 
-SUB aUpdateTile (X, Y)
+SUB aUpdateTile (x, y)
  
- p2% = tilePosXlookUp(X) + tilePosYlookUp(Y)
+ p2% = tilePosXlookUp(x) + tilePosYlookUp(y)
 
  IF p2% < 0 THEN p2% = 0
  IF p2% > 1599 THEN p2% = 1599
 
- p0% = (tilePosYlookUp(Y) - gfx.tileOfs) / 20
+ p0% = (tilePosYlookUp(y) - gfx.tileOfs) / 20
 
  IF p0% > 11 THEN p0% = 11
 
- aTileDraw p0%, tilePosXlookUp(X), p2%, tileBufferSeg, tileBufferOfs, TileMapOfs, tileBankOfs
+ aTileDraw p0%, tilePosXlookUp(x), p2%, tileBufferSeg, tileBufferOfs, TileMapOfs, tileBankOfs
 
  EXIT SUB
 
- tileCopyList(1, 0).Y = 255
+ tileCopyList(1, 0).y = 255
  tileCopyList(0, 0).w = 4
  tileCopyList(0, 0).h = 8
 
  FOR p = 0 TO 1
-  tileCopyList(0, 0).X = X - gfx.screenoldx(p)
-  tileCopyList(0, 0).Y = Y - gfx.screenoldy(p)
+  tileCopyList(0, 0).x = x - gfx.screenOldX(p)
+  tileCopyList(0, 0).y = y - gfx.screenOldY(p)
 
-  IF tileCopyList(0, 0).X < 0 THEN tileCopyList(0, 0).X = 0
-  IF tileCopyList(0, 0).Y < 0 THEN tileCopyList(0, 0).Y = 0
-  IF tileCopyList(0, 0).X > 36 THEN tileCopyList(0, 0).X = 36
-  IF tileCopyList(0, 0).Y > 42 THEN tileCopyList(0, 0).Y = 42
+  IF tileCopyList(0, 0).x < 0 THEN tileCopyList(0, 0).x = 0
+  IF tileCopyList(0, 0).y < 0 THEN tileCopyList(0, 0).y = 0
+  IF tileCopyList(0, 0).x > 36 THEN tileCopyList(0, 0).x = 36
+  IF tileCopyList(0, 0).y > 42 THEN tileCopyList(0, 0).y = 42
   
   aRectList gfx.windowOfs(p), gfx.videoWrap, &HB800, gfx.pageOfs(p), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, 0).offset), VARPTR(tileCopyList(0, 0).offset)
  NEXT p
@@ -178,8 +178,8 @@ SUB destroyObject (index)
  object(n).anim = 0
  object(n).animFrame = 0
  object(n).flags = 0
- physics(n).X = 0
- physics(n).Y = 0
+ physics(n).x = 0
+ physics(n).y = 0
  physics(n).speedX = 0
  physics(n).speedY = 0
 
@@ -252,12 +252,12 @@ gfx.page = 0
 FOR n = 0 TO 1
  gfx.screenX(n) = 0
  gfx.screenY(n) = 0
- gfx.screenoldx(n) = 0
- gfx.screenoldy(n) = 0
+ gfx.screenOldX(n) = 0
+ gfx.screenOldY(n) = 0
  gfx.windowX(n) = 0
  gfx.windowY(n) = 24
  gfx.windowOfs(n) = 1920
- spriteList(2, n).Y = 255
+ spriteList(2, n).y = 255
 NEXT n
 
 '------------------------------------------------------
@@ -294,11 +294,11 @@ InitScreen
 gfx.page = 0
 gfx.pageOfs(0) = 0
 FOR n = 0 TO 3
- tileCopyList(0, gfx.page).X = 0
- tileCopyList(0, gfx.page).Y = 0
+ tileCopyList(0, gfx.page).x = 0
+ tileCopyList(0, gfx.page).y = 0
  tileCopyList(0, gfx.page).w = 40
  tileCopyList(0, gfx.page).h = 50
- tileCopyList(1, gfx.page).Y = 255
+ tileCopyList(1, gfx.page).y = 255
  
  aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
  
@@ -389,28 +389,28 @@ END SUB
 
 SUB handleScroll
  
- diffX = gfx.screenX(gfx.page) - gfx.screenoldx(gfx.page)
- diffY = gfx.screenY(gfx.page) - gfx.screenoldy(gfx.page)
+ diffX = gfx.screenX(gfx.page) - gfx.screenOldX(gfx.page)
+ diffY = gfx.screenY(gfx.page) - gfx.screenOldY(gfx.page)
 
  IF diffX = 0 AND diffY = 0 THEN EXIT SUB
  
  n = 0
 
  IF diffX THEN
-  gfx.screenoldx(gfx.page) = gfx.screenX(gfx.page)
+  gfx.screenOldX(gfx.page) = gfx.screenX(gfx.page)
   gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + diffX
   gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) + diffX
     IF diffX > 0 THEN
-      tileCopyList(n, gfx.page).X = 40 - diffX
-      tileCopyList(n, gfx.page).Y = 0
+      tileCopyList(n, gfx.page).x = 40 - diffX
+      tileCopyList(n, gfx.page).y = 0
       tileCopyList(n, gfx.page).w = diffX
       tileCopyList(n, gfx.page).h = 50
       n = n + 1
     END IF
 
    IF diffX < 0 THEN
-      tileCopyList(n, gfx.page).X = 0
-      tileCopyList(n, gfx.page).Y = 0
+      tileCopyList(n, gfx.page).x = 0
+      tileCopyList(n, gfx.page).y = 0
       tileCopyList(n, gfx.page).w = ABS(diffX)
       tileCopyList(n, gfx.page).h = 50
       n = n + 1
@@ -418,19 +418,19 @@ SUB handleScroll
  END IF
 
  IF diffY THEN
-  gfx.screenoldy(gfx.page) = gfx.screenY(gfx.page)
+  gfx.screenOldY(gfx.page) = gfx.screenY(gfx.page)
   gfx.windowY(gfx.page) = gfx.windowY(gfx.page) + diffY
   gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + diffY * 80
   gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) + diffY * 40
    IF diffY > 0 THEN
-      tileCopyList(n, gfx.page).X = 0
-      tileCopyList(n, gfx.page).Y = 50 - diffY - 1
+      tileCopyList(n, gfx.page).x = 0
+      tileCopyList(n, gfx.page).y = 50 - diffY - 1
       tileCopyList(n, gfx.page).w = 40
       tileCopyList(n, gfx.page).h = diffY + 1
       n = n + 1
      ELSE
-      tileCopyList(n, gfx.page).X = 0
-      tileCopyList(n, gfx.page).Y = 0
+      tileCopyList(n, gfx.page).x = 0
+      tileCopyList(n, gfx.page).y = 0
       tileCopyList(n, gfx.page).w = 40
       tileCopyList(n, gfx.page).h = ABS(diffY) + 2
       n = n + 1
@@ -465,38 +465,11 @@ SUB handleScroll
    aDrawTiles gfx.tileArea + 3, gfx.tileOfs + 180
  END IF
 
- tileCopyList(n, gfx.page).Y = 255
+ tileCopyList(n, gfx.page).y = 255
  
  'aCopyTileAreas gfx.page, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 
  aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
-
-END SUB
-
-SUB hudPrint (X, text$, colour1, colour2)
-
- DEF SEG = hudBufferSeg
-
- writeOfs = 0& + hudBufferOfs + X * 2
- writeOfs2 = 80& + hudBufferOfs + X * 2
-
- FOR n = 1 TO LEN(text$)
-  l = ASC(MID$(text$, n, 1))
-
-  POKE writeOfs, ASC(w40char.glyph1(l))
-  POKE writeOfs2, ASC(w40char.glyph2(l))
-
-  writeOfs = writeOfs + 1
-  writeOfs2 = writeOfs2 + 1
-
-  POKE writeOfs, colour1
-  POKE writeOfs2, colour2
-
-  writeOfs = writeOfs + 1
-  writeOfs2 = writeOfs2 + 1
- NEXT n
-
- DEF SEG
 
 END SUB
 
@@ -567,19 +540,19 @@ NEXT n
 CLOSE #1
 
 c = 0
-X = 0
+x = 0
 FOR n = -16 TO 95
- tilePosXlookUp(n) = X
+ tilePosXlookUp(n) = x
  IF n > -1 AND n < 79 THEN c = c + 1
- IF c = 4 THEN c = 0: X = X + 1
+ IF c = 4 THEN c = 0: x = x + 1
 NEXT n
 
 c = 0
-Y = 0
+y = 0
 FOR n = -16 TO 655
- tilePosYlookUp(n) = Y
+ tilePosYlookUp(n) = y
  IF n > -1 AND n < 639 THEN c = c + 1
- IF c = 8 THEN c = 0: Y = Y + 20
+ IF c = 8 THEN c = 0: y = y + 20
 NEXT n
 
 END SUB
@@ -728,13 +701,13 @@ SUB loadSprites (file$)
     IF name$ <> "#anims" THEN
      INPUT #1, index
 
-     INPUT #1, X
-     INPUT #1, Y
+     INPUT #1, x
+     INPUT #1, y
      
-     IF index > 199 THEN index = index - 140: Y = Y + 40
+     IF index > 199 THEN index = index - 140: y = y + 40
 
      plong& = spriteBankOfs
-     plong& = plong& + X + (Y * 80)
+     plong& = plong& + x + (y * 80)
      a$ = MKL$(plong&)
      spriteOffset(index) = CVI(a$)
 
@@ -765,12 +738,12 @@ SUB loadSprites (file$)
        'PRINT a$
        'DO: LOOP WHILE INKEY$ = ""
        INPUT #1, animation(n).index(0)
-       INPUT #1, animation(n).X(0)
-       INPUT #1, animation(n).Y
-       animation(n).X(0) = animation(n).X(0) / 2
+       INPUT #1, animation(n).x(0)
+       INPUT #1, animation(n).y
+       animation(n).x(0) = animation(n).x(0) / 2
        INPUT #1, animation(n).jump
        animation(n).index(1) = animation(n).index(0) + 60
-       animation(n).X(1) = animation(n).X(0) * -1 - spriteWidth(animation(n).index(0))
+       animation(n).x(1) = animation(n).x(0) * -1 - spriteWidth(animation(n).index(0))
        n = n + 1
     LOOP WHILE animation(n - 1).jump > -1
    END IF
@@ -823,22 +796,22 @@ SUB loadTiles (file$)
 
 END SUB
 
-SUB myPrint (X, Y, text$, colour1, colour2, overRideSeg, overRideOfs)
- IF X < 0 THEN EXIT SUB
+SUB myPrint (x, y, text$, colour1, colour2, overRideSeg, overRideOfs)
+ IF x < 0 THEN EXIT SUB
 
  slen = LEN(text$)
  sOfs = 1
- IF X + slen > 39 THEN slen = slen + (40 - (X + slen))
+ IF x + slen > 39 THEN slen = slen + (40 - (x + slen))
  
  IF slen < 1 THEN EXIT SUB
  IF sOfs > slen THEN EXIT SUB
 
  IF overRideSeg = 0 THEN
   DEF SEG = &HB800
-  writeOfs = gfx.pageOfs(gfx.page) * 2 + X * 2 + Y * 80
+  writeOfs = gfx.pageOfs(gfx.page) * 2 + x * 2 + y * 80
  ELSE
   DEF SEG = overRideSeg
-  writeOfs = overRideOfs + X * 2 + Y * 80
+  writeOfs = overRideOfs + x * 2 + y * 80
  END IF
 
  writeOfs2 = writeOfs + 80
@@ -949,11 +922,11 @@ SUB quit
 
  gfx.page = 0
  gfx.pageOfs(0) = 0
- tileCopyList(0, gfx.page).X = 0
- tileCopyList(0, gfx.page).Y = 0
+ tileCopyList(0, gfx.page).x = 0
+ tileCopyList(0, gfx.page).y = 0
  tileCopyList(0, gfx.page).w = 40
  tileCopyList(0, gfx.page).h = 50
- tileCopyList(1, gfx.page).Y = 255
+ tileCopyList(1, gfx.page).y = 255
 
  aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &H7, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 
@@ -1005,8 +978,44 @@ SUB saveLevel (fileName AS STRING)
 
 END SUB
 
+SUB screenFakePos (y)
+
+ ' - Works on the assumption that the buffer window Y > 24, how to fix?
+ '
+ ' - windowY and windowOfs must match current situation.
+ '
+ ' - y(change) && 0x8 must match y(current) && 0x8.
+
+
+yTileRelative = gfx.screenY(gfx.page) AND 7
+
+y = (y AND &HFFF8) + yTileRelative
+
+diffY = y - gfx.screenY(gfx.page)
+
+ FOR n = 2 TO 60
+  physics(n).y = physics(n).y + diffY
+ NEXT n
+
+ FOR n = 0 TO 1
+  gfx.screenY(n) = y
+  gfx.screenOldY(n) = y
+  'gfx.windowOfs(n) = gfx.windowX(gfx.page)
+  'gfx.windowX(n) = gfx.windowX(gfx.page)
+  'gfx.windowY(n) = 0
+ NEXT n
+
+ gfx.windowOfs(gfx.page XOR 1) = gfx.windowOfs(gfx.page)
+ gfx.windowY(gfx.page XOR 1) = gfx.windowY(gfx.page)
+
+ 'gfx.windowX(gfx.page XOR 1) = gfx.windowX(gfx.page)
+ 
+ gfx.tileOfs = tilePosYlookUp(y)
+ 
+END SUB
+
 DEFSNG A-Z
-SUB screenResetPos (X%, Y%)
+SUB screenResetPos (x%, y%)
 
  ' To-Do
  '
@@ -1015,34 +1024,34 @@ SUB screenResetPos (X%, Y%)
  ' -Draw new data to set offset
  ' -Page flip to set offset
 
- IF X% < 0 THEN X% = 0
- IF X% > 40 THEN X% = 40
+ IF x% < 0 THEN x% = 0
+ IF x% > 40 THEN x% = 40
 
  screenTargetYlock = -1
- screenTargetX = X%
- screenTargetY = Y%
+ screenTargetX = x%
+ screenTargetY = y%
  
- X% = X% AND &HFFFC
- Y% = Y% AND &HFFF8
+ x% = x% AND &HFFFC
+ y% = y% AND &HFFF8
 
  'IF Y% < 24 THEN Y% = 24
  'IF Y% > 590 THEN Y% = 590
- IF Y% < 0 THEN Y% = 0
- IF Y% > 615 THEN Y% = 615
+ IF y% < 0 THEN y% = 0
+ IF y% > 615 THEN y% = 615
 
 
  FOR n = 0 TO 1
-  gfx.screenX(n) = X%
-  gfx.screenY(n) = Y%
-  gfx.screenoldx(n) = X%
-  gfx.screenoldy(n) = Y%
-  gfx.windowX(n) = X%
+  gfx.screenX(n) = x%
+  gfx.screenY(n) = y%
+  gfx.screenOldX(n) = x%
+  gfx.screenOldY(n) = y%
+  gfx.windowX(n) = x%
   gfx.windowY(n) = 24
-  gfx.windowOfs(n) = 1920 + X%
-  spriteList(0, n).Y = 255
+  gfx.windowOfs(n) = 1920 + x%
+  spriteList(0, n).y = 255
  NEXT n
 
- gfx.tileOfs = tilePosYlookUp(Y%) - 60
+ gfx.tileOfs = tilePosYlookUp(y%) - 60
  gfx.tileArea = 0
 
  aDrawTiles 0, gfx.tileOfs
@@ -1050,9 +1059,9 @@ SUB screenResetPos (X%, Y%)
  aDrawTiles 2, gfx.tileOfs + 120
  aDrawTiles 3, gfx.tileOfs + 180
 
- spriteList(1, gfx.page).Y = 255
- spriteList(0, gfx.page).X = 0
- spriteList(0, gfx.page).Y = 0
+ spriteList(1, gfx.page).y = 255
+ spriteList(0, gfx.page).x = 0
+ spriteList(0, gfx.page).y = 0
  spriteList(0, gfx.page).w = 40
  spriteList(0, gfx.page).h = 50
 
@@ -1062,9 +1071,9 @@ SUB screenResetPos (X%, Y%)
  aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
  gfx.page = gfx.page XOR 1
  
- spriteList(1, gfx.page).Y = 255
- spriteList(0, gfx.page).X = 0
- spriteList(0, gfx.page).Y = 0
+ spriteList(1, gfx.page).y = 255
+ spriteList(0, gfx.page).x = 0
+ spriteList(0, gfx.page).y = 0
  spriteList(0, gfx.page).w = 40
  spriteList(0, gfx.page).h = 50
  'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
@@ -1082,11 +1091,11 @@ SUB switchAnim (objectIndex, anim)
  
 END SUB
 
-FUNCTION tileRead (X, Y)
+FUNCTION tileRead (x, y)
  
  DEF SEG = tileBufferSeg
 
- readOfs = 0& + TileMapOfs + tilePosXlookUp(X) + tilePosYlookUp(Y)
+ readOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
  
  tileRead = PEEK(readOfs)
  
@@ -1095,11 +1104,11 @@ FUNCTION tileRead (X, Y)
 END FUNCTION
 
 DEFSNG A-Z
-SUB tileWrite (X AS INTEGER, Y AS INTEGER, index AS INTEGER)
+SUB tileWrite (x AS INTEGER, y AS INTEGER, index AS INTEGER)
 
     DEF SEG = tileBufferSeg
 
-    writeOfs = 0& + TileMapOfs + tilePosXlookUp(X) + tilePosYlookUp(Y)
+    writeOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
 
     POKE writeOfs, index
 
