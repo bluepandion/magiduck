@@ -1643,8 +1643,9 @@ aPrint PROC
 ; 40x50 mode drawing. Characters consist of two half-height glyphs.
 ;
 ; Uses a 58+58 byte lookup table for glyph-pairs. 
+; Each half-height row can be assigned it's own attribute byte.
 ;
-; Can print one 40-character line of text.
+; Can print one line of text up to 40 characters in length.
 ;
 ;============================================================================
 

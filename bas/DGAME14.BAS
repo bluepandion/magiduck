@@ -1350,9 +1350,9 @@ END SUB
 
 SUB initTestGame
 
- loadTiles "tileset0"
+ loadTiles "tileset1"
 
- player.level = 2
+ player.level = 3
 
  randomOffset = 0
 

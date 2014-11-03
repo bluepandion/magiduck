@@ -98,6 +98,8 @@ DIM SHARED soundFreqTable(1 TO 96, 2) AS INTEGER
 
 DIM SHARED errorMessage$
 
+DIM SHARED camSpeed(-16 TO 16) AS INTEGER
+
 SUB aDrawTiles (area, forceOfs)
  'EXIT SUB
  
@@ -362,23 +364,24 @@ FOR n = 0 TO 1
  diffY = screenTargetY - gfx.screenY(n)
  
  IF diffX THEN
-  speedX = 1
-  IF ABS(diffX) > 1 THEN speedX = 2
-  IF ABS(diffX) > 17 THEN speedX = 3
-  IF ABS(diffX) > 23 THEN speedX = 4
-  IF diffX < 0 THEN speedX = speedX * -1
-  gfx.screenX(n) = gfx.screenX(n) + speedX
+  'speedX = 1
+  'IF ABS(diffX) > 1 THEN speedX = 1
+  'IF ABS(diffX) > 17 THEN speedX = 2
+  'IF ABS(diffX) > 23 THEN speedX = 4
+  'IF diffX < 0 THEN speedX = speedX * -1
+  gfx.screenX(n) = gfx.screenX(n) + (((diffX < -23) + (diffX < -17) + (diffX < 0) + (diffX > 0) + (diffX > 0) + (diffX > 17) + (diffX > 23) XOR (diffX > 0)))
   IF gfx.screenX(n) < 0 THEN gfx.screenX(n) = 0
   IF gfx.screenX(n) > 40 THEN gfx.screenX(n) = 40
  END IF
 
  IF diffY THEN
-  speedY = 1
-  IF ABS(diffY) > 4 THEN speedY = 2
-  IF ABS(diffY) > 11 THEN speedY = 3
-  IF ABS(diffY) > 19 THEN speedY = 4
-  IF diffY < 0 THEN speedY = speedY * -1
-  gfx.screenY(n) = gfx.screenY(n) + speedY
+  'speedY = 1
+  'IF ABS(diffY) > 4 THEN speedY = 1
+  'IF ABS(diffY) > 11 THEN speedY = 2
+  'IF ABS(diffY) > 19 THEN speedY = 4
+  'IF diffY < 0 THEN speedY = speedY * -1
+  'gfx.screenY(n) = gfx.screenY(n) + camSpeed(diffY AND 15)
+  gfx.screenY(n) = gfx.screenY(n) + (((diffY < -19) + (diffY < -11) + (diffY < 0) + (diffY > 0) + (diffY > 0) + (diffY > 11) + (diffY > 19) XOR (diffY > 0)))
   IF gfx.screenY(n) < 4 THEN gfx.screenY(n) = 4
   IF gfx.screenY(n) > 590 THEN gfx.screenY(n) = 590
  END IF
@@ -553,6 +556,16 @@ FOR n = -16 TO 655
  tilePosYlookUp(n) = y
  IF n > -1 AND n < 639 THEN c = c + 1
  IF c = 8 THEN c = 0: y = y + 20
+NEXT n
+
+FOR n = -16 TO 16
+ c = 1
+ IF ABS(n) > 3 THEN c = 2
+ IF ABS(n) > 7 THEN c = 3
+ IF ABS(n) > 11 THEN c = 4
+ IF n = 0 THEN c = 0
+ IF n < 0 THEN c = c * -1
+ camSpeed(n) = c
 NEXT n
 
 END SUB
