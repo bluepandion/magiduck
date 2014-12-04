@@ -1769,6 +1769,113 @@ exit:
 ;================================================================================	
 aPrint ENDP
 ;================================================================================	
+aInitVideo PROC
+
+;============================================================================
+;
+;	Checks for video adapters VGA, EGA, CGA or MONO/OTHER
+;	
+;	If MONO/OTHER is found, 0 is returned at ES:DI (and the game won't run).
+;
+;	VGA/EGA/CGA will initialize 40x50 text mode with 8x8 characters.
+;
+;============================================================================
+
+; Parameter stack offsets
+; Order is inverted from qbasic CALL ABSOLUTE parameter order
+
+;00 bp
+;02 Qbasic return segment
+;04 Qbasic return offset
+
+;06 Video adapter data offset	/	64 bytes of data to accommodate
+;08 Video adapter data segment	/	VGA state check and adapter test result.
+
+;============================================================================
+
+	push bp
+	mov bp,sp
+
+;---------------------------------------------------------------------------
+	mov es, [bp + 08]				;ES = Write seg (video adapter data)
+	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
+	
+;---------------------------------------------------------------------------
+test_VGA:
+	xor ax, ax						;Interrupt call 10h
+	mov ah, 01bh					;Get VGA functionality and state.
+	xor bx, bx						;dumps 64 bytes at ES:[DI]
+	
+	int 10h
+		
+	mov ds, [bp + 08]				;ES = Write seg (video adapter data)
+	mov si, [bp + 06]				;DI = Write ofs (video adapter data)
+	xor bx, bx
+	mov cx, 16
+VGAstatedatacheck:
+	lodsw							;AX = DS:[SI], SI+2
+	or bx, ax						;BX: accumulate any bits from the data dump.
+loop VGAstatedatacheck				;If nothing's there, this isn't a VGA.
+	
+	cmp bx, 0
+	jz test_EGA
+	jmp detected_VGA
+
+test_EGA:
+	xor ax, ax
+	xor bx, bx						;Interrupt call 10h:
+	mov ah, 12h						;Get EGA information.
+	mov bl, 10h						;Returns BL > 4 if not EGA.
+									
+	int 10h							
+									
+	cmp bl, 4						;BL =< 4 means we're EGA
+	ja test_CGA						;compatible.
+	jmp detected_EGA
+
+test_CGA:
+	
+	int 11h							;Interrupt call: Equipment check.
+	
+	and ax, 30h						;Check bits 4 & 5
+	
+	cmp ax, 30h						;If bits are on, this is a mono adapter.
+	jz detected_MONO
+	jmp detected_CGA
+
+;---------------------------------------------------------------------------
+	
+detected_MONO:
+	mov dx, 0
+	jmp exit
+	
+detected_VGA:
+	mov dx, 3
+	jmp exit
+
+detected_EGA:
+	mov dx, 2
+	jmp exit
+
+detected_CGA:
+	mov dx, 1
+	jmp exit
+
+;------------------------------------------------------------------------------
+exit:
+	mov es, [bp + 08]				;ES = Write seg (video adapter data)
+	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
+	
+	mov ax, dx						;Store detected video adapter
+	stosw							;data at ES:[DI]
+	
+	pop bp
+	retf 4
+
+;================================================================================	
+aInitVideo ENDP
+
+public aInitVideo
 
 public aPrint
 

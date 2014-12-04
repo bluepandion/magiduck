@@ -2,7 +2,7 @@
 
 infile$ = "..\convert\ducks2.tga"
 
-outfile$ = "ducks2"
+outFile$ = "ducks2"
 
 alphacolor = 11
 
@@ -16,6 +16,8 @@ DIM SHARED spriteimport AS STRING
 DIM SHARED conversion AS STRING * 6400
 DIM SHARED getbyte AS STRING * 1
 
+DIM SHARED fileLength AS INTEGER
+
 CLS
 SCREEN 0
 
@@ -23,6 +25,7 @@ SCREEN 0
 
 COLOR 15
 
+fileLength = 0
 x = 0
 y = 150
 a = 67 + 80 * 9
@@ -46,6 +49,8 @@ FOR f = a TO LOF(1) - 26
 
  vofs = vofs - 2
  IF vofs < 0 THEN vofs = 3998
+
+ fileLength = fileLength + 1
 
  lineget$ = lineget$ + CHR$(c * 16)
  x = x + 1
@@ -97,11 +102,15 @@ NEXT y
 
 '---------------------------------------------------------------------------
 
-IF LEN(DIR$(outfile$ + ".csg")) THEN KILL outfile$ + ".csg"
+IF LEN(DIR$(outFile$ + ".csg")) THEN KILL outFile$ + ".csg"
 
-OPEN outfile$ + ".csg" FOR BINARY AS #1
- PUT #1, 1, conversion
-CLOSE #1
+'OPEN outfile$ + ".csg" FOR BINARY AS #1
+' PUT #1, 1, conversion
+'CLOSE #1
+
+DEF SEG = VARSEG(conversion)
+BSAVE outFile$ + ".csg", VARPTR(conversion), fileLength
+DEF SEG
 
 PRINT "Done. Press ESC to exit, Any other to preview."
 DO

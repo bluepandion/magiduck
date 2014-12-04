@@ -5,6 +5,7 @@
 "BABAT ", 05
 "SKULL ", 06
 "CANNON", 07
+"SPIKEY", 08
 "FLAM R", 11
 "FLAM L", 12
 "HCRUSH", 13
@@ -37,3 +38,4 @@
 "M HISC", 73
 "M QUIT", 74
 "M LEVL", 75
+

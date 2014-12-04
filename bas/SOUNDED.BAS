@@ -13,7 +13,8 @@ sounds.speakerOn = INP(&H61) OR 3
 sounds.speakerOff = sounds.speakerOn XOR 3
 
 CLS
-
+WIDTH 80, 25
+VIEW PRINT 1 TO 25
 
 DIM viewx(0 TO 255) AS INTEGER
 DIM viewy(0 TO 255) AS INTEGER
@@ -40,8 +41,6 @@ noteTable(96) = " END "
 
 sounds.track(255) = 96
 
-WIDTH 80, 25
-
 selection = 0
 octave = 0
 playMode = 0
@@ -49,14 +48,14 @@ playReturn = 0
 
 reFresh:
 COLOR 7, 0
-X = 4
+X = 1
 Y = 2
 FOR n = 0 TO 255
  LOCATE Y, X: PRINT noteTable(sounds.track(n))
  viewx(n) = X
  viewy(n) = Y
  Y = Y + 1
- IF Y = 24 THEN Y = 2: X = X + 6
+ IF Y = 22 THEN Y = 2: X = X + 6
 NEXT n
 
 COLOR 9, 0
@@ -183,8 +182,8 @@ DO
   LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
   IF d$ = CHR$(0) + "H" AND selection > 0 THEN selection = selection - 1
   IF d$ = CHR$(0) + "P" AND selection < 254 THEN selection = selection + 1
-  IF d$ = CHR$(0) + "K" AND selection > 21 THEN selection = selection - 22
-  IF d$ = CHR$(0) + "M" AND selection < 233 THEN selection = selection + 22
+  IF d$ = CHR$(0) + "K" AND selection > 21 THEN selection = selection - 20
+  IF d$ = CHR$(0) + "M" AND selection < 233 THEN selection = selection + 20
  END IF
 
 

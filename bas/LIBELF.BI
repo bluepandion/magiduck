@@ -10,6 +10,7 @@ DECLARE SUB aTileArea (BYVAL forceOfs%, BYVAL area%, BYVAL tileBufferSeg%, BYVAL
 DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%, BYVAL tileBufSeg%, BYVAL tileBufOfs%, BYVAL TileMapOfs%, BYVAL tileBankOfs%)
 DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
 DECLARE SUB aPrint (BYVAL wrapOfs%, BYVAL attributes%, BYVAL TextSeg%, BYVAL TextOfs%, BYVAL Column%, BYVAL Row%, BYVAL writeSeg%, BYVAL writeOfs%)
+DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
 
 '-------------------------------------------------------------------------
 ' Variables and types
@@ -52,12 +53,22 @@ COMMON SHARED spawnIndex AS INTEGER
 DIM spriteOffset(128)   AS INTEGER      'Sprite bank offsets per sprite
 DIM spriteWidth(128)  AS INTEGER        'and some basic data.
 DIM spriteHeight(128)  AS INTEGER
+
 COMMON SHARED spriteOffset() AS INTEGER
 COMMON SHARED spriteWidth() AS INTEGER
 COMMON SHARED spriteHeight() AS INTEGER
 
+'TYPE spriteDataType
+' offset AS INTEGER
+' width AS STRING * 1
+' height AS STRING * 1
+'END TYPE
+'DIM sprite(0 TO 127) AS INTERGER
+'COMMON SHARED sprite() AS INTEGER
+
 COMMON SHARED spriteBankSeg AS INTEGER
 COMMON SHARED spriteBankOfs AS INTEGER
+COMMON SHARED spriteBankAuxOfs AS INTEGER
 
 COMMON SHARED tileBufferSeg AS INTEGER
 COMMON SHARED tileBufferOfs AS INTEGER

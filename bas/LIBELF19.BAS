@@ -1,21 +1,16 @@
+DECLARE FUNCTION getSpawnSlot% ()
+DECLARE SUB initTimer ()
 DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
 DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
-DECLARE SUB setErrorMsg (msg$)
 DECLARE SUB aDrawTiles (area%, forceOfs%)
 
 DECLARE SUB queueSound (offset%, position%)
 DECLARE SUB playSounds ()
 
-DECLARE FUNCTION collision% (x0%, y0%, w0%, h0%, x1%, y1%, w1%, h1%)
-
-DECLARE SUB debugWrite (message$)
-
 DECLARE SUB loadLevel (fileName AS STRING)
-
-DECLARE SUB handleKeyboard ()
 
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 
@@ -24,8 +19,7 @@ DECLARE SUB deltaTime ()
 DECLARE SUB elfInit ()
 DECLARE SUB initLookUps ()
 DECLARE SUB InitScreen ()
-DECLARE SUB initTimer ()
-DECLARE SUB loadSprites (file$)
+DECLARE SUB loadSprites (file$, offset%)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
 DECLARE SUB loadAssembler ()
@@ -34,8 +28,6 @@ DECLARE SUB quit ()
 DECLARE FUNCTION tileRead% (x%, y%)
 
 DECLARE SUB destroyObject (index%)
-
-DECLARE FUNCTION getSpawnSlot% ()
 
 DEFINT A-Z
 
@@ -98,15 +90,15 @@ DIM SHARED soundFreqTable(1 TO 96, 2) AS INTEGER
 
 DIM SHARED errorMessage$
 
-DIM SHARED camSpeed(-16 TO 16) AS INTEGER
+DIM SHARED videoInitData AS STRING * 64
 
 SUB aDrawTiles (area, forceOfs)
  'EXIT SUB
  
  p0% = forceOfs  'gfx.tileOfs
 
- IF p0% < 0 THEN p0% = 0
- IF p0% > 1540 THEN p0% = 1540
+ 'IF p0% < 0 THEN p0% = 0
+ 'IF p0% > 1540 THEN p0% = 1540
 
  'p1% = area AND 3
  'p2% = tileBufferSeg
@@ -155,13 +147,6 @@ SUB aUpdateTile (x, y)
  
 END SUB
 
-FUNCTION collision (x0%, y0%, x1%, y1%, x2%, y2%, x3%, y3%)
-
-  a = (x0% > x3%) OR (x1% < x2%) OR (y0% > y3%) OR (y1% < y2%)
-  collision = NOT a
-
-END FUNCTION
-
 SUB deltaTime
  dt = TIMER - dtCompare
  dtCompare = TIMER
@@ -204,6 +189,14 @@ LOCATE 1, 1: PRINT "Magiduck Startup"
 COLOR 7, 0
 PRINT "Init."
 
+aInitVideo VARSEG(videoInitData), VARPTR(videoInitData)
+
+FOR n = 1 TO LEN(videoInitData)
+ PRINT ASC(MID$(videoInitData, n, 1));
+NEXT n
+
+DO: LOOP WHILE INKEY$ = ""
+
 '-----------------------------------------------------------------------
 ' Setup and initialize
 '-----------------------------------------------------------------------
@@ -217,7 +210,11 @@ hudBufferSeg = VARSEG(hudBuffer)
 hudBufferOfs = VARPTR(hudBuffer)
 
 spriteBankSeg = VARSEG(spriteBank)
-spriteBankOfs = VARPTR(spriteBank)
+spriteBankOfs = VARPTR(spriteBank)             'Sprite Bank main
+plong& = spriteBankOfs
+plong& = plong& + 3840
+a$ = MKL$(plong&)
+spriteBankAuxOfs = CVI(a$)                     'Sprite Bank aux portion
 
 tileBufferSeg = VARSEG(tileBuffer)             'Tilemap render buffer
 tileBufferOfs = VARPTR(tileBuffer)             '7680 bytes (80x96)
@@ -279,7 +276,7 @@ initLookUps
 PRINT "Binaries..."
 loadAssembler
 PRINT "Sprites..."
-loadSprites "ducks2"
+loadSprites "ducks2", spriteBankOfs
 
 w40char.seg = VARSEG(w40char.glyph1(32))
 w40char.ofs = VARPTR(w40char.glyph1(32))
@@ -348,7 +345,7 @@ FUNCTION getSpawnSlot
  FOR n = 4 TO 60
   IF object(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
  NEXT n
- 
+
 END FUNCTION
 
 SUB handleCamera
@@ -381,7 +378,7 @@ FOR n = 0 TO 1
   'IF ABS(diffY) > 19 THEN speedY = 4
   'IF diffY < 0 THEN speedY = speedY * -1
   'gfx.screenY(n) = gfx.screenY(n) + camSpeed(diffY AND 15)
-  gfx.screenY(n) = gfx.screenY(n) + (((diffY < -19) + (diffY < -11) + (diffY < 0) + (diffY > 0) + (diffY > 0) + (diffY > 11) + (diffY > 19) XOR (diffY > 0)))
+  gfx.screenY(n) = gfx.screenY(n) + (((diffY < -19) + (diffY < -12) + (diffY < -8) + (diffY < 0) + (diffY > 0) + (diffY > 0) + (diffY > 8) + (diffY > 12) + (diffY > 19) XOR (diffY > 0)))
   IF gfx.screenY(n) < 4 THEN gfx.screenY(n) = 4
   IF gfx.screenY(n) > 590 THEN gfx.screenY(n) = 590
  END IF
@@ -558,16 +555,6 @@ FOR n = -16 TO 655
  IF c = 8 THEN c = 0: y = y + 20
 NEXT n
 
-FOR n = -16 TO 16
- c = 1
- IF ABS(n) > 3 THEN c = 2
- IF ABS(n) > 7 THEN c = 3
- IF ABS(n) > 11 THEN c = 4
- IF n = 0 THEN c = 0
- IF n < 0 THEN c = c * -1
- camSpeed(n) = c
-NEXT n
-
 END SUB
 
 SUB InitScreen
@@ -688,13 +675,19 @@ SUB loadSounds (file$)
  CLOSE #1
 END SUB
 
-SUB loadSprites (file$)
+SUB loadSprites (file$, offset)
 
 'Sprite bank load
 
- OPEN file$ + ".csg" FOR BINARY AS #1
-  GET #1, 1, spriteBank
- CLOSE #1
+' OPEN file$ + ".csg" FOR BINARY AS #1
+'  GET #1, 1, spriteBank
+' CLOSE #1
+
+ DEF SEG = spriteBankSeg
+
+ BLOAD file$ + ".csg", offset
+
+ DEF SEG
 
  OPEN file$ + ".def" FOR INPUT AS #1
   INPUT #1, a$
@@ -792,19 +785,6 @@ SUB loadTiles (file$)
  
  BLOAD file$ + ".ctg", tileBankOfs
 
- DEF SEG
-
- EXIT SUB
-
- OPEN file$ + ".ctg" FOR BINARY AS #1
-  IF LOF(1) < 2000 THEN quit
-
-  FOR a = 1 TO 2000
-   GET #1, a, loadStr
-   MID$(tileBuffer, 7760 + a, 1) = loadStr
-  NEXT a
- CLOSE #1
- 
  DEF SEG
 
 END SUB
@@ -932,18 +912,6 @@ SUB quit
   IF ((n - 1) AND 15) = 15 THEN PRINT : c = 1
  NEXT n
 
-COLOR 1
-FOR n = -9 TO 9
-   PRINT n;
-NEXT n
-PRINT
-COLOR 7
-FOR nn = 0 TO 9
- FOR n = -9 TO 9
-   PRINT fakeFloat(n, nn);
- NEXT n
- PRINT
-NEXT nn
 END
 
 END SUB
