@@ -92,6 +92,117 @@ DIM SHARED errorMessage$
 
 DIM SHARED videoInitData AS STRING * 64
 
+'----------------------------------------------------------------------
+
+initVideoCGA:
+ 
+ DATA &H3D8, 1              'Disable video
+
+ DATA &H3D4, &H0            'Horizontal total
+ DATA &H3D5, &H38
+
+ DATA &H3D4, &H1            'Horizontal displayed
+ DATA &H3D5, &H28
+
+ DATA &H3D4, &H2            'Horizontal sync pos
+ DATA &H3D5, &H2D
+
+ DATA &H3D4, &H3            'Horizontal sync width
+ DATA &H3D5, &HA
+
+ DATA &H3D4, &H4            'Vertical total
+ DATA &H3D5, &H3F           '(nearest 2^ to row count = 63)
+
+ DATA &H3D4, &H5            'Vertical total adjust
+ DATA &H3D5, 6              '
+
+ DATA &H3D4, &H6            'Vertical displayed
+ DATA &H3D5, 50             '
+
+ DATA &H3D4, &H7            'Vertical sync position
+ DATA &H3D5, 56             'Row count + 6
+
+ DATA &H3D4, &H8            'Interlace mode
+ DATA &H3D5, 2
+
+ DATA &H3D4, &H9            'Maximum scan line address, or glyph height.
+ DATA &H3D5, 3
+
+ DATA &H3D8, &H8            '&H8 = 40 column, &H9 = 80 column
+
+ DATA &HFFFF                'END OF SEQUENCE
+'----------------------------------------------------------------------
+
+initVideoVGA:
+
+                        'Clocking mode register
+                        'Bit 5=1 : 'Screen off
+ DATA &H3c4, &H1
+ DATA &H3c5, &H10
+                           'CRT control registers
+                           'Horizontal total
+                           'total number of characters - 5
+ DATA &H3d4, &H0
+ DATA &H3d5, 58
+                           'Horizontal display-enable end
+                           'total number of visible characters - 1
+ DATA &H3d4, &H1
+ DATA &H3d5, 38
+                           'Start horizontal blank
+                              '45
+ DATA &H3d4, &H2
+ DATA &H3d5, 45
+                            'End horizontal blank
+                              '55
+ DATA &H3d4, &H3
+ DATA &H3D5, 1
+                            'Start horizontal retrace pulse
+ DATA &H3d4, &H4
+ DATA &H3d5, &H31
+                            'End horizontal retrace
+ DATA &H3d4, &H5
+ DATA &H3d5, &H15
+                            'Vertical total
+ DATA &H3d4, &H6
+ DATA &H3d5, &H3f
+                            'Overflow bits
+ DATA &H3d4, &H7
+ DATA &H3d5, &H0
+                            'Preset row scan
+ DATA &H3d4, &H8
+ DATA &H3d5, &H0
+                            'Maximum scan line
+                            'Bit 7=1 : 200 to 400 scanline conversion
+                            'Bits 0-3 : Glyph height
+ DATA &H3d4, &H9
+ DATA &H3d5, &H3
+                            'Vertical retrace start
+ DATA &H3d4, &H10
+ DATA &H3d5, &HE1
+                            'Vertical retrace end
+ DATA &H3d4, &H11
+ DATA &H3d5, &H24
+                            'Vertical display-enable end
+ DATA &H3d4, &H12
+ DATA &H3d5, 199
+                            'Offset
+ DATA &H3d4, &H13
+ DATA &H3d5, &H14
+                            'Start vertical blank
+ DATA &H3d4, &H15
+ DATA &H3d5, &HE0
+                            'End vertical blank
+ DATA &H3d4, &H16
+ DATA &H3d5, &HF0
+                         'Clocking mode register
+                         'Bit 5=0 : 'Screen On, Bit 3=1 : Clocks / 2
+                         'Bit 0=1 : 8 pixel wide characters
+ DATA &H3c4, &H1
+ DATA &H3c5, &H09
+                         
+                            'END OF SEQUENCE
+ DATA &HFFFF
+
 SUB aDrawTiles (area, forceOfs)
  'EXIT SUB
  
@@ -183,19 +294,17 @@ SUB destroyObject (index)
 END SUB
 
 SUB elfInit
-CLS
-COLOR 11, 1
-LOCATE 1, 1: PRINT "Magiduck Startup"
-COLOR 7, 0
-PRINT "Init."
 
-aInitVideo VARSEG(videoInitData), VARPTR(videoInitData)
+ aInitVideo VARSEG(videoInitData), VARPTR(videoInitData)
+ 
+ gfx.adapter = ASC(MID$(videoInitData, 1, 1))
 
-FOR n = 1 TO LEN(videoInitData)
- PRINT ASC(MID$(videoInitData, n, 1));
-NEXT n
-
-DO: LOOP WHILE INKEY$ = ""
+ IF gfx.adapter > 0 THEN
+   PRINT MID$("CEV", gfx.adapter, 1); "GA detected."
+  ELSE
+   errorMessage$ = "This game requires a CGA, EGA or VGA compatible color display adapter."
+   quit
+ END IF
 
 '-----------------------------------------------------------------------
 ' Setup and initialize
@@ -239,14 +348,9 @@ a$ = MKL$(plong&)                              'for some safety
 tileBufferOfs = CVI(a$)
 
 '------------------------------------------------------
-gfx.videoWrap = 16383
-gfx.pageWrap = 8191
 
 gfx.windowOfs(0) = 0
 gfx.windowOfs(1) = 0
-gfx.pageOfs(0) = 1000
-gfx.pageOfs(1) = 5000
-gfx.page = 0
 
 FOR n = 0 TO 1
  gfx.screenX(n) = 0
@@ -290,9 +394,12 @@ w40char.ofs = VARPTR(w40char.glyph1(32))
 
 InitScreen
 
+clearCount = 3
+IF gfx.adapter >= 1 THEN clearCount = 7
+
 gfx.page = 0
 gfx.pageOfs(0) = 0
-FOR n = 0 TO 3
+FOR n = 0 TO clearCount
  tileCopyList(0, gfx.page).x = 0
  tileCopyList(0, gfx.page).y = 0
  tileCopyList(0, gfx.page).w = 40
@@ -304,23 +411,20 @@ FOR n = 0 TO 3
  gfx.pageOfs(0) = gfx.pageOfs(0) + 2000
 NEXT n
 
+v1 = 16000
+v2 = 16382
+IF gfx.adapter > 1 THEN v1 = 32000: v2 = 32766
+
 DEF SEG = &HB800
-FOR a& = 16000 TO 16382 STEP 2
+FOR a& = v1 TO v2 STEP 2
  POKE a& + 1, 0
  POKE a&, 222
 NEXT a&
 DEF SEG
 
-'DO
-'loadText 160, 0
-'loadText 640, &HA0
-'loadText 1280, &H140
-'LOOP WHILE INKEY$ = ""
-
-'w40char.text = "ABCDEFGHIJKLMN 0123456789|||"
-'aPrint &HFFFF, &H1F1F, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
-'aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-'DO: LOOP WHILE INKEY$ = ""
+gfx.pageOfs(0) = 0
+gfx.pageOfs(1) = 5000
+gfx.page = 0
 
 '-----------------------------------------------------------------------
 ' Preload data.
@@ -335,9 +439,6 @@ DEF SEG
 
  aKBinit KBoldSeg, KBoldOfs, p2%, p3%
 
- OPEN "debug.txt" FOR OUTPUT AS #2
-  PRINT #2, "Debug start"
- CLOSE #2
 END SUB
 
 FUNCTION getSpawnSlot
@@ -539,42 +640,75 @@ FOR n = 1 TO 12
 NEXT n
 CLOSE #1
 
-c = 0
+C = 0
 x = 0
 FOR n = -16 TO 95
  tilePosXlookUp(n) = x
- IF n > -1 AND n < 79 THEN c = c + 1
- IF c = 4 THEN c = 0: x = x + 1
+ IF n > -1 AND n < 79 THEN C = C + 1
+ IF C = 4 THEN C = 0: x = x + 1
 NEXT n
 
-c = 0
+C = 0
 y = 0
 FOR n = -16 TO 655
  tilePosYlookUp(n) = y
- IF n > -1 AND n < 639 THEN c = c + 1
- IF c = 8 THEN c = 0: y = y + 20
+ IF n > -1 AND n < 639 THEN C = C + 1
+ IF C = 8 THEN C = 0: y = y + 20
 NEXT n
 
 END SUB
 
 SUB InitScreen
 
- gfx.adapter = 1
- gfx.glyphHeight = 3
- gfx.rows = 49
 
- 'Disable video
- OUT &H3D8, 1
- 
- 'Disable blink
- IF gfx.adapter <> 1 THEN
-   b = INP(&H3DA)
-   'b = INP(&H3C1)
-   OUT &H3C0, &H30
-   b = INP(&H3C1)
-   b = b AND &HF7
-   OUT &H3C0, b
- END IF
+SELECT CASE gfx.adapter
+
+ CASE 3  'VGA
+
+  gfx.videoWrap = 32767
+  gfx.pageWrap = 16383
+
+
+  OUT &H3D4, &H9            'Maximum scan line
+  OUT &H3D5, &H83           'Bit 7 true = 200 to 400 scanline conversion
+                            'Bits 3-0   = Glyph height
+
+ CASE 2  'EGA
+
+  gfx.videoWrap = 32767
+  gfx.pageWrap = 16383
+
+  OUT &H3D4, &H6            'Vertical total
+  OUT &H3D5, &H4
+
+  OUT &H3D4, &H7            'Overflow
+  OUT &H3D5, &H11
+
+  OUT &H3D4, &H8            'Preset row SC
+  OUT &H3D5, &H0
+
+  OUT &H3D4, &H9            'Maximum scan line
+  OUT &H3D5, &H3            'Bits 3-0   = Glyph height
+
+  OUT &H3D4, &H10           'Vert retrace start
+  OUT &H3D5, &HE1
+
+  OUT &H3D4, &H11           'Vert retrace end
+  OUT &H3D5, &H24
+
+  OUT &H3D4, &H12           'Vert display end
+  OUT &H3D5, &HC7
+
+  OUT &H3D4, &H15           'Start vBlank
+  OUT &H3D5, &HE0
+
+  OUT &H3D4, &H16           'End vBlank
+  OUT &H3D5, &HF0
+
+ CASE 1  'CGA
+
+ gfx.videoWrap = 16383
+ gfx.pageWrap = 8191
 
  OUT &H3D4, &H0            'Horizontal total
  OUT &H3D5, &H38
@@ -607,12 +741,13 @@ SUB InitScreen
  OUT &H3D5, 3
 
 
-'Enable video, Bit 0 = 0, for low resolution text mode.
-'              Bit 3 = 1, to enable video.
-'              Bit 5 = 1, to enable blink.
+ 'Enable video,             Bit 0 = 0, for low resolution text mode.
+ '                          Bit 3 = 1, to enable video.
+ '                          Bit 5 = 1, to enable blink.
 
  OUT &H3D8, &H8   '&H8 = 40 column, &H9 = 80 column
 
+END SELECT
 
 END SUB
 
@@ -903,13 +1038,13 @@ SUB quit
  PRINT "fps:"; fps
  PRINT
 
- c = 1
+ C = 1
 
  FOR n = 1 TO 128
-  c = c + 4
+  C = C + 4
   COLOR (n AND 1) + 7
-  PRINT HEX$(spawnerEnabler(n)); TAB(c);
-  IF ((n - 1) AND 15) = 15 THEN PRINT : c = 1
+  PRINT HEX$(spawnerEnabler(n)); TAB(C);
+  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 
 END

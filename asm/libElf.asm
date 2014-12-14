@@ -62,21 +62,6 @@ aPageFlip PROC
 	loop copyHud
 
 	;---------------------------------------------------------------------------
-	; Wait for vertical overscan and retrace.
-	;---------------------------------------------------------------------------
-				mov dx, 03DAh
-
-	wait1:
-				in  al, dx
-				and al, 8
-	jnz wait1
-
-	wait2:
-				in  al, dx
-				and al, 8
-	jz wait2
-
-	;---------------------------------------------------------------------------
 	; Change page offset
 	;---------------------------------------------------------------------------
 		mov dx, 03d4h 
@@ -95,6 +80,23 @@ aPageFlip PROC
 		xchg dx, bx
 		mov al, [bp + 07]
 		out dx, al
+
+	;---------------------------------------------------------------------------
+	; Wait for vertical overscan and retrace.
+	;---------------------------------------------------------------------------
+				mov dx, 03DAh
+				mov ah, 8
+
+	wait1:								;If currently in retrace, wait
+				in  al, dx				;until that's finished.
+				and al, ah
+	jnz wait1
+			
+	wait2:								;Wait until retrace starts.
+				in  al, dx
+				and al, ah
+	jz wait2
+
 
 	;---------------------------------------------------------------------------
 	; Clear HUD from previous page
@@ -1802,14 +1804,14 @@ aInitVideo PROC
 	
 ;---------------------------------------------------------------------------
 test_VGA:
-	xor ax, ax						;Interrupt call 10h
+	xor ax, ax						;Interrupt call 10h AH=1Bh AL=0 BX=0
 	mov ah, 01bh					;Get VGA functionality and state.
 	xor bx, bx						;dumps 64 bytes at ES:[DI]
 	
 	int 10h
 		
-	mov ds, [bp + 08]				;ES = Write seg (video adapter data)
-	mov si, [bp + 06]				;DI = Write ofs (video adapter data)
+	mov ds, [bp + 08]				;DS = seg (video adapter data)
+	mov si, [bp + 06]				;SI = ofs (video adapter data)
 	xor bx, bx
 	mov cx, 16
 VGAstatedatacheck:
@@ -1846,19 +1848,43 @@ test_CGA:
 ;---------------------------------------------------------------------------
 	
 detected_MONO:
-	mov dx, 0
+	mov dx, 0						;Video adapter data for game
 	jmp exit
 	
 detected_VGA:
-	mov dx, 3
+	xor ax, ax
+	mov al, 01h						;Set video mode 01h
+	int 10h							;40x25 colour text mode
+	
+	mov ax, 1112h					;Load and activate 8x8 character
+	xor bx, bx						;set 0
+	int 10h
+	
+	mov ax, 1003h					;INT Slect FG Blink / 16 bg colors (BL = 0)
+	mov bx, 0000h					;Clear whole BX to avoid problems on some adapters.
+	int 10h
+	
+	mov dx, 3						;Video adapter data for game
 	jmp exit
 
 detected_EGA:
-	mov dx, 2
+	xor ax, ax
+	mov al, 01h						;Set video mode 01h
+	int 10h							;40x25 colour text mode
+	
+	mov ax, 1112h					;Load and activate 8x8 character
+	xor bx, bx						;set 0
+	int 10h
+	
+	mov ax, 1003h					;INT Slect FG Blink / 16 bg colors (BL = 0)
+	mov bx, 0000h					;Clear whole BX to avoid problems on some adapters.
+	int 10h
+	
+	mov dx, 2						;Video adapter data for game
 	jmp exit
 
 detected_CGA:
-	mov dx, 1
+	mov dx, 1						;Video adapter data for game
 	jmp exit
 
 ;------------------------------------------------------------------------------

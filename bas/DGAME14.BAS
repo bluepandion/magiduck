@@ -1209,8 +1209,8 @@ SUB handleBehaviors
 
  mainCounter0 = (mainCounter0 + 1) AND 63
 
-' w40char.text = STR$(entityCounter) + STR$(player.wave) + "|"
-' aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
+ 'w40char.text = STR$(gfx.pageOfs(0)) + STR$(gfx.pageOfs(1)) + "|"
+ 'aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
  
 END SUB
 
@@ -1403,7 +1403,7 @@ SUB initTestGame
 
  loadTiles "tileset0"
 
- player.level = 1
+ player.level = 0
 
  randomOffset = 0
 
@@ -1494,10 +1494,8 @@ SUB main
  
  DO
       
-  IF TIMER > dtGame THEN
 
-      'skipFrame = (TIMER - dtGame > .3) AND frameSkip
-      'frameSkip = frameSkip XOR -1
+  IF TIMER > dtGame THEN
 
       dtGame = TIMER + .3
 
