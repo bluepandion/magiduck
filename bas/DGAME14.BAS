@@ -81,7 +81,7 @@ SUB addScore (eventType)
    s = 25
   CASE 88
    s = player.hp * 1000
-  CASE 160
+  CASE 158
    s = 0
    IF player.hp < 4 THEN player.hp = player.hp + 1
    hudUpdate 2
@@ -459,13 +459,13 @@ SUB handleBehaviors
                 IF kbArray(29) AND player.jumpRelease THEN
                  player.jumpRelease = 0
                  player.speedY = -35
-                 physics(n).Y = physics(n).Y - 2
+                 'physics(n).Y = physics(n).Y - 2
                  soundEvent = 0
                 END IF
 
                 IF kbArray(75) THEN
                  player.speedX = player.speedX - speedMod
-                 object(n).flags = object(n).flags OR flags.flip
+                 object(n).flags = 1
                  IF collisionFloor = 1 THEN
                   switchAnim n, 40
                   IF fakeFloat(2, floatC) THEN
@@ -477,7 +477,7 @@ SUB handleBehaviors
 
                 IF kbArray(77) THEN
                  player.speedX = player.speedX + speedMod
-                 object(n).flags = object(n).flags OR flags.flip XOR flags.flip
+                 object(n).flags = 0
                  IF collisionFloor = 1 THEN
                   switchAnim n, 40
                   IF fakeFloat(2, floatC) THEN
@@ -493,7 +493,7 @@ SUB handleBehaviors
                 player.ShootDelay = player.ShootDelay + (player.ShootDelay > 0)
                 IF kbArray(56) AND player.ShootDelay = 0 THEN
                  player.ShootDelay = 10
-                 spawnObject physics(2).X, physics(2).Y - 6, 100, object(n).flags AND flags.flip, 0
+                 spawnObject physics(2).X, physics(2).Y - 6, 100, object(n).flags, 0
                  soundEvent = 55
                  switchAnim n, 30
                 END IF
@@ -607,13 +607,13 @@ SUB handleBehaviors
               END IF
               IF c = 53 THEN
                soundEvent = 122
-               a = 181
+               a = 160
                t = 52
                physics(n).speedY = 0
                 IF player.hp > 1 THEN
                   o = 88
                  ELSE
-                  o = 160
+                  o = 158
                 END IF
                spawnObject physics(n).X + 2, physics(n).Y, 41, o, 0
               END IF
@@ -897,9 +897,9 @@ SUB handleBehaviors
         END IF
        ELSE
         object(n).counter = object(n).counter - 1
-        object(n).animFrame = 222
+        object(n).animFrame = 239
         IF object(n).counter = 0 THEN
-         object(n).animFrame = 215
+         object(n).animFrame = 232
          physics(n).collider = 1
          physics(n).speedX = object(n).direction
         END IF
@@ -965,7 +965,7 @@ SUB handleBehaviors
          CASE 0
             IF playerDeltaX < 16 AND playerDeltaY < 32 AND physics(2).Y > physics(n).Y THEN
              object(n).counter = 1
-             object(n).animFrame = 52
+             object(n).animFrame = 202
              object(n).jump = physics(2).X
             END IF
 
@@ -1088,7 +1088,7 @@ SUB handleBehaviors
 
       parts = animation(object(n).animFrame).jump AND object(n).animFrame > 0
       
-      flipIndex = object(n).flags AND 1 'abs((object(n).flags AND flags.flip) <> 0)
+      flipIndex = object(n).flags AND 1
 
       flash = NOT object(n).flash AND 1
       object(n).flash = object(n).flash + (object(n).flash > 0)
@@ -1264,7 +1264,7 @@ SUB handleCollision
        END IF
        IF object(n2).life > -1 THEN
          physics(n).X = physics(n2).X
-         object(n).animFrame = 195
+         object(n).animFrame = 162
          soundEvent = 44
         ELSE
          object(n).animFrame = 110
@@ -1401,6 +1401,8 @@ END SUB
 
 SUB initTestGame
 
+ loadSprites "spenemy0", 1
+
  loadTiles "tileset0"
 
  player.level = 0
@@ -1481,9 +1483,6 @@ SUB main
 
  dtGame = TIMER
 
- frameSkip = 0
- skipFrame = 0
-
  IF player.level = 8 THEN
    hudTextLoad &H6E0, 0
    player.hudLock = 999
@@ -1501,7 +1500,7 @@ SUB main
 
       handleCollision
 
-      handleBehaviors        'Create new sprite list
+      handleBehaviors
 
       playSounds
 
@@ -1536,8 +1535,7 @@ SUB main
          deltaTime                     'Not needed!
          updatetext = 0
          fps = 192 / dt
-         hudUpdate 16
-         hudUpdate 8
+         hudUpdate &H18
         END IF
       END IF
 
@@ -1617,22 +1615,22 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
      object(n).animFrame = 144
     CASE 1
      object(n).life = 2
-     object(n).animFrame = 181
+     object(n).animFrame = 160
      physics(n).speedX = spawner
     CASE 2
      object(n).life = 2
-     object(n).animFrame = 181
+     object(n).animFrame = 160
      physics(n).speedY = spawner
     CASE 3
      object(n).life = 40
-     object(n).animFrame = 181
+     object(n).animFrame = 160
      physics(n).speedX = spawner
      object(n).visX = 70
      object(n).visY = 70
      object(n).control = 99
     CASE 4
      object(n).life = 40
-     object(n).animFrame = 181
+     object(n).animFrame = 160
      physics(n).speedY = spawner
      object(n).visX = 999
      object(n).visY = 999
@@ -1648,8 +1646,8 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).control = 98
    object(n).exist = 1
    object(n).life = spawnerFlags
-   object(n).animFrame = 181
-   object(n).anim = 181
+   object(n).animFrame = 160
+   object(n).anim = 160
    object(n).visX = 999
    object(n).visY = 999
    incSpawnIndex
@@ -1756,7 +1754,7 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).exist = 1
    object(n).life = -50
    physics(n).collider = 1
-   object(n).animFrame = 215
+   object(n).animFrame = 232
    object(n).counter = 0
    object(n).visY = 35
    incSpawnIndex
@@ -1768,7 +1766,7 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).exist = 1
    object(n).life = -2
    physics(n).collider = 1
-   object(n).animFrame = 200
+   object(n).animFrame = 227
    object(n).counter = 0
    object(n).visY = 55
    object(n).visX = 55
@@ -1784,8 +1782,8 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).life = -1
    physics(n).collider = 1
    physics(n).speedX = 2
-   object(n).animFrame = 170
-   object(n).anim = 170
+   object(n).animFrame = 208
+   object(n).anim = 208
    object(n).visY = 30
    incSpawnIndex
 
@@ -1798,7 +1796,7 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).life = -2
    object(n).direction = Y
    physics(n).collider = 1
-   object(n).animFrame = 50
+   object(n).animFrame = 200
    object(n).visX = 30
    object(n).visY = 50
    object(n).counter = 0
@@ -1812,7 +1810,7 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).spawner = spawner
    object(n).life = -999
    physics(n).collider = 1
-   object(n).animFrame = 185
+   object(n).animFrame = 220
    object(n).visX = 999
    object(n).visY = 30
    object(n).counter = Y
@@ -1831,7 +1829,7 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).visX = 21
    d = 8 + ((11 - object) * 13)
    object(n).direction = d
-   IF object = 12 THEN object(n).flags = flags.flip
+   IF object = 12 THEN object(n).flags = 1
    incSpawnIndex
 
   CASE 15

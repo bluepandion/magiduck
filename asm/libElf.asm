@@ -7,13 +7,7 @@
 
 ;================================================================================	
 aPageFlip PROC
-	; ██████╗  █████╗  ██████╗ ███████╗███████╗██╗     ██╗██████╗ 
-	; ██╔══██╗██╔══██╗██╔════╝ ██╔════╝██╔════╝██║     ██║██╔══██╗
-	; ██████╔╝███████║██║  ███╗█████╗  █████╗  ██║     ██║██████╔╝
-	; ██╔═══╝ ██╔══██║██║   ██║██╔══╝  ██╔══╝  ██║     ██║██╔═══╝ 
-	; ██║     ██║  ██║╚██████╔╝███████╗██║     ███████╗██║██║     
-	; ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝     ╚══════╝╚═╝╚═╝     
-                                                            
+                                                           
 	; Page flip and vertical sync.
 	;
 	; Waits for vertical retrace and changes video start offset.
@@ -1810,6 +1804,9 @@ test_VGA:
 	
 	int 10h
 		
+	cmp al, 01bh					;If AL=1Bh this is a VGA
+	je detected_VGA
+	
 	mov ds, [bp + 08]				;DS = seg (video adapter data)
 	mov si, [bp + 06]				;SI = ofs (video adapter data)
 	xor bx, bx
@@ -1849,44 +1846,46 @@ test_CGA:
 	
 detected_MONO:
 	mov dx, 0						;Video adapter data for game
-	jmp exit
+	jmp get_current_mode
 	
 detected_VGA:
-	xor ax, ax
-	mov al, 01h						;Set video mode 01h
-	int 10h							;40x25 colour text mode
-	
-	mov ax, 1112h					;Load and activate 8x8 character
-	xor bx, bx						;set 0
-	int 10h
-	
-	mov ax, 1003h					;INT Slect FG Blink / 16 bg colors (BL = 0)
-	mov bx, 0000h					;Clear whole BX to avoid problems on some adapters.
-	int 10h
-	
 	mov dx, 3						;Video adapter data for game
-	jmp exit
+	jmp get_current_mode
 
 detected_EGA:
-	xor ax, ax
-	mov al, 01h						;Set video mode 01h
-	int 10h							;40x25 colour text mode
-	
-	mov ax, 1112h					;Load and activate 8x8 character
-	xor bx, bx						;set 0
-	int 10h
-	
-	mov ax, 1003h					;INT Slect FG Blink / 16 bg colors (BL = 0)
-	mov bx, 0000h					;Clear whole BX to avoid problems on some adapters.
-	int 10h
-	
 	mov dx, 2						;Video adapter data for game
-	jmp exit
+	jmp get_current_mode
 
 detected_CGA:
 	mov dx, 1						;Video adapter data for game
-	jmp exit
+	jmp get_current_mode
 
+get_current_mode:
+	mov ax, 0F00h					;Get current video mode
+	int 10h							;Stored to BL
+	
+	mov es, [bp + 08]				;ES = Write seg (video adapter data)
+	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
+	add di, 2
+	stosw							;AL = current video mode
+	
+	cmp dx, 1						;If adapter is EGA/VGA
+	ja set_EGAVGA					;set mode with interrupts
+	jmp exit
+	
+set_EGAVGA:
+	xor ax, ax
+	mov al, 01h						;Set video mode 01h
+	int 10h							;40x25 colour text mode
+	
+	mov ax, 1112h					;Load and activate 8x8 character
+	xor bx, bx						;set 0
+	int 10h
+	
+	mov ax, 1003h					;Select FG Blink / 16 bg colors (BL = 0)
+	mov bx, 0000h					;Clear whole BX to avoid problems on some adapters.
+	int 10h
+	
 ;------------------------------------------------------------------------------
 exit:
 	mov es, [bp + 08]				;ES = Write seg (video adapter data)
@@ -1900,6 +1899,58 @@ exit:
 
 ;================================================================================	
 aInitVideo ENDP
+
+aExitVideo PROC
+;============================================================================
+;
+;	Sets video mode back to original state
+;
+;============================================================================
+
+; Parameter stack offsets
+; Order is inverted from qbasic CALL ABSOLUTE parameter order
+
+;00 bp
+;02 Qbasic return segment
+;04 Qbasic return offset
+
+;06 Old video mode
+;08 Video adapter
+
+;============================================================================
+
+	push bp
+	mov bp,sp
+
+;---------------------------------------------------------------------------
+	
+	mov ax, [bp + 06]				;AX = old mode
+		
+	xor ah, ah						;Clear AH, just in case.
+	int 10h							;Set mode
+
+	mov dx, [bp + 08]				;DX = video adapter
+	cmp dx, 3						;IF adapter is VGA, set scanlines to 400
+	jne exit
+	
+	mov ax, 1202h
+	xor bx, bx
+	mov bl, 30h
+	int 10h
+	
+	
+;------------------------------------------------------------------------------
+exit:
+	
+	pop bp
+	retf 4
+
+;================================================================================	
+	
+	
+aExitVideo ENDP
+
+public aExitVideo
 
 public aInitVideo
 

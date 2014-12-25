@@ -11,6 +11,7 @@ DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%, 
 DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
 DECLARE SUB aPrint (BYVAL wrapOfs%, BYVAL attributes%, BYVAL TextSeg%, BYVAL TextOfs%, BYVAL Column%, BYVAL Row%, BYVAL writeSeg%, BYVAL writeOfs%)
 DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
+DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)
 
 '-------------------------------------------------------------------------
 ' Variables and types
@@ -196,6 +197,7 @@ TYPE gfxType
  height AS INTEGER
  segment AS INTEGER
  adapter AS INTEGER
+ oldMode AS INTEGER
  glyphHeight AS INTEGER
  rows AS INTEGER
  videoWrap AS INTEGER
