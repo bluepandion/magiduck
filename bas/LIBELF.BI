@@ -12,6 +12,9 @@ DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
 DECLARE SUB aPrint (BYVAL wrapOfs%, BYVAL attributes%, BYVAL TextSeg%, BYVAL TextOfs%, BYVAL Column%, BYVAL Row%, BYVAL writeSeg%, BYVAL writeOfs%)
 DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)
+DECLARE SUB aTileRead (BYVAL resultSeg%, BYVAL resultOfs%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
+DECLARE SUB aTileWrite (BYVAL writeIndex%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
+
 
 '-------------------------------------------------------------------------
 ' Variables and types
@@ -19,9 +22,11 @@ DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)
 
 '$STATIC
 
-COMMON SHARED dataFolder AS STRING
+COMMON SHARED loadStr AS STRING * 1            'General purpose file read
+COMMON SHARED loadInt AS INTEGER               ' variables
+COMMON SHARED loadLong AS LONG
 
-COMMON SHARED hudBuffer AS STRING * 160
+COMMON SHARED hudBuffer AS STRING * 161
 
 DIM KBarray(130)  AS INTEGER
 COMMON SHARED KBarray() AS INTEGER
@@ -88,10 +93,6 @@ TYPE physicsType
  collider AS INTEGER
  childX AS INTEGER
  childY AS INTEGER
-  'h0 Hit Player
-  'h1 Hit Enemy
-  'h2 Hit Bullet
-  'h3
 END TYPE
 
 TYPE behaviorType
@@ -182,6 +183,8 @@ TYPE playerType
  scoreCounterMode AS INTEGER
  scoreCounterSound AS INTEGER
  scoreCounterMul AS INTEGER
+ tileSet AS STRING * 8
+ spriteSet AS STRING * 8
 END TYPE
 
 TYPE spriteListType
@@ -278,18 +281,17 @@ COMMON SHARED screenTargetX AS INTEGER
 COMMON SHARED screenTargetY AS INTEGER
 COMMON SHARED screenTargetYlock AS INTEGER
 
-COMMON SHARED playerObj AS INTEGER
-
-COMMON SHARED skippedFrame AS INTEGER
-
 COMMON SHARED angle AS angleType
 
 COMMON SHARED sounds AS soundType
 
 CONST defaultVisX = 25
 CONST defaultVisY = 30
+CONST playerObj = 2
 
-COMMON SHARED randomOffset AS INTEGER
+COMMON SHARED tRead AS INTEGER
+COMMON SHARED tReadSeg AS INTEGER
+COMMON SHARED tReadOfs AS INTEGER
 
 TYPE w40textType
  glyph1(32 TO 90) AS STRING * 1

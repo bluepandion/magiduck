@@ -27,37 +27,59 @@ aPageFlip PROC
 
 	;============================================================================
 
-				push bp
-				mov bp,sp
+		push bp
+		mov bp,sp
 
 	;---------------------------------------------------------------------------
 	; Copy HUD to set page
 	;---------------------------------------------------------------------------
-				mov dx, [bp + 14]				;DX = Video wrap offset
+		mov dx, [bp + 14]				;DX = Video wrap offset
 
-				mov ds, [bp + 12]
-				mov si, [bp + 10]
+		mov ds, [bp + 12]
+		mov si, [bp + 10]
 
-				mov es, screenSeg				;ES:DI = Page offset * 2
-				mov di, [bp + 06]
-				shl di, 1
-	mov cx, 16									;Hud string = 160 bytes
+		mov es, screenSeg				;ES:DI = Page offset * 2
+		mov di, [bp + 06]
+		shl di, 1
+	mov cx, 16							;Hud string = 160 bytes
 	copyHud:		
-				movsw							;Copy character and attribute
-				and di, dx						;Wrap DI with video wrap offset		
-				movsw							
-				and di, dx						
-				movsw							
-				and di, dx						
-				movsw							
-				and di, dx						
-				movsw							
-				and di, dx						
+		movsw							;Copy character and attribute
+		and di, dx						;Wrap DI with video wrap offset		
+		movsw							
+		and di, dx						
+		movsw							
+		and di, dx						
+		movsw							
+		and di, dx						
+		movsw							
+		and di, dx						
 	loop copyHud
+	
+		lodsb							;CL = Video adapter (stored at the
+		cmp al, 1
+		jne egaVgaPageflip
+	
+	
+	;---------------------------------------------------------------------------
+	; CGA Wait for vertical overscan and retrace.
+	;---------------------------------------------------------------------------
+		mov dx, 03DAh
+		mov ah, 8
 
+	cgawait1:							;If currently in retrace, wait
+		in  al, dx						;until that's finished.
+		and al, ah
+	jnz cgawait1								
+		
+	cgawait2:							;Wait until retrace starts.
+		in  al, dx
+		and al, ah
+	jz cgawait2
+	
 	;---------------------------------------------------------------------------
-	; Change page offset
+	; CGA Change page offset
 	;---------------------------------------------------------------------------
+	
 		mov dx, 03d4h 
 		mov bx, 03d5h
 
@@ -74,27 +96,62 @@ aPageFlip PROC
 		xchg dx, bx
 		mov al, [bp + 07]
 		out dx, al
+	
+	jmp clearHudPrevPage						
+	
+	;---------------------------------------------------------------------------
+	; EGA/VGA Wait for vertical overscan and retrace.
+	;---------------------------------------------------------------------------
+	egaVgaPageflip:	
+		mov dx, 03DAh
+		mov ah, 9
+
+	egavgawait1:						;If currently in retrace, wait
+		in  al, dx						;until that's finished.
+		and al, ah
+	jnz egavgawait1								
 
 	;---------------------------------------------------------------------------
-	; Wait for vertical overscan and retrace.
+	; EGA/VGA Change page offset
+	; This needs to be done before vertical retrace with these adapters.
 	;---------------------------------------------------------------------------
-				mov dx, 03DAh
-				mov ah, 8
+				
+		cli								;Close interrupts
+				
+		mov dx, 03d4h 
+		mov bx, 03d5h
 
-	wait1:								;If currently in retrace, wait
-				in  al, dx				;until that's finished.
-				and al, ah
-	jnz wait1
-			
-	wait2:								;Wait until retrace starts.
-				in  al, dx
-				and al, ah
-	jz wait2
+		mov al, 0dh
+		out dx, al
+		xchg dx, bx
+		mov al, [bp + 06]
+		out dx, al
 
+		xchg dx, bx
 
+		mov al, 0ch
+		out dx, al
+		xchg dx, bx
+		mov al, [bp + 07]
+		out dx, al
+				
+		sti								;Restore interrupts
+				
+	;---------------------------------------------------------------------------
+	
+		mov dx, 03DAh
+		mov ah, 8
+
+	egavgawait2:						;Wait until retrace starts.
+		in  al, dx
+		and al, ah
+	jz egavgawait2
+	
+	
 	;---------------------------------------------------------------------------
 	; Clear HUD from previous page
 	;---------------------------------------------------------------------------
+	clearHudPrevPage:
 		mov dx, [bp + 14]				;DX = Video wrap offset
 		mov di, [bp + 08]				;DI = previous page offset * 2
 		shl di, 1
@@ -116,8 +173,8 @@ aPageFlip PROC
 	;============================================================================
 
 	exit:
-				pop bp
-				retf 10
+		pop bp
+		retf 10
 aPageFlip endp
 ;================================================================================
 aKBinit PROC
@@ -1899,7 +1956,7 @@ exit:
 
 ;================================================================================	
 aInitVideo ENDP
-
+;================================================================================	
 aExitVideo PROC
 ;============================================================================
 ;
@@ -1949,6 +2006,137 @@ exit:
 	
 	
 aExitVideo ENDP
+;================================================================================	
+aTileRead PROC
+;============================================================================
+;
+; Read tile from tilemap
+;
+; Returns a tile index from the tilemap from position (x,y).
+;
+;============================================================================
+
+; Parameter stack offsets
+; Order is inverted from qbasic CALL ABSOLUTE parameter order
+
+;00 bp
+;02 Qbasic return segment
+;04 Qbasic return offset
+
+;06 tileMap offset
+;08 tileBuffer Segment
+;10 Tile X
+;12 Tile Y
+;14 Result return offset
+;16 Result return segment
+
+;============================================================================
+
+	push bp
+	mov bp,sp
+
+;---------------------------------------------------------------------------
+
+begin:
+
+	mov ds, [bp + 08]				;DS = Tilebuffer seg
+	mov si, [bp + 06]				;SI = Tilemap tile read offset
+
+	mov es, [bp + 16]				;ES:DI = Result seg:ofs
+	mov di, [bp + 14]
+
+	mov ax, [bp + 10]				;AX = X / 4
+	shr ax, 1
+	shr ax, 1
+	add si, ax						;SI += AX
+
+	mov ax, [bp + 12]				;AX = Y * 8 (from pixel coords to tile index)
+	and ax, 0FFF8h					;Remove pixels from coordinate
+	mov bx, ax						;BX = AX / 2
+	shr bx, 1
+	shl ax, 1						;AX = AX * 2
+	add ax, bx						;AX = Y * 20
+	add si, ax						;SI += AX
+
+	lodsb							;AL = tile index at (x,y)
+	xor ah, ah						;AH = 0
+
+	stosw							;Store result at ES:DI
+
+;---------------------------------------------------------------------------
+
+exit:
+
+	pop bp
+	retf 12
+
+;================================================================================	
+aTileRead ENDP
+;================================================================================	
+aTileWrite PROC
+;============================================================================
+;
+; Write a tile to tilemap.
+;
+; Write a tile index into the tilemap at (x,y).
+;
+;============================================================================
+
+; Parameter stack offsets
+; Order is inverted from qbasic CALL ABSOLUTE parameter order
+
+;00 bp
+;02 Qbasic return segment
+;04 Qbasic return offset
+
+;06 tileMap offset
+;08 tileBuffer Segment
+;10 Tile X
+;12 Tile Y
+;14 Tile index to write.
+
+;============================================================================
+
+	push bp
+	mov bp,sp
+
+;---------------------------------------------------------------------------
+
+begin:
+
+	mov es, [bp + 08]				;ES = Tilebuffer seg
+	mov di, [bp + 06]				;DI = Tilemap tile read offset
+
+	mov ax, [bp + 10]				;AX = X / 4
+	shr ax, 1
+	shr ax, 1
+	add di, ax						;DI += AX
+
+	mov ax, [bp + 12]				;AX = Y * 8 (from pixel coords to tile index)
+	and ax, 0FFF8h					;Remove pixels from coordinate
+	mov bx, ax						;BX = AX / 2
+	shr bx, 1
+	shl ax, 1						;AX = AX * 2
+	add ax, bx						;AX = Y * 20
+	add di, ax						;DI += AX
+
+	mov ax, [bp + 14]				;AX = Tile index to write
+	
+	stosb							;Write index at ES:DI
+
+;---------------------------------------------------------------------------
+
+exit:
+
+	pop bp
+	retf 10
+
+;================================================================================	
+aTileWrite ENDP
+
+public aTileWrite
+
+public aTileRead
 
 public aExitVideo
 

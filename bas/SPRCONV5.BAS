@@ -20,8 +20,8 @@ DIM longOfs AS LONG
 
 '---------------------------------------------------------------------------
 
-file$ = "spducks"
-isAuxBank = 0
+file$ = "spenemy0"
+isAuxBank = 1
 
 infile$ = "..\convert\" + file$ + ".tga"
 

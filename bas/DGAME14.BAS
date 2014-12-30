@@ -1209,9 +1209,6 @@ SUB handleBehaviors
 
  mainCounter0 = (mainCounter0 + 1) AND 63
 
- 'w40char.text = STR$(gfx.pageOfs(0)) + STR$(gfx.pageOfs(1)) + "|"
- 'aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
- 
 END SUB
 
 SUB handleCollision
@@ -1295,10 +1292,11 @@ SUB handleSpawn (wave)
 END SUB
 
 SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
-
+ loadStr = MID$(hudBuffer, 161, 1)
  OPEN "ducktext.ctt" FOR BINARY AS #1
   GET #1, offset + 1, hudBuffer
  CLOSE #1
+ MID$(hudBuffer, 161, 1) = loadStr
 IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 
 END SUB
@@ -1359,6 +1357,9 @@ SUB hudUpdate (flags AS INTEGER)
 
   'hudPrint 4, STR$(INT(fps)), &HF, &HE
  END IF
+
+ w40char.text = STR$(ASC(MID$(hudBuffer, 161, 1))) + "|"
+ aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
 
 END SUB
 
@@ -1699,8 +1700,8 @@ SUB spawnObject (X, Y, object, spawnerFlags, spawner)
    object(n).life = 20
    physics(n).speedX = spawnerFlags
    physics(n).speedY = -30
-   object(n).animFrame = 175
-   object(n).anim = 175
+   object(n).animFrame = 214
+   object(n).anim = 214
    object(n).visY = 30
    incSpawnIndex
 

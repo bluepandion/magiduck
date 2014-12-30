@@ -55,10 +55,6 @@ DIM SHARED readOfs AS LONG                ' Read/Write variables
 DIM SHARED storeOfs AS LONG
 DIM SHARED pageOfs AS INTEGER
 
-DIM SHARED loadStr AS STRING * 1            'General purpose file read
-DIM SHARED loadInt AS INTEGER               ' variables
-DIM SHARED loadLong AS LONG
-
 DIM SHARED asmKBinit AS STRING
 DIM SHARED asmKBroutine AS STRING
 DIM SHARED asmKBremove AS STRING
@@ -172,13 +168,25 @@ SUB elfInit
 
  gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
  gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
-
+ 
  IF gfx.adapter > 0 THEN
    PRINT MID$("CEV", gfx.adapter, 1); "GA detected."
   ELSE
    errorMessage$ = "This game requires a CGA, EGA or VGA compatible color display adapter."
    quit
  END IF
+
+
+ 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
+ MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
+ CLS
+ PRINT
+ PRINT
+ PRINT gfx.adapter
+ PRINT ASC(MID$(hudBuffer, 1, 1))
+ PRINT ASC(MID$(hudBuffer, 161, 1))
+
+ DO: LOOP WHILE INKEY$ = ""
 
 '-----------------------------------------------------------------------
 ' Setup variables
@@ -549,46 +557,46 @@ SELECT CASE gfx.adapter
 
  CASE 1  'CGA
 
- gfx.videoWrap = 16383
- gfx.pageWrap = 8191
+  gfx.videoWrap = 16383
+  gfx.pageWrap = 8191
 
- OUT &H3D4, &H0            'Horizontal total
- OUT &H3D5, &H38
+  OUT &H3D4, &H0            'Horizontal total
+  OUT &H3D5, &H38
 
- OUT &H3D4, &H1            'Horizontal displayed
- OUT &H3D5, &H28
+  OUT &H3D4, &H1            'Horizontal displayed
+  OUT &H3D5, &H28
 
- OUT &H3D4, &H2            'Horizontal sync pos
- OUT &H3D5, &H2D
+  OUT &H3D4, &H2            'Horizontal sync pos
+  OUT &H3D5, &H2D
 
- OUT &H3D4, &H3            'Horizontal sync width
- OUT &H3D5, &HA
+  OUT &H3D4, &H3            'Horizontal sync width
+  OUT &H3D5, &HA
  
- OUT &H3D4, &H4            'Vertical total
- OUT &H3D5, &H3F           '(nearest 2^ to row count = 63)
+  OUT &H3D4, &H4            'Vertical total
+  OUT &H3D5, &H3F           '(nearest 2^ to row count = 63)
 
- OUT &H3D4, &H5            'Vertical total adjust
- OUT &H3D5, 6              '
+  OUT &H3D4, &H5            'Vertical total adjust
+  OUT &H3D5, 6              '
 
- OUT &H3D4, &H6            'Vertical displayed
- OUT &H3D5, 50             '
+  OUT &H3D4, &H6            'Vertical displayed
+  OUT &H3D5, 50             '
 
- OUT &H3D4, &H7            'Vertical sync position
- OUT &H3D5, 56             'Row count + 6
+  OUT &H3D4, &H7            'Vertical sync position
+  OUT &H3D5, 56             'Row count + 6
 
- OUT &H3D4, &H8            'Interlace mode
- OUT &H3D5, 2
+  OUT &H3D4, &H8            'Interlace mode
+  OUT &H3D5, 2
  
- OUT &H3D4, &H9            'Maximum scan line address, or glyph height.
- OUT &H3D5, 3
+  OUT &H3D4, &H9            'Maximum scan line address, or glyph height.
+  OUT &H3D5, 3
 
 
- 'Enable video,             Bit 0 = 0, for low resolution text mode.
- '                          Bit 3 = 1, to enable video.
- '                          Bit 5 = 1, to enable blink.
-
- OUT &H3D8, &H8   '&H8 = 40 column, &H9 = 80 column
-
+  'Enable video,             Bit 0 = 0, for low resolution text mode.
+  '                          Bit 3 = 1, to enable video.
+  '                          Bit 5 = 1, to enable blink.
+ 
+  OUT &H3D8, &H8   '&H8 = 40 column, &H9 = 80 column
+ 
 END SELECT
 
 clearCount = 3
@@ -1003,7 +1011,6 @@ SUB screenResetPos (X%, Y%)
  spriteList(0, gfx.page).w = 40
  spriteList(0, gfx.page).h = 50
 
- 'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
  aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
  aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
@@ -1014,7 +1021,7 @@ SUB screenResetPos (X%, Y%)
  spriteList(0, gfx.page).Y = 0
  spriteList(0, gfx.page).w = 40
  spriteList(0, gfx.page).h = 50
- 'aCopyTileAreas gfx.page, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+
  aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
 END SUB
