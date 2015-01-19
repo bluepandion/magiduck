@@ -1402,9 +1402,9 @@ END SUB
 
 SUB initTestGame
 
- loadSprites "spenemy0", 1
+ 'loadSprites "spenemy0", 1
 
- loadTiles "tileset0"
+ 'loadTiles "tileset0"
 
  player.level = 0
 

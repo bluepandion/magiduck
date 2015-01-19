@@ -103,8 +103,8 @@ aPageFlip PROC
 	; EGA/VGA Wait for vertical overscan and retrace.
 	;---------------------------------------------------------------------------
 	egaVgaPageflip:	
-		mov dx, 03DAh
-		mov ah, 9
+		mov dx, 03DAh					;Check for both Display enable- and
+		mov ah, 9						;Vertical retrace bits (0 and 3).
 
 	egavgawait1:						;If currently in retrace, wait
 		in  al, dx						;until that's finished.
@@ -113,7 +113,7 @@ aPageFlip PROC
 
 	;---------------------------------------------------------------------------
 	; EGA/VGA Change page offset
-	; This needs to be done before vertical retrace with these adapters.
+	; This needs to be done before vertical retrace begins with these adapters.
 	;---------------------------------------------------------------------------
 				
 		cli								;Close interrupts
@@ -1906,6 +1906,10 @@ detected_MONO:
 	jmp get_current_mode
 	
 detected_VGA:
+	mov ax, 1003h					;Disable blink for VGA one extra time to be sure.
+	xor bx, bx						
+	int 10h
+	
 	mov dx, 3						;Video adapter data for game
 	jmp get_current_mode
 
@@ -1940,7 +1944,7 @@ set_EGAVGA:
 	int 10h
 	
 	mov ax, 1003h					;Select FG Blink / 16 bg colors (BL = 0)
-	mov bx, 0000h					;Clear whole BX to avoid problems on some adapters.
+	xor bx, bx						;Clear whole BX to avoid problems on some adapters.
 	int 10h
 	
 ;------------------------------------------------------------------------------

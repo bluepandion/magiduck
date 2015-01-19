@@ -129,6 +129,8 @@ TYPE levelType
  wave(0 TO 7) AS waveType
  playerX AS INTEGER
  playerY AS INTEGER
+ tileSet AS STRING * 8
+ spriteSet AS STRING * 8
 END TYPE
 
 TYPE animDataType

@@ -1,3 +1,4 @@
+DECLARE SUB progressBar (stage AS INTEGER)
 DECLARE FUNCTION getSpawnSlot% ()
 DECLARE SUB initTimer ()
 DECLARE SUB loadText (screenOfs%, textOfs%)
@@ -678,9 +679,21 @@ SUB loadLevel (fileName AS STRING)
      MID$(tileBuffer, 9760 + n, 1) = loadStr
     NEXT n
 
+    progressBar 0
+
     readOfs = 1601
     GET #1, readOfs, level
    CLOSE #1
+
+   progressBar 1
+
+   IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
+
+   progressBar 2
+
+   IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
+
+   progressBar 3
 
    'debugwrite "OK"
 
@@ -698,6 +711,7 @@ SUB loadSprites (file$, offset)
    offset = spriteBankOfs
   ELSE
    offset = spriteBankAuxOfs
+   player.spriteSet = file$
  END IF
 
  DEF SEG = spriteBankSeg
@@ -765,6 +779,8 @@ SUB loadTiles (file$)
  
  BLOAD file$ + ".ctg", tileBankOfs
 
+ player.tileSet = file$
+
  DEF SEG
 
 END SUB
@@ -795,6 +811,17 @@ SUB playSounds
  END IF
 
  sounds.readPos = (sounds.readPos + 1) AND 63
+
+END SUB
+
+SUB progressBar (stage AS INTEGER)
+
+ n = gfx.pageOfs(gfx.page) * 2 + 40
+ POKE n, 219
+ POKE n + 1, &HFE
+ n = n + 78
+ POKE n, 219
+ POKE n + 1, &HFE
 
 END SUB
 
