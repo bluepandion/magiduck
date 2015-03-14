@@ -1,3 +1,7 @@
+'
+' Fill high-score file with default data.
+'
+
 TYPE scoreType
  name AS STRING * 3
  score AS LONG

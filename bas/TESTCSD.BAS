@@ -1,4 +1,11 @@
 DEFINT A-Z
+
+' TestCSD
+'
+' Test and print out contents of binary sprite/anim definition file.
+'
+'
+
 DIM n AS INTEGER
 
 WIDTH 80, 50

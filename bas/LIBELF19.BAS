@@ -261,7 +261,8 @@ sounds.speakerOff = sounds.speakerOn XOR 3
 '------------------------------------------------------
 
 RANDOMIZE TIMER
-initTimer
+
+CALL aTimerStart
 
 '-----------------------------------------------------------------------
 ' Set up lookups, preload some data and setup screen
@@ -635,26 +636,6 @@ gfx.page = 0
 
 END SUB
 
-SUB initTimer
-
- '-------------------------------------------------------------------
- 'Main Timer (timer 0)
-
- ticksPerTimer = 1193181# / 145.6#     'Use a multiple of 18.2
-
- OUT &H43, &H34               'Specifies bitmap setting the timer style
-                              ' and initiates ports to receive desired
-                              ' clock trigger rate
-
- OUT &H40, ticksPerTimer AND 255    'Send low byte
- OUT &H40, ticksPerTimer / 256      'Send high byte
-
- '----------------------------------------------------------------------
- 'Sound Timer (timer 2)
-
-
-END SUB
-
 SUB loadKeyboard
 
 OPEN "kbint.bin" FOR BINARY AS #1          'Keyboard interrupt routine
@@ -855,6 +836,9 @@ IF gfx.adapter > 0 THEN
 END IF
  
  aExitVideo gfx.adapter, gfx.oldMode
+
+ CALL aTimerEnd
+
  GOTO exitgame
 
  'Disable video

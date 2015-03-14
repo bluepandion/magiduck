@@ -14,7 +14,10 @@ DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)
 DECLARE SUB aTileRead (BYVAL resultSeg%, BYVAL resultOfs%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
 DECLARE SUB aTileWrite (BYVAL writeIndex%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
-
+DECLARE SUB aTimerStart ()
+DECLARE SUB aTimerEnd ()
+DECLARE SUB aTimerWait ()
+DECLARE SUB aTimerReset ()
 
 '-------------------------------------------------------------------------
 ' Variables and types

@@ -1,3 +1,8 @@
+' Create sound engine frequency lookups and save them in binary format.
+'
+'
+
+
 CLS
 
 OPEN "freqs.def" FOR BINARY AS #2

@@ -1480,9 +1480,7 @@ SUB main
 
  screenResetPos physics(2).X - 20, physics(2).Y - 46
 
- updatetext = 1
-
- dtGame = TIMER
+ updateText = 1
 
  IF player.level = 8 THEN
    hudTextLoad &H6E0, 0
@@ -1492,12 +1490,10 @@ SUB main
    player.hudLock = 10
  END IF
  
+ CALL aTimerReset
+
  DO
-      
-
-  IF TIMER > dtGame THEN
-
-      dtGame = TIMER + .3
+      CALL aTimerWait
 
       handleCollision
 
@@ -1516,10 +1512,10 @@ SUB main
         hudTextLoad &H780, 1
         queueSound 0, 76
         DO
-         IF TIMER > dtGame THEN
-          dtGame = TIMER + .3
-          playSounds
-         END IF
+         CALL aTimerWait
+
+         playSounds
+         
          IF kbArray(21) THEN
           quit
           EXIT SUB
@@ -1529,14 +1525,11 @@ SUB main
         player.hudLock = 0
         hudUpdate 255
        END IF
-
-        updatetext = updatetext + 1
-        IF updatetext = 24 THEN
+        updateText = updateText + 1
+        IF updateText = 24 THEN
          IF object(2).control = 255 THEN player.time = player.time + (player.time > 0)
-         deltaTime                     'Not needed!
-         updatetext = 0
-         fps = 192 / dt
-         hudUpdate &H18
+         updateText = 0
+         hudUpdate &H8
         END IF
       END IF
 
@@ -1544,8 +1537,6 @@ SUB main
       gfx.page = gfx.page XOR 1
 
       aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
-
-   END IF
  LOOP
 
 END SUB

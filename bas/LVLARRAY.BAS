@@ -1,5 +1,11 @@
 DEFINT A-Z
 
+' Test
+'
+' Tried saving level tiles as Integers for fast read/write in QBasic.
+' Didn't work, byte masking is too slow.
+'
+
 mask(0) = &HFF
 mask(1) = &HFF00
 DIM tileVal(0 TO 60, 0 TO 1) AS INTEGER

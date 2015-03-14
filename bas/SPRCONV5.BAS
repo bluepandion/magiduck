@@ -1,5 +1,22 @@
-'Convert sprites to two pixels / byte + mask
+' Sprite convert
+'
+' Converts sprites from TGA (File$) to two pixels / byte + mask.
+' Converts .DEF-file with same filename to binary definition format.
+'
+' < isAuxBank = 1 > offets sprite definitions to match aux-sprite
+'                   memory locations.
 '---------------------------------------------------------------------------
+' Arguments:
+'---------------------------------------------------------------------------
+ file$ = "spenemy0"
+ isAuxBank = 1
+ alphacolor = 11
+
+ infile$ = "..\convert\" + file$ + ".tga"
+ outFile$ = file$
+
+'---------------------------------------------------------------------------
+
 DIM spriteOffset(128)   AS INTEGER      'Sprite bank offsets per sprite
 DIM spriteWidth(128)  AS INTEGER        'and some basic data.
 DIM spriteHeight(128)  AS INTEGER
@@ -17,17 +34,6 @@ DIM saveThisAnim(0 TO 255) AS INTEGER
 
 DIM n AS INTEGER
 DIM longOfs AS LONG
-
-'---------------------------------------------------------------------------
-
-file$ = "spenemy0"
-isAuxBank = 1
-
-infile$ = "..\convert\" + file$ + ".tga"
-
-outFile$ = file$
-
-alphacolor = 11
 
 '---------------------------------------------------------------------------
 
