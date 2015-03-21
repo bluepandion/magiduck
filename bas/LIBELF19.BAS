@@ -1,22 +1,15 @@
 DECLARE SUB progressBar (stage AS INTEGER)
 DECLARE FUNCTION getSpawnSlot% ()
-DECLARE SUB initTimer ()
 DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
 DECLARE SUB hudPrint (X%, text$, colour1%, colour2%)
 DECLARE SUB aDrawTiles (area%, forceOfs%)
-
 DECLARE SUB queueSound (offset%, position%)
 DECLARE SUB playSounds ()
-
 DECLARE SUB loadLevel (fileName AS STRING)
-
 DECLARE SUB myPrint (X%, Y%, text$, attributes%)
-
-DECLARE SUB deltaTime ()
-
 DECLARE SUB elfInit ()
 DECLARE SUB initLookUps ()
 DECLARE SUB InitScreen ()
@@ -73,13 +66,13 @@ DIM SHARED KBoldSeg AS INTEGER               'KB state save.
 DIM SHARED KBoldOfs AS INTEGER
 DIM SHARED Keyflags AS INTEGER
 
-DIM SHARED spriteBank AS STRING * 6401
+DIM SHARED spriteBank AS STRING * 6402
 
 DIM SHARED tilemapReadX AS INTEGER              '0-7 scroll offset
 DIM SHARED tilemapReadY AS INTEGER              '0-3 scroll offset
 DIM SHARED tileMapReadOfs AS INTEGER            'Tilemap read offset
 
-DIM SHARED tileBuffer AS STRING * 11361         '7760 + 1600 + 2000
+DIM SHARED tileBuffer AS STRING * 11362         '7760 + 1600 + 2000
 
 DIM SHARED tilePosXlookUp(-16 TO 95) AS INTEGER
 DIM SHARED tilePosYlookUp(-16 TO 655) AS INTEGER
@@ -123,11 +116,6 @@ SUB aUpdateTile (X, Y)
 
  aTileDraw p0%, tilePosXlookUp(X), p2%, tileBufferSeg, tileBufferOfs, TileMapOfs, tileBankOfs
 
-END SUB
-
-SUB deltaTime
- dt = TIMER - dtCompare
- dtCompare = TIMER
 END SUB
 
 SUB destroyObject (index)
@@ -180,14 +168,6 @@ SUB elfInit
 
  'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
  MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
- CLS
- PRINT
- PRINT
- PRINT gfx.adapter
- PRINT ASC(MID$(hudBuffer, 1, 1))
- PRINT ASC(MID$(hudBuffer, 161, 1))
-
- DO: LOOP WHILE INKEY$ = ""
 
 '-----------------------------------------------------------------------
 ' Setup variables
@@ -259,8 +239,6 @@ sounds.speakerOn = INP(&H61) OR 3
 sounds.speakerOff = sounds.speakerOn XOR 3
 
 '------------------------------------------------------
-
-RANDOMIZE TIMER
 
 CALL aTimerStart
 
@@ -826,18 +804,15 @@ IF gfx.adapter > 0 THEN
  DEF SEG = 0
  POKE (&H417), Keyflags           'Restore old keyboard flags
  DEF SEG
- 
- OUT &H43, &H34         'Return Timer to normal operation
- OUT &H40, 0            'Set low 8 bits of trigger to 0
- OUT &H40, 0            'Set hi  8 bits of trigger to 0
 
  'Disconnect speaker from Timer 2
  OUT &H61, sounds.speakerOff
+
+ CALL aTimerEnd
+
 END IF
  
  aExitVideo gfx.adapter, gfx.oldMode
-
- CALL aTimerEnd
 
  GOTO exitgame
 

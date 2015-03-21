@@ -1,19 +1,9 @@
 .model medium,basic
 
 .data
-	screenSeg	dw	0b800h
-
-	timerTick 	dw 	0
-	timerCount 	db 	8
-	timerActive db 	0
-	
-	dummyData	dw	0000h, 0000h, 0000h, 0000h
 
 .code	
-;==============================================================================	
-;
-; Procedures
-;
+
 ;==============================================================================	
 aPageFlip PROC
                                                            
@@ -47,7 +37,8 @@ aPageFlip PROC
 		mov ds, [bp + 12]
 		mov si, [bp + 10]
 
-		mov es, screenSeg				;ES:DI = Page offset * 2
+		mov ax, 0b800h
+		mov es, ax						;ES:DI = Page offset * 2
 		mov di, [bp + 06]
 		shl di, 1
 	mov cx, 16							;Hud string = 160 bytes
@@ -2148,7 +2139,7 @@ exit:
 aTileWrite ENDP
 ;==============================================================================
 ;
-; Timer ISR by DeathShadow / Jason Knight
+; Timer ISR by DeathShadow / Jason M. Knight
 ;
 ; Interface Procedures
 ;
@@ -2169,20 +2160,9 @@ aTimerStart PROC
 		mov   ax, 3508h
 		int   21h
 		
-		;mov   di, offset oldTimerISR
-		;mov   cs:[di], es
-		;inc   di
-		;inc   di
-		;mov   cs:[di], bx
-		
-		;mov   di, oldTimerISR
-				
-		
 		mov oldTimerISR, bx
 		mov oldTimerISR + 2, es
 		
-		;mov   oldTimerOfs, bx
-		;mov   oldTimerSeg, es
 		cli
 		mov   ax, cs
 		mov   ds, ax
@@ -2223,14 +2203,9 @@ aTimerEnd PROC
 		out   40h, al
 		mov   timerActive, al
 		
-		;lds   dx, oldTimerISR
-		
-		mov   dx, cs:oldTimerISR + 2
+		mov   dx, oldTimerISR + 2
 		mov   ds, dx
-		mov   dx, cs:oldTimerISR
-		
-		;mov   dx, oldTimerSeg
-		;mov   dx, oldTimerOfs
+		mov   dx, oldTimerISR
 		
 		mov   ax, 2508h
 		int   21h
@@ -2243,45 +2218,55 @@ aTimerEnd PROC
 aTimerEnd ENDP
 ;==============================================================================
 aTimerWait PROC
-		push cx
-		mov cx, 6
-		
+		push ax
+		mov ax, 6
+				
 	timerWait:		
-		cmp   timerTick, 0000h
-		je    timerWait
-		dec   timerTick
-	loop timerWait
+		cmp   	timerTick, ax
+		jb    	timerWait
 		
-		pop cx
+		mov timerTick, 0000h
+		
+		pop ax
 		
 		retf 0
 aTimerWait ENDP
 ;==============================================================================
 aTimerReset PROC
-	mov   timerTick, 0000h
-	retf 0
+		mov   timerTick, 0000h
+		retf 0
 aTimerReset ENDP
 ;==============================================================================
-
-;==============================================================================	
 ;
 ; ISR
 ;
 ;==============================================================================	
 
 timerISR:
-		inc   timerTick
-		dec   timerCount
-		jz    callOldTimerISR
-		push  ax
-		mov   al, 20h
-		out   20h, al
-		pop   ax
+		inc 	timerTick
+		dec   	timerCount
+		jz    	callOldTimerISR
+		push  	ax
+		mov   	al, 20h
+		out   	20h, al
+		pop   	ax
 		iret
-callOldTimerISR:
+		
+	callOldTimerISR:
 		mov  timerCount, 8
 		db 234
 		oldTimerISR dw 1234h, 5678h, 0000h, 0000h, 0000h
+
+		dummyData1		dw	0000h, 0000h, 0000h, 0000h
+	
+		screenSeg		dw	0b800h
+
+		timerTick 		dw 	0
+		timerSecond		dw	0
+		timerCount 		db 	8
+		timerActive 	db 	0
+	
+		dummyData2		dw	0000h, 0000h, 0000h, 0000h
 
 ;==============================================================================	
 

@@ -1406,7 +1406,7 @@ SUB initTestGame
 
  'loadTiles "tileset0"
 
- player.level = 0
+ player.level = 1
 
  randomOffset = 0
 
