@@ -12,10 +12,11 @@ cd%compile%
 
 @echo on
 
-%linker% bgame+libelfb+dgame+libelf+noedit+nocom+nolpt+smallerr+nograph+noevent+noisam,duck,nul,BCL71EFR+libelf /EX /NOE /NOD:BRT71FR.LIB
+%linker% bgame+libelfb+dgame+libelf+noedit+nocom+nolpt+smallerr+nograph+noevent+noisam,duck,NUL,BCL71EFR+libelf /EX /NOE /NOD:BRT71FR.LIB
 
 @echo off
 
 cd%gamedir%
 
 copy %compile%duck.exe
+

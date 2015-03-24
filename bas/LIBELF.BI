@@ -46,8 +46,8 @@ COMMON SHARED mainCounter0 AS INTEGER
 COMMON SHARED mainCounter1 AS INTEGER
 COMMON SHARED mainCounter2 AS INTEGER
 
-DIM multiplyTable(1 TO 20, -20 TO 20) AS INTEGER
-COMMON SHARED multiplyTable() AS INTEGER
+DIM mulTable(1 TO 20, -20 TO 20) AS INTEGER
+COMMON SHARED mulTable() AS INTEGER
 
 DIM fakeFloat(-40 TO 40, 10) AS INTEGER
 COMMON SHARED fakeFloat() AS INTEGER
@@ -67,14 +67,6 @@ COMMON SHARED spriteOffset() AS INTEGER
 COMMON SHARED spriteWidth() AS INTEGER
 COMMON SHARED spriteHeight() AS INTEGER
 
-'TYPE spriteDataType
-' offset AS INTEGER
-' width AS STRING * 1
-' height AS STRING * 1
-'END TYPE
-'DIM sprite(0 TO 127) AS INTERGER
-'COMMON SHARED sprite() AS INTEGER
-
 COMMON SHARED spriteBankSeg AS INTEGER
 COMMON SHARED spriteBankOfs AS INTEGER
 COMMON SHARED spriteBankAuxOfs AS INTEGER
@@ -88,30 +80,31 @@ COMMON SHARED tileBufferWrap AS INTEGER
 COMMON SHARED hudBufferSeg AS INTEGER
 COMMON SHARED hudBufferOfs AS INTEGER
 
-TYPE physicsType
+TYPE objectType
  X AS INTEGER
  Y AS INTEGER
- speedX AS INTEGER
- speedY AS INTEGER
+ vecX AS INTEGER
+ vecY AS INTEGER
  collider AS INTEGER
- childX AS INTEGER
- childY AS INTEGER
-END TYPE
+ parentDX AS INTEGER
+ parentDY AS INTEGER
 
-TYPE behaviorType
  anim AS INTEGER
- animFrame AS INTEGER
+ frame AS INTEGER
  life AS INTEGER
  control AS INTEGER
  jump AS INTEGER
- counter AS INTEGER
+ count AS INTEGER
  flash AS INTEGER
  exist AS INTEGER
  spawner AS INTEGER
  flags AS INTEGER
- direction AS INTEGER
+ dir AS INTEGER
  visX AS INTEGER
  visY AS INTEGER
+
+ lNext AS INTEGER
+ lPrev AS INTEGER
 END TYPE
 
 TYPE spawnerType
@@ -179,8 +172,8 @@ TYPE playerType
  keyRelease AS INTEGER
  jumpRelease AS INTEGER
  bouncing AS INTEGER
- speedX AS INTEGER
- speedY AS INTEGER
+ vecX AS INTEGER
+ vecY AS INTEGER
  walkCounter AS INTEGER
  scoreCounter AS LONG
  scoreCounterTarget AS LONG
@@ -249,11 +242,8 @@ COMMON SHARED player AS playerType
 
 COMMON SHARED flags AS flagsType
 
-DIM physics(0 TO 60) AS physicsType
-COMMON SHARED physics()  AS physicsType
-
-DIM object(0 TO 60) AS behaviorType
-COMMON SHARED object()  AS behaviorType
+DIM actor(1 TO 60) AS objectType
+COMMON SHARED actor()  AS objectType
 
 COMMON SHARED level AS levelType              'Level object data
 
@@ -305,5 +295,6 @@ TYPE w40textType
  seg AS INTEGER
  ofs AS INTEGER
 END TYPE
+
 COMMON SHARED w40char AS w40textType
 
