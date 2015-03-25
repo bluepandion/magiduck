@@ -248,7 +248,7 @@ FUNCTION getSpawnSlot
  FOR n = 3 TO 60
   IF actor(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
  NEXT n
-
+ getSpawnSlot = 60
 END FUNCTION
 
 SUB handleCamera
@@ -385,11 +385,6 @@ SUB importLevel
      END IF
     LOOP WHILE NOT EOF(1)
    CLOSE #1
-END SUB
-
-SUB incSpawnIndex
- spawnIndex = spawnIndex + 1 + (spawnIndex > 60)
- 'IF spawnIndex > 60 THEN spawnIndex = 60
 END SUB
 
 SUB initLookUps
@@ -859,10 +854,10 @@ exitgame:
 
  C = 1
 
- FOR n = 1 TO 128
+ FOR n = 1 TO 80
   C = C + 4
   COLOR (n AND 1) + 7
-  PRINT HEX$(spawnerEnabler(n)); TAB(C);
+  PRINT HEX$(level.spawner(n).object) TAB(C);
   IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 

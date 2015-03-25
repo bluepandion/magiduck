@@ -124,6 +124,7 @@ OPEN listFile$ FOR INPUT AS #1
           '  nWave = nWave + 1
           'END IF
           addActor tile, actorWave, X, Y
+          IF actorWave < 5 THEN addActor tile, actorWave + 1, X, Y
          END IF
 
          IF tile > 19 THEN
@@ -186,12 +187,13 @@ SUB addActor (actor, wave, X, Y)
  
  IF actorConvert(actor).id > 0 THEN
   FOR spawner = 1 TO 16
-   IF level.wave(wave).spawner(spawner).object = 0 THEN
+   nn = 16 * wave + spawner
+   IF level.spawner(nn).object = 0 THEN
     COLOR 7
-    level.wave(wave).spawner(spawner).object = actorConvert(actor).id
-    level.wave(wave).spawner(spawner).X = actorConvert(actor).xOfs + X
-    level.wave(wave).spawner(spawner).Y = actorConvert(actor).yOfs + Y
-    level.wave(wave).spawner(spawner).flags = actorConvert(actor).flags
+    level.spawner(nn).object = actorConvert(actor).id
+    level.spawner(nn).X = actorConvert(actor).xOfs + X
+    level.spawner(nn).Y = actorConvert(actor).yOfs + Y
+    level.spawner(nn).flags = actorConvert(actor).flags
     PRINT "   Wave:"; wave; " Spawner:"; spawner, "Actor: "; actor,
     PRINT actorConvert(actor).name, X; ","; Y
     spawner = 999: EXIT SUB
@@ -200,6 +202,11 @@ SUB addActor (actor, wave, X, Y)
    COLOR 12
    PRINT "     Too many actors per wave "; wave
    COLOR 7
+   IF actor > 11 AND actor < 19 THEN
+      PRINT "CRITICAL: Checkpoint missing!"
+      BEEP
+      END
+   END IF
   ELSE
    COLOR 4
    PRINT "     Not found: "; actor

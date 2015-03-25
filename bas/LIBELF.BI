@@ -114,15 +114,8 @@ TYPE spawnerType
  flags AS INTEGER
 END TYPE
 
-TYPE waveType
- spawner(1 TO 16) AS spawnerType
- scoreTime(1 TO 3) AS INTEGER
- length AS INTEGER
- flags AS INTEGER
-END TYPE
-
 TYPE levelType
- wave(0 TO 7) AS waveType
+ spawner(0 TO 80) as spawnerType
  playerX AS INTEGER
  playerY AS INTEGER
  tileSet AS STRING * 8
@@ -254,12 +247,6 @@ DIM colCount(1 TO 3) AS INTEGER
 COMMON SHARED colCount() AS INTEGER
 DIM colList(1 TO 3, 30) AS collisionType
 COMMON SHARED colList() AS collisionType
-
-DIM objectIndex(0 TO 65) AS INTEGER
-COMMON SHARED objectIndex() AS INTEGER
-
-DIM spawnerEnabler(0 TO 128) AS INTEGER
-COMMON SHARED spawnerEnabler() AS INTEGER
 
 COMMON SHARED spriteCount AS INTEGER
 COMMON SHARED objCount AS INTEGER

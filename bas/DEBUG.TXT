@@ -1,722 +1,107 @@
-07:13:40
+23:44:40
+handleSpawn 0
+# 1 found 62
+spawnObject 62
+actorListNew
+# 2 found 1
+spawnObject 1
+actorListNew
+# 3 found 52
+spawnObject 52
+actorListNew
+# 4 found 45
+spawnObject 45
+actorListNew
+# 5 found 2
+spawnObject 2
+actorListNew
+# 6 found 1
+spawnObject 1
+actorListNew
+# 7 found 1
+spawnObject 1
+actorListNew
+# 8 found 1
+spawnObject 1
+actorListNew
+# 9 found 2
+spawnObject 2
+actorListNew
+# 10 found 1
+spawnObject 1
+actorListNew
+Checkpoint from Lo
+handleSpawn 1
+# 17 found 44
+spawnObject 44
+actorListNew
+# 18 found 17
+spawnObject 17
 actorListNew
 actorListNew
 actorListNew
+# 19 found 45
+spawnObject 45
 actorListNew
+# 20 found 1
+spawnObject 1
 actorListNew
+# 21 found 1
+spawnObject 1
 actorListNew
+# 22 found 1
+spawnObject 1
 actorListNew
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
+# 23 found 2
+spawnObject 2
 actorListNew
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-destroy  11
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
+# 24 found 2
+spawnObject 2
 actorListNew
+# 25 found 11
+spawnObject 11
 actorListNew
+# 26 found 44
+spawnObject 44
 actorListNew
+# 27 found 15
+spawnObject 15
 actorListNew
+# 28 found 15
+spawnObject 15
 actorListNew
+# 29 found 62
+spawnObject 62
 actorListNew
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-destroy  7
-destroy  8
-destroy  9
-destroy  10
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-makeParent
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-.EB
-.SB
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-actorListNew
-.EB
-.SB
-destroy  4
-destroy  5
-destroy  6
-destroy  11
 destroy  12
+ 11- 12- 13
+makeParent
+Checkpoint from Hi
+handleSpawn 0
+# 1 found 62
+spawnObject 62
+actorListNew
+destroy  10
+ 9- 10- 11
+destroy  11
+ 9- 11- 13
 destroy  13
+ 9- 13- 14
 destroy  14
+ 9- 14- 15
 destroy  15
+ 9- 15- 16
 destroy  16
+ 9- 16- 17
+destroy  17
+ 9- 17- 18
+destroy  18
+ 9- 18- 19
+destroy  19
+ 9- 19- 20
+destroy  20
+ 9- 20- 21
+destroy  21
+ 9- 21- 22
+unParent
+makeParent
