@@ -47,20 +47,8 @@ DIM SHARED readOfs AS LONG                ' Read/Write variables
 DIM SHARED storeOfs AS LONG
 DIM SHARED pageOfs AS INTEGER
 
-DIM SHARED asmKBinit AS STRING
 DIM SHARED asmKBroutine AS STRING
-DIM SHARED asmKBremove AS STRING
-
-DIM SHARED asmPageFlip AS STRING
-
-DIM SHARED asmTile AS STRING                'Assembly routine storage
-DIM SHARED asmCopyTileArea AS STRING
-DIM SHARED asmSpriteList AS STRING
-DIM SHARED asmTilePan AS STRING
-DIM SHARED asmClearList AS STRING
-DIM SHARED asmUpdateTile AS STRING
-
-DIM SHARED KBoldSeg AS INTEGER               'KB state save.
+DIM SHARED KBoldSeg AS INTEGER              'KB state save.
 DIM SHARED KBoldOfs AS INTEGER
 DIM SHARED Keyflags AS INTEGER
 
@@ -729,7 +717,7 @@ SUB myPrint (x, y, text$, attributes)
 END SUB
 
 SUB playSounds
-
+ exit sub
  IF sounds.Queue(sounds.readPos) THEN
    OUT &H43, &HB6     'Tell timer 2 we want to change countdown value
 

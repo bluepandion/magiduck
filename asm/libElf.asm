@@ -176,7 +176,7 @@ aPageFlip PROC
 		pop bp
 		retf 10
 aPageFlip endp
-;==============================================================================
+
 aKBinit PROC
 
 ;------------------------------------------------------------------------------
@@ -231,7 +231,7 @@ pop bp
 retf 8
 
 aKBinit ENDP
-;==============================================================================
+
 aClearList PROC
 
 ;---------------------------------------------------------------------------
@@ -418,7 +418,7 @@ JMP loopYsafe			;		else { GOTO loopy }
 ;--------------------------------------------------------------------------
 
 aClearList ENDP
-;==============================================================================
+
 aRectList PROC
 
 	;---------------------------------------------------------------------------
@@ -874,7 +874,7 @@ safeRectEnd:
 
 ;--------------------------------------------------------------------------
 aRectList ENDP
-;==============================================================================
+
 aSpriteList PROC
 
 ;---------------------------------------------------------------------------
@@ -1334,7 +1334,7 @@ jmp newSprite
 
 ;============================================================================
 aSpriteList ENDP
-;==============================================================================
+
 aTileArea PROC
 
 ;============================================================================
@@ -1456,7 +1456,7 @@ retf 12
 
 ;============================================================================
 aTileArea ENDP
-;==============================================================================
+
 aTileDraw PROC
 
 ;============================================================================
@@ -1560,7 +1560,7 @@ retf 14
 
 ;================================================================================	
 aTileDraw ENDP
-;==============================================================================
+
 aTilePan PROC
 
 ;============================================================================
@@ -1646,7 +1646,7 @@ retf 6
 
 ;================================================================================	
 aTilePan ENDP
-;==============================================================================
+
 aKBremove PROC
 
 ;------------------------------------------------------------------------------
@@ -1686,7 +1686,7 @@ retf 4
 ;------------------------------------------------------------------------------
 
 aKBremove ENDP
-;==============================================================================
+
 aPrint PROC
 
 ;============================================================================
@@ -1821,7 +1821,7 @@ exit:
 
 ;================================================================================	
 aPrint ENDP
-;==============================================================================
+
 aInitVideo PROC
 
 ;============================================================================
@@ -1960,7 +1960,7 @@ exit:
 
 ;================================================================================	
 aInitVideo ENDP
-;==============================================================================
+
 aExitVideo PROC
 ;============================================================================
 ;
@@ -2010,7 +2010,7 @@ exit:
 	
 	
 aExitVideo ENDP
-;==============================================================================
+
 aTileRead PROC
 ;============================================================================
 ;
@@ -2076,7 +2076,7 @@ exit:
 
 ;================================================================================	
 aTileRead ENDP
-;==============================================================================
+
 aTileWrite PROC
 ;============================================================================
 ;
@@ -2137,6 +2137,114 @@ exit:
 
 ;================================================================================	
 aTileWrite ENDP
+
+aSoundNote PROC
+	push bp
+	mov bp, sp
+	
+	xor bx, bx
+	mov bl, soundPos
+	mov ax, [bp + 6]
+	mov soundQueue[bx], al
+	
+	pop bp
+	retf 2
+aSoundNote ENDP
+
+aSoundFX PROC
+	push bp
+	mov bp, sp
+	
+	xor ax, ax
+	mov bx, [bp + 8]
+	xor cx, cx
+	mov cl, soundPos
+	add cx, [bp + 6]
+	and cx, 63
+	
+	fillQueue:
+	mov al, soundData[bx]
+	cmp al, 95
+	ja exit
+	xchg bx, cx
+	mov soundQueue[bx], al
+	xchg bx, cx
+	inc cx
+	and cx, 63
+	
+	exit:
+	pop si
+	retf 4	
+aSoundFX ENDP
+
+aSoundPlay PROC
+	push ax
+	push bx
+	
+	xor bx, bx
+	mov bl, soundPos
+	xor ax, ax
+	mov al, soundData[bx]
+	cmp	ax, 0
+	jz	noPlay
+	
+	shl ax, 1
+	mov bx, ax
+	mov ax, freqData[bx]
+	cli
+	mov al,	0B6h
+	out	43h, al
+	pop ax
+	out 42h, al
+	xchg al, ah
+	out 42h, al
+	sti
+	jmp exit
+	
+	noPlay:
+	cli
+	mov al, soundOff
+	out 61h, al
+	sti
+	
+	exit:
+	inc soundPos
+	and soundPos, 63
+	pop bx
+	pop ax
+	retf
+aPlaySounds ENDP
+
+aSoundStop PROC
+	cli
+	mov al, soundOff
+	out 61h, al
+	sti
+	mov bx, 0
+	clearQueue:
+	mov soundQueue[bx], 0
+	inc bx
+	cmp bx, 64
+	jl clearQueue
+	retf 0
+
+aSoundStop ENDP
+
+aInit PROC
+	push bp
+	mov bp, sp
+	
+	mov soundPos, 0			; Setup pc speaker control values.
+	in al, 61h
+	or al, 3
+	mov soundOn, al
+	xor al, 3
+	mov soundOff, al	
+	
+	pop bp
+	retf 4
+aInit ENDP
+
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2160,8 +2268,8 @@ aTimerStart PROC
 		mov   ax, 3508h
 		int   21h
 		
-		mov oldTimerISR, bx
-		mov oldTimerISR + 2, es
+		mov   oldTimerISR, bx
+		mov   oldTimerISR + 2, es
 		
 		cli
 		mov   ax, cs
@@ -2188,7 +2296,7 @@ aTimerStart PROC
 		retf 0
 		
 aTimerStart ENDP
-;==============================================================================
+
 aTimerEnd PROC
 		cmp   timerActive, 00h
 		je    done
@@ -2216,7 +2324,7 @@ aTimerEnd PROC
 	done:
 		retf 0
 aTimerEnd ENDP
-;==============================================================================
+
 aTimerWait PROC
 		push ax
 		mov ax, 6
@@ -2231,11 +2339,12 @@ aTimerWait PROC
 		
 		retf 0
 aTimerWait ENDP
-;==============================================================================
+
 aTimerReset PROC
 		mov   timerTick, 0000h
 		retf 0
 aTimerReset ENDP
+
 ;==============================================================================
 ;
 ; Timer ISR
@@ -2255,17 +2364,113 @@ timerISR:
 	callOldTimerISR:
 		mov  timerCount, 8
 		db 234
-		oldTimerISR dw 1234h, 5678h, 0000h, 0000h, 0000h
+		oldTimerISR dw 1234h, 5678h, 0000h, 0000h
 
-		dummyData1		dw	0000h, 0000h, 0000h, 0000h
-	
-		screenSeg		dw	0b800h
+;==============================================================================
+;
+; Keyboard interrupt
+;
+; Modified after Jim Leonard's article for PC/XT machines.
+;
+;==============================================================================
+KeyboardInterrupt:
+	push ds
+	push ax
+	push bx
 
+	mov bx, kbArray			
+	mov ds, bx				
+	mov bx, kbArray + 2		
+
+	xor ah, ah				
+	in al, 060h				
+
+	CMP al, 07f				;0-127 press, 128-255 release
+	JA release
+		shl al, 1			;AL * 2
+		add bx, ax			;BX = Keyboard array offset + Key offset (AX)
+		mov al, 1			;Write a one to enable key
+		mov ds:[bx], al
+		JMP exit			
+	release:
+							;Key released.
+		and al, 07f			;Remove higheset bit of AL
+		shl al, 1			;AL * 2
+		add bx, ax			;BX = Keyboard array offset + Key offset (AX)
+		mov al, 0
+		mov ds:[bx], al		;Write a zero to disable key
+		
+	exit:
+
+	in al, 061h				;Reset keyboard, send EOI to XT keyboard
+	mov ah, al				;Store value to AH
+	or al, 080h				;Set Bit 7 to acknowledge scancode.
+	out 061h, al
+	xchg ah, al
+	out 061h, al
+
+	mov al, 020h			;Send EOI to master PIC
+	out 020h, al
+
+	pop bx					
+	pop ax
+	pop ds
+
+	iret					;Exit interrupt
+;==============================================================================
+;
+; Code segment variables
+;
+;==============================================================================	
+		dummyData1		dw	0000h, 0000h
 		timerTick 		dw 	0
 		timerSecond		dw	0
 		timerCount 		db 	8
 		timerActive 	db 	0
-	
+		
+		soundOff		db	0
+		soundOn			db	0
+		soundPos		db	0
+
+		soundData		db	256	dup(0)
+		
+		soundQueue		db	64	dup(0)
+		
+		freqData		dw	5535, 65535, 65535, 62798, 56818, 54235, 51877, 49715, 45891, 44191, 41144, 38489
+		dw 36156 , 34090 , 32248 , 30594 , 29101 , 27117 , 25938 , 24350 , 22945 , 21694 , 20572 , 19244
+		dw 18356 , 17292 , 16344 , 15297 , 14550 , 13714 , 12969 , 12175 , 11472 , 10847 , 10286 , 9700
+		dw 9108 , 8584 , 8116 , 7697 , 7231 , 6818 , 6449 , 6087 , 5736 , 5423 , 5120 , 4870
+		dw 4554 , 4307 , 4058 , 3836 , 3615 , 3418 , 3224 , 3043 , 2875 , 2711 , 2560 , 2415
+		dw 2281 , 2153 , 2032 , 1918 , 1810 , 1709 , 1612 , 1521 , 1435 , 1355 , 1280 , 1207
+		dw 1140 , 1075 , 1015 , 959 , 898 , 854 , 806 , 760 , 718 , 677 , 639 , 604
+		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301
+		
+		gfxSpriteBank	dw	0000h, 0000h
+		gfxTileBank		dw	0000h, 0000h
+		gfxAnims		dw	0000h, 0000h
+		gfxActorList	dw	0000h, 0000h
+		gfxSpriteList	dw	0000h, 0000h
+		gfxClearList	dw	0000h, 0000h
+		gfxCollList		dw	0000h, 0000h
+		kbArray			dw 	0000h, 0000h
+		
+		vOldMode		db	0
+		vAadapter		db	0
+		vWrap			dw	0000h
+		
+		vCGAregs		dw	42
+		dw 03D4h, 0000h, 03D5h, 0038h
+		dw 03D4h, 0001h, 03D5h, 0028h
+		dw 03D4h, 0002h, 03D5h, 002Dh
+		dw 03D4h, 0003h, 03D5h, 000Ah
+		dw 03D4h, 0004h, 03D5h, 003Fh
+		dw 03D4h, 0005h, 03D5h, 0006h
+		dw 03D4h, 0006h, 03D5h, 0032h
+		dw 03D4h, 0007h, 03D5h, 0038h
+		dw 03D4h, 0008h, 03D5h, 0002h
+		dw 03D4h, 0009h, 03D5h, 0003h
+		dw 03D8h, 0008h
+					
 		dummyData2		dw	0000h, 0000h, 0000h, 0000h
 
 ;==============================================================================	

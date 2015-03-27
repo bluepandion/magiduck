@@ -1,4 +1,4 @@
-DECLARE SUB debugOut (s$)
+DECLARE SUB DEBUGOUT (s$)
 DECLARE SUB actorListNew (index%)
 DECLARE SUB unParent (object%)
 DECLARE SUB makeParent (child%, parent%)
@@ -58,7 +58,7 @@ DIM SHARED spriteClipYofs(-20 TO 70) AS INTEGER
 DIM SHARED walkNote(0 TO 7) AS INTEGER
 
 SUB actorListNew (index)
-	debugOut "actorListNew"
+	'debugOut "actorListNew"
 	actor(index).lNext = 1
 	actor(actor(1).lPrev).lNext = index
 	actor(index).lPrev = actor(1).lPrev
@@ -97,7 +97,7 @@ SUB damagePlayer
 	END IF
 END SUB
 
-SUB debugOut (s$)
+SUB DEBUGOUT (s$)
 	OPEN "debug.txt" FOR APPEND AS #1
 		PRINT #1, s$
 	CLOSE #1
@@ -119,7 +119,7 @@ SUB destroyObject (n)
 	actor(thisNext).lPrev = thisPrev
 	actor(thisPrev).lNext = thisNext	
 
-	debugOut STR$(thisPrev) + "-" + STR$(n) + "-" + STR$(thisNext)
+	'debugOut STR$(thisPrev) + "-" + STR$(n) + "-" + STR$(thisNext)
 END SUB
 
 SUB handleBehaviors
@@ -139,7 +139,7 @@ SUB handleBehaviors
 	soundEvent = -1
 
 	dtAnims = dtAnims + 1
-	floatC = (floatC + 1) MOD 10
+	fractionC = (fractionC + 1) MOD 10
 '--------------------------------------------------------------------------
 	colCount(1) = -1
 	colCount(2) = -1
@@ -470,7 +470,7 @@ CASE 255
       actor(n).flags = 1
       IF collisionFloor = 1 THEN
          switchAnim n, 40
-         IF fakeFloat(2, floatC) THEN
+         IF fraction(2, fractionC) THEN
             sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
             player.walkCounter = (player.walkCounter + 1) AND 7
          END IF
@@ -482,7 +482,7 @@ CASE 255
       actor(n).flags = 0
       IF collisionFloor = 1 THEN
          switchAnim n, 40
-         IF fakeFloat(2, floatC) THEN
+         IF fraction(2, fractionC) THEN
             sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
             player.walkCounter = (player.walkCounter + 1) AND 7
          END IF
@@ -528,8 +528,8 @@ CASE 255
    IF player.vecY > maxY THEN player.vecY = maxY
    IF player.vecY < minY THEN player.vecY = minY
 
-   actor(n).x = actor(n).x + fakeFloat(player.vecX, floatC)
-   actor(n).y = actor(n).y + fakeFloat(player.vecY, floatC)
+   actor(n).x = actor(n).x + fraction(player.vecX, fractionC)
+   actor(n).y = actor(n).y + fraction(player.vecY, fractionC)
 
    c = tileRead(actor(n).x + 2, actor(n).y - 4)
    IF c > 29 THEN
@@ -582,8 +582,8 @@ IF actor(n).exist > 0 THEN
       '
       'Add speed vector to transform.
       '
-      actor(n).x = actor(n).x + fakeFloat(actor(n).vecX, floatC)
-      actor(n).y = actor(n).y + fakeFloat(actor(n).vecY, floatC)
+      actor(n).x = actor(n).x + fraction(actor(n).vecX, fractionC)
+      actor(n).y = actor(n).y + fraction(actor(n).vecY, fractionC)
       '
       'Store current parent transform for next delta.
       '
@@ -660,18 +660,24 @@ IF actor(n).exist > 0 THEN
    SELECT CASE actor(n).control
    'SPIKE BALL U
    CASE 17
-        c = angle.y(mainCounter0) + 32
+        c = angle.y(counter0) + 32
         actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(c))
         actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(c))
 
    CASE 18
    'SPIKE BALL O+
-        actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(mainCounter0))
-        actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(mainCounter0))
+        actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(counter0))
+        actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(counter0))
    END SELECT
 
    IF gfx.page > 0 AND actor(n).control THEN
-      playerDeltaX = ABS(actor(n).x - playerX)
+      
+		actor(n).frame = actor(n).frame + animation(actor(n).frame).jump
+		IF animation(actor(n).frame).jump < 0 THEN
+			actor(n).frame = actor(n).frame + animation(actor(n).frame).jump
+		END IF
+		  
+	  playerDeltaX = ABS(actor(n).x - playerX)
       playerDeltaY = ABS(actor(n).y - playerY)
       
       SELECT CASE actor(n).control
@@ -778,7 +784,7 @@ IF actor(n).exist > 0 THEN
 		   listIDX = actor(n).lNext
           END IF
          ELSE
-          IF playerDeltaX > 4 OR playerDeltaY > 2 OR kbArray(28) THEN unParent 2
+          IF playerDeltaX > 4 OR playerDeltaY > 1 THEN unParent 2
          END IF
 
        'Enemy bullet
@@ -1039,12 +1045,12 @@ IF actor(n).exist > 0 THEN
            actor(n).vecX = 8
            IF actor(n).x > screenX + 44 THEN actor(n).flags = 1 ' soundEvent = 151
          END IF
-         c = (mainCounter0 + actor(n).count) AND 63
+         c = (counter0 + actor(n).count) AND 63
          actor(n).y = actor(n).count + mulTable(1, angle.y(c))
 
          'FIRE BREATH
        CASE 11
-         x = (mainCounter1 + actor(n).y) AND 31
+         x = (counter1 + actor(n).y) AND 31
          IF x > 10 THEN
           IF x = 11 THEN
            actor(n).frame = 152: soundEvent = 66
@@ -1073,16 +1079,16 @@ IF actor(n).exist > 0 THEN
        'CHECKPOINT
        CASE 62
            'IF playerDeltaY < 10 AND player.wave <> actor(n).flags THEN
-		IF playerDeltaY < 30 THEN
+		IF playerDeltaY < 52 THEN
 			check = 0
-			IF actor(2).Y > actor(n).Y + 20 AND player.wave =< actor(n).flags THEN
+			IF actor(2).Y < actor(n).Y - 20 AND player.wave =< actor(n).flags THEN
 				player.wave = actor(n).flags + 1
 				check = 1
-				debugOut "Checkpoint from Lo"
-			ELSEIF actor(2).Y < actor(n).Y - 20 AND player.wave > actor(n).flags THEN
+				'debugOut "Checkpoint from Lo"
+			ELSEIF actor(2).Y > actor(n).Y + 20 AND player.wave > actor(n).flags THEN
 				player.wave = actor(n).flags
 				check = 1
-				debugOut "Checkpoint from Hi"
+				'debugOut "Checkpoint from Hi"
 			END IF
 			IF check THEN
 				'spawnerEnabler(actor(n).spawner) = spawnerEnabler(actor(n).spawner) AND &HFFF
@@ -1104,7 +1110,7 @@ IF actor(n).exist > 0 THEN
 
         'EXIT
         CASE 63
-         IF (mainCounter1 AND 3) = 2 THEN
+         IF (counter1 AND 3) = 2 THEN
           x = actor(n).x - 4 + INT(RND * 10)
           y = actor(n).y - 22 + INT(RND * 15)
           spawnObject x, y, 93, 0, 0
@@ -1190,7 +1196,7 @@ IF actor(n).exist > 0 THEN
 '----------------------------------------------------------------------------
    IF actor(n).life > -1 THEN
     IF actor(n).life = 0 THEN
-     debugOut "destroy " + STR$(n)
+     'debugOut "destroy " + STR$(n)
      IF actor(n).control > 0 AND actor(n).control < 63 THEN
 	  'spawnerEnabler(actor(n).spawner) = 0
 	  level.spawner(actor(n).spawner).object = 0
@@ -1224,7 +1230,7 @@ IF actor(n).exist > 0 THEN
    END IF 'exist check
 LOOP WHILE actor(listIDX).lNext > 1
 
- IF gfx.page THEN mainCounter1 = (mainCounter1 + 1) AND 63
+ IF gfx.page THEN counter1 = (counter1 + 1) AND 63
 
  spriteList(spriteListIndex, gfx.page).y = 255
 
@@ -1234,7 +1240,7 @@ LOOP WHILE actor(listIDX).lNext > 1
   hudUpdate 4
  END IF
 
- mainCounter0 = (mainCounter0 + 1) AND 63
+ counter0 = (counter0 + 1) AND 63
 
 END SUB
 
@@ -1287,22 +1293,6 @@ SUB handleCollision
 	NEXT b
 
 	IF soundEvent > -1 THEN queueSound 0, soundEvent
-END SUB
-
-SUB handleSpawn (wave)
-	debugOut "handleSpawn"+str$(wave)
-	FOR n = 1 TO 16
-		nn = wave * 16 + n
-		o = level.spawner(nn).object
-		'IF spawnerEnabler(nn) > 0 THEN o = spawnerEnabler(nn)
-		IF o > 0 THEN
-			debugOut "#"+str$(nn)+" found"+str$(o)
-			spawnObject level.spawner(nn).x, level.spawner(nn).y, o, level.spawner(nn).flags, nn
-			level.spawner(nn).object = level.spawner(nn).object OR &HF000
-			'spawnerEnabler(nn) = o OR &HF000
-			'level.wave(wave).spawner(n).object = 0			
-		END IF
-	NEXT n
 END SUB
 
 SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
@@ -1366,216 +1356,174 @@ SUB hudUpdate (flags AS INTEGER)
 
   'hudPrint 39 - LEN(a$), a$, &HF, &HE
  END IF
-
-
  IF flags AND 16 THEN
   'w40char.text = STR$(INT(fps)) + "|"
   'aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 4, 0, hudBufferSeg, hudBufferOfs
-
   'hudPrint 4, STR$(INT(fps)), &HF, &HE
  END IF
-
  'w40char.text = STR$(ASC(MID$(hudBuffer, 161, 1))) + "|"
  'aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
-
-
 END SUB
 
 SUB initGame
-
-OPEN "debug.txt" FOR OUTPUT AS #1
- PRINT #1, TIME$
-CLOSE #1
-
-elfInit
-
-loadSounds "sound"
-
-walkNote(0) = 30
-walkNote(1) = 32
-walkNote(2) = 34
-walkNote(3) = 35
-walkNote(4) = 30
-walkNote(5) = 32
-walkNote(6) = 28
-walkNote(7) = 27
-
-initTestGame
-
-'initMainMenu
-
+	OPEN "debug.txt" FOR OUTPUT AS #1
+		PRINT #1, TIME$
+	CLOSE #1
+	elfInit
+	loadSounds "sound"
+	walkNote(0) = 30
+	walkNote(1) = 32
+	walkNote(2) = 34
+	walkNote(3) = 35
+	walkNote(4) = 30
+	walkNote(5) = 32
+	walkNote(6) = 28
+	walkNote(7) = 27
+	initTestGame
+	'initMainMenu
 END SUB
 
 SUB initMainMenu
-
- hudTextLoad &H0, 1
-
- loadTiles "logotile"
-
- player.level = 8
-
- randomOffset = 0
-
- DO
-  main
- LOOP
-
+	hudTextLoad &H0, 1
+	loadTiles "logotile"
+	player.level = 8
+	randomOffset = 0
+	DO
+		main
+	LOOP
 END SUB
 
 SUB initTestGame
-
- 'loadSprites "spenemy0", 1
-
- 'loadTiles "tileset0"
-
- player.level = 0
-
- randomOffset = 0
-
- DO
-  main
- LOOP
-
+	player.level = 0
+	DO
+		main
+	LOOP
 END SUB
 
 SUB main
+	hudTextLoad &HA0, 1
+	loadLevel "level" + MID$(STR$(player.level), 2, 1)
+	
+	for n = 1 to 60
+		actor(n).exist = 0
+		actor(n).parentDX = 0
+		actor(n).parentDY = 0
+		actor(n).lNext = 1
+		actor(n).lPrev = 1
+		actor(n).control = 0
+	next n
+	
+	actor(1).x = 0
+	actor(1).y = 0
+	actor(1).lNext = 2
+	actor(1).lPrev = 2
+	actor(1).exist = 0
 
- hudTextLoad &HA0, 1
- 
- loadLevel "level" + MID$(STR$(player.level), 2, 1)
- 
- actor(1).x = 0
- actor(1).y = 0
- actor(1).lNext = 2
- actor(1).lPrev = 2
- actor(1).exist = 0
- 
- colCount(1) = -1
- colCount(2) = -1
- colCount(3) = -1
- 
- player.hp = 4
- player.time = 300
- player.hasKey = 0
- player.jumpRelease = -1
- player.wave = 0
- player.scoreBase = player.score
+	colCount(1) = -1
+	colCount(2) = -1
+	colCount(3) = -1
 
- actor(2).lPrev = 1
- actor(2).lNext = 1
+	player.hp = 4
+	player.time = 300
+	player.hasKey = 0
+	player.jumpRelease = -1
+	player.wave = 0
+	player.scoreBase = player.score
 
- actor(2).exist = 1
- actor(2).control = 255
- actor(2).life = -3
- actor(2).x = level.playerX
- actor(2).y = level.playerY
- actor(2).parentDX = 0
- actor(2).parentDY = 0
- actor(2).collider = 0
+	actor(2).lPrev = 1
+	actor(2).lNext = 1
+	actor(2).exist = 1
+	actor(2).control = 255
+	actor(2).life = -3
+	actor(2).x = level.playerX
+	actor(2).y = level.playerY
+	actor(2).parentDX = 0
+	actor(2).parentDY = 0
+	actor(2).collider = 0
+	actor(2).vecX = 0
+	actor(2).vecY = 0
+	player.vecY = 0
+	player.vecX = 0
+	player.Bouncing = 0
+	actor(2).frame = 10
+	actor(2).anim = 10
+	actor(2).visX = 999
+	actor(2).visY = 999
+	playerOldX = -999
+	playerOldY = -999
 
- actor(2).vecX = 0
- actor(2).vecY = 0
- player.vecY = 0
- player.vecX = 0
- player.Bouncing = 0
+	handleSpawn 0
+	screenResetPos actor(2).x - 20, actor(2).y - 46
+	updateText = 1
 
- actor(2).frame = 10
- actor(2).anim = 10
+	IF player.level = 8 THEN
+		hudTextLoad &H6E0, 0
+		player.hudLock = 999
+	ELSE
+		hudTextLoad &H1E0 + player.level * 160, 0
+		player.hudLock = 10
+	END IF
 
- actor(2).visX = 999
- actor(2).visY = 999
+	CALL aTimerReset
 
- playerOldX = -999
- playerOldY = -999
+	DO
+		CALL aTimerWait
+		handleCollision
+		handleBehaviors
+		playSounds
+		handleScroll
+		aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
- handleSpawn 0
-
- screenResetPos actor(2).x - 20, actor(2).y - 46
-
- updateText = 1
-
- IF player.level = 8 THEN
-   hudTextLoad &H6E0, 0
-   player.hudLock = 999
-  ELSE
-   hudTextLoad &H1E0 + player.level * 160, 0
-   player.hudLock = 10
- END IF
- 
- CALL aTimerReset
-
- DO
-      CALL aTimerWait
-
-      handleCollision
-
-      handleBehaviors
-
-      playSounds
-
-      handleScroll
-
-      aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
-
-      IF actor(2).control = 259 THEN EXIT SUB
-
-      IF actor(2).control = 255 THEN
-       IF kbArray(1) THEN
-        hudTextLoad &H780, 1
-        queueSound 0, 76
-        DO
-         CALL aTimerWait
-
-         playSounds
-         
-         IF kbArray(21) THEN
-          quit
-          EXIT SUB
-         END IF
-        LOOP WHILE kbArray(49) = 0
-        queueSound 0, 76
-        player.hudLock = 0
-        hudUpdate 255
-       END IF
-        updateText = updateText + 1
-        IF updateText = 24 THEN
-         IF actor(2).control = 255 THEN player.time = player.time + (player.time > 0)
-         updateText = 0
-         hudUpdate &H8
-        END IF
-      END IF
-
+		IF actor(2).control = 259 THEN EXIT SUB
+		IF actor(2).control = 255 THEN
+			IF kbArray(1) THEN
+				hudTextLoad &H780, 1
+				queueSound 0, 76
+				DO
+					CALL aTimerWait
+					playSounds		 
+					IF kbArray(21) THEN
+						quit
+						EXIT SUB
+					END IF
+				LOOP WHILE kbArray(49) = 0
+				queueSound 0, 76
+				player.hudLock = 0
+				hudUpdate 255
+			END IF
+			updateText = updateText + 1
+			IF updateText = 24 THEN
+				IF actor(2).control = 255 THEN player.time = player.time + (player.time > 0)
+				updateText = 0
+				hudUpdate &H8
+			END IF
+			END IF
       aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
       gfx.page = gfx.page XOR 1
-
       aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
- LOOP
-
+	LOOP
 END SUB
 
-SUB makeParent (child, parent)
-	debugOut "makeParent"
-	
-	cNext = actor(child).lNext
-	cPrev = actor(child).lPrev
-	pNext = actor(parent).lNext
-
-	actor(cPrev).lNext = actor(child).lNext
-	actor(cNext).lPrev = actor(child).lPrev
-	actor(child).lPrev = parent
-	actor(child).lNext = pNext
-	actor(parent).lNext = child
-	actor(pNext).lPrev = child
-
-	actor(child).exist = parent
-	actor(child).parentDX = actor(parent).X
-	actor(child).parentDY = actor(parent).Y
+SUB handleSpawn (wave)
+	'debugOut "handleSpawn"+str$(wave)
+	FOR n = 1 TO 16
+		nn = wave * 16 + n
+		o = level.spawner(nn).object
+		'IF spawnerEnabler(nn) > 0 THEN o = spawnerEnabler(nn)
+		IF o > 0 THEN
+			'debugOut "#"+str$(nn)+" found"+str$(o)
+			spawnObject level.spawner(nn).x, level.spawner(nn).y, o, level.spawner(nn).flags, nn
+			level.spawner(nn).object = level.spawner(nn).object OR &HF000
+			'spawnerEnabler(nn) = o OR &HF000
+			'level.wave(wave).spawner(n).object = 0			
+		END IF
+	NEXT n
 END SUB
 
 SUB spawnObject (x, y, object, spawnerFlags, spawner) 
 	n = getSpawnSlot
 	
-	debugOut "spawnObject"+str$(object)
+	'debugOut "spawnObject"+str$(object)
 	
 	actor(n).exist = 1
 	actor(n).spawner = 0
@@ -1813,9 +1761,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).frame = 148
 			actor(n).anim = 148
 			actor(n).visX = 45
-			actor(n).visY = 45    			
+			actor(n).visY = 45
+			n = getSpawnslot
 		NEXT p
-		n = getSpawnSlot
 		actorListNew n
 		actor(n).collider = 1
 		actor(n).x = x
@@ -1824,7 +1772,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).dir = y
 		actor(n).control = c
 		actor(n).exist = 1
-		actor(n).spawner = 0
+		actor(n).spawner = spawner
 		actor(n).life = -999
 		actor(n).jump = 5
 		actor(n).frame = 146
@@ -1911,46 +1859,45 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 END SUB
 
 FUNCTION speedDiff% (x0, x1)
-
- d = ABS(x0 - x1)
-
- IF d = 0 THEN speedDiff% = 0: EXIT FUNCTION
-
- IF x0 < x1 THEN
-   m = 1
-  ELSE
-   m = -1
- END IF
-
- IF d > 16 THEN speedDiff% = 30 * m: EXIT FUNCTION
- IF d > 8 THEN speedDiff% = 20 * m: EXIT FUNCTION
- 'IF d > 3 THEN speedDiff% = 10 * m: EXIT FUNCTION
- speedDiff% = 10 * m
+	d = ABS(x0 - x1)
+	IF d = 0 THEN speedDiff% = 0: EXIT FUNCTION
+	IF x0 < x1 THEN
+		m = 1
+	ELSE
+		m = -1
+	END IF
+	IF d > 16 THEN speedDiff% = 30 * m: EXIT FUNCTION
+	IF d > 8 THEN speedDiff% = 20 * m: EXIT FUNCTION
+	speedDiff% = 10 * m
 END FUNCTION
 
-SUB unParent (index)
+SUB makeParent (child, parent)
+	'debugOut "makeParent"
+	actor(child).exist = parent
+	actor(child).parentDX = actor(parent).X
+	actor(child).parentDY = actor(parent).Y
+	
+	n = child
+	do
+		n = actor(n).lPrev
+		if n = parent then EXIT SUB
+	loop while n>1
+	
+	cNext = actor(child).lNext
+	cPrev = actor(child).lPrev
+	pNext = actor(parent).lNext
 
- debugOut "unParent"
-
- 'parent = actor(index).exist
-
- actor(index).parentDX = 0
- actor(index).parentDY = 0
- actor(index).exist = 1
-
- 'thisPrev = actor(index).lPrev
- 'thisNext = actor(index).lNext
- 'worldNext = actor(1).lNext
-
- 'actor(thisPrev).lNext = thisNext
- 'actor(thisNext).lPrev = thisPrev
-
- 'actor(index).lPrev = 1
- 'actor(index).lNext = actor(1).lNext
- 
- 'actor(worldNext).lPrev = index
-
- 'actor(1).lNext = index
-
+	actor(cPrev).lNext = actor(child).lNext
+	actor(cNext).lPrev = actor(child).lPrev
+	actor(child).lPrev = parent
+	actor(child).lNext = pNext
+	actor(parent).lNext = child
+	actor(pNext).lPrev = child	
 END SUB
 
+SUB unParent (index)
+	'debugOut "unParent"
+	actor(index).parentDX = 0
+	actor(index).parentDY = 0
+	actor(index).exist = 1
+END SUB
