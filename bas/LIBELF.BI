@@ -14,6 +14,11 @@ DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)
 DECLARE SUB aTileRead (BYVAL resultSeg%, BYVAL resultOfs%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
 DECLARE SUB aTileWrite (BYVAL writeIndex%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
+DECLARE SUB aSoundFX (BYVAl fx%, BYVAL offset%)
+DECLARE SUB aSoundNote (BYVAL note%)
+DECLARE SUB aSoundStop ()
+DECLARE SUB aSoundPlay ()
+DECLARE SUB aSetup (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aTimerStart ()
 DECLARE SUB aTimerEnd ()
 DECLARE SUB aTimerWait ()
@@ -31,7 +36,7 @@ COMMON SHARED loadLong AS LONG
 
 COMMON SHARED hudBuffer AS STRING * 164
 
-DIM KBarray(130)  AS INTEGER
+DIM KBarray(0 to 130)  AS INTEGER
 COMMON SHARED KBarray() AS INTEGER
 
 COMMON SHARED fps AS DOUBLE
@@ -210,14 +215,6 @@ TYPE angleType
  Y(0 TO 63) AS INTEGER
 END TYPE
 
-TYPE soundType
- Queue(0 TO 63) AS INTEGER
- readPos AS INTEGER
- speakerOn AS INTEGER
- speakerOff AS INTEGER
- Track(0 TO 255) AS INTEGER
-END TYPE
-
 COMMON SHARED gfx AS gfxType
 
 DIM spriteList(0 TO 31, 0 TO 1) AS spriteListType         'Sprite list = 600 bytes
@@ -233,7 +230,7 @@ COMMON SHARED flags AS flagsType
 DIM actor(1 TO 60) AS objectType
 COMMON SHARED actor()  AS objectType
 
-COMMON SHARED level AS levelType              'Level object data
+COMMON SHARED level AS levelType
 
 DIM animation(0 TO 255) AS animDataType
 COMMON SHARED animation() AS animDataType
@@ -260,12 +257,6 @@ COMMON SHARED screenTargetYlock AS INTEGER
 
 COMMON SHARED angle AS angleType
 
-COMMON SHARED sounds AS soundType
-
-CONST defaultVisX = 25
-CONST defaultVisY = 30
-CONST playerObj = 2
-
 COMMON SHARED tRead AS INTEGER
 COMMON SHARED tReadSeg AS INTEGER
 COMMON SHARED tReadOfs AS INTEGER
@@ -279,4 +270,3 @@ TYPE w40textType
 END TYPE
 
 COMMON SHARED w40char AS w40textType
-

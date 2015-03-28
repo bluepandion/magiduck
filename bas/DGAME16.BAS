@@ -14,8 +14,6 @@ DECLARE FUNCTION collision% (x0%, y0%, w0%, h0%, x1%, y1%, w1%, h1%)
 DECLARE SUB damagePlayer ()
 DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB aUpdateTile (x%, y%)
-DECLARE SUB queueSound (offset%, Position%)
-DECLARE SUB playSounds ()
 DECLARE SUB handleCollision ()
 DECLARE SUB screenResetPos (x%, y%)
 
@@ -57,6 +55,10 @@ DIM SHARED spriteClipYofs(-20 TO 70) AS INTEGER
 
 DIM SHARED walkNote(0 TO 7) AS INTEGER
 
+CONST defaultVisX = 25
+CONST defaultVisY = 30
+CONST playerObj = 2
+
 SUB actorListNew (index)
 	'debugOut "actorListNew"
 	actor(index).lNext = 1
@@ -92,7 +94,7 @@ SUB damagePlayer
     IF actor(2).flash = 0 THEN
 		player.hp = player.hp + (player.hp > 0)
 		actor(2).flash = 40
-		queueSound 0, 4
+		aSoundFX 0, 4
 		hudUpdate 2
 	END IF
 END SUB
@@ -230,8 +232,7 @@ CASE 262
             aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 
         CASE 1001
-            sounds.queue(sounds.readPos) = 0
-            playSounds
+            CALL aSoundStop
             actor(n).control = 259
       END SELECT
                
@@ -347,8 +348,7 @@ CASE 258
 CASE 256
 
    IF kbArray(57) THEN
-       sounds.queue(sounds.readPos) = 0
-       playSounds
+       CALL aSoundStop
        actor(n).control = 259
    END IF
 
@@ -471,7 +471,7 @@ CASE 255
       IF collisionFloor = 1 THEN
          switchAnim n, 40
          IF fraction(2, fractionC) THEN
-            sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
+            'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
             player.walkCounter = (player.walkCounter + 1) AND 7
          END IF
       END IF
@@ -483,7 +483,7 @@ CASE 255
       IF collisionFloor = 1 THEN
          switchAnim n, 40
          IF fraction(2, fractionC) THEN
-            sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
+            'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
             player.walkCounter = (player.walkCounter + 1) AND 7
          END IF
       END IF
@@ -513,8 +513,8 @@ CASE 255
          ys = angle.y(b) \ 2
          spawnObject actor(n).x, actor(n).y, 257, xs, ys
       NEXT b
-      queueSound 4, 22
-      queueSound 14, 23
+      aSoundFX 4, 22
+      aSoundFX 14, 23
       hudTextLoad &H140, 0
       player.hudLock = 999
       player.score = player.scoreBase
@@ -1070,7 +1070,7 @@ IF actor(n).exist > 0 THEN
         IF c > 29 THEN
           actor(n).y = actor(n).y AND &HFFF8 - 6
           actor(n).vecY = -30
-          sounds.queue(sounds.readPos) = 40
+          aSoundNote 40
          ELSE
           actor(n).vecY = actor(n).vecY + 6
           IF actor(n).vecY > 20 THEN actor(n).vecY = 20
@@ -1234,7 +1234,7 @@ LOOP WHILE actor(listIDX).lNext > 1
 
  spriteList(spriteListIndex, gfx.page).y = 255
 
- IF soundEvent > -1 THEN queueSound 0, soundEvent
+ IF soundEvent > -1 THEN aSoundFX 0, soundEvent
 
  IF player.score > scoreDelta THEN
   hudUpdate 4
@@ -1292,7 +1292,7 @@ SUB handleCollision
 		NEXT a
 	NEXT b
 
-	IF soundEvent > -1 THEN queueSound 0, soundEvent
+	IF soundEvent > -1 THEN aSoundFX 0, soundEvent
 END SUB
 
 SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
@@ -1307,7 +1307,7 @@ END SUB
 SUB hudUpdate (flags AS INTEGER)
  IF player.hudLock THEN
    player.hudLock = player.hudLock - 1
-   IF player.hudLock = 1 THEN
+   IF player.hudLock = < 2 THEN
      flags = 255
     ELSE
      EXIT SUB
@@ -1404,6 +1404,8 @@ SUB main
 	hudTextLoad &HA0, 1
 	loadLevel "level" + MID$(STR$(player.level), 2, 1)
 	
+	debugOut "level load ok"
+	
 	for n = 1 to 60
 		actor(n).exist = 0
 		actor(n).parentDX = 0
@@ -1451,11 +1453,17 @@ SUB main
 	actor(2).visY = 999
 	playerOldX = -999
 	playerOldY = -999
-
+	
+	debugOut "actor setup ok"
+	
 	handleSpawn 0
+	debugOut "spawn ok"
+	
 	screenResetPos actor(2).x - 20, actor(2).y - 46
+	debugOut "set screen pos ok"
+	
 	updateText = 1
-
+	
 	IF player.level = 8 THEN
 		hudTextLoad &H6E0, 0
 		player.hudLock = 999
@@ -1463,14 +1471,18 @@ SUB main
 		hudTextLoad &H1E0 + player.level * 160, 0
 		player.hudLock = 10
 	END IF
-
+	
+	debugOut "hud ok"
+	
 	CALL aTimerReset
 
+	debugOut "timer ok"
+	
 	DO
 		CALL aTimerWait
 		handleCollision
 		handleBehaviors
-		playSounds
+		CALL aSoundPlay
 		handleScroll
 		aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
@@ -1478,16 +1490,16 @@ SUB main
 		IF actor(2).control = 255 THEN
 			IF kbArray(1) THEN
 				hudTextLoad &H780, 1
-				queueSound 0, 76
+				aSoundFX 0, 76
 				DO
 					CALL aTimerWait
-					playSounds		 
+					CALL aSoundPlay		 
 					IF kbArray(21) THEN
 						quit
 						EXIT SUB
 					END IF
 				LOOP WHILE kbArray(49) = 0
-				queueSound 0, 76
+				aSoundFX 0, 76
 				player.hudLock = 0
 				hudUpdate 255
 			END IF
@@ -1505,13 +1517,11 @@ SUB main
 END SUB
 
 SUB handleSpawn (wave)
-	'debugOut "handleSpawn"+str$(wave)
 	FOR n = 1 TO 16
 		nn = wave * 16 + n
 		o = level.spawner(nn).object
 		'IF spawnerEnabler(nn) > 0 THEN o = spawnerEnabler(nn)
 		IF o > 0 THEN
-			'debugOut "#"+str$(nn)+" found"+str$(o)
 			spawnObject level.spawner(nn).x, level.spawner(nn).y, o, level.spawner(nn).flags, nn
 			level.spawner(nn).object = level.spawner(nn).object OR &HF000
 			'spawnerEnabler(nn) = o OR &HF000
@@ -1521,10 +1531,7 @@ SUB handleSpawn (wave)
 END SUB
 
 SUB spawnObject (x, y, object, spawnerFlags, spawner) 
-	n = getSpawnSlot
-	
-	'debugOut "spawnObject"+str$(object)
-	
+	n = getSpawnSlot	
 	actor(n).exist = 1
 	actor(n).spawner = 0
 	actor(n).flash = 0
@@ -1872,7 +1879,7 @@ FUNCTION speedDiff% (x0, x1)
 END FUNCTION
 
 SUB makeParent (child, parent)
-	'debugOut "makeParent"
+	
 	actor(child).exist = parent
 	actor(child).parentDX = actor(parent).X
 	actor(child).parentDY = actor(parent).Y

@@ -176,62 +176,58 @@ aPageFlip PROC
 		pop bp
 		retf 10
 aPageFlip endp
-
 aKBinit PROC
+	;------------------------------------------------------------------------------
+	;
+	; Keyboard init v2
+	;
+	;------------------------------------------------------------------------------
 
-;------------------------------------------------------------------------------
-;
-; Keyboard init v2
-;
-;------------------------------------------------------------------------------
+	; Parameter stack offsets
+	; Order is inverted from qbasic CALL ABSOLUTE parameter order
 
-; Parameter stack offsets
-; Order is inverted from qbasic CALL ABSOLUTE parameter order
+	;00 ds
+	;02 bp
+	;04 Qbasic return segment
+	;06 Qbasic return offset
 
-;00 ds
-;02 bp
-;04 Qbasic return segment
-;06 Qbasic return offset
+	;08 New offset
+	;10 New segment
+	;12 Old offset
+	;14 Old segment
 
-;08 New offset
-;10 New segment
-;12 Old offset
-;14 Old segment
+	;------------------------------------------------------------------------------
+	push bp
+	push ds
 
-;------------------------------------------------------------------------------
-push bp
-push ds
+	mov bp, sp
 
-mov bp, sp
+	mov ah, 035h		;Subfunction 35h: Get current interrupt handler address
+	mov al, 09h			;Subfunction 09h: Get address of int 09h (keyboard handler)
+	int 021h			;Call interrupt 21h
 
-mov ah, 035h		;Subfunction 35h: Get current interrupt handler address
-mov al, 09h			;Subfunction 09h: Get address of int 09h (keyboard handler)
-int 021h			;Call interrupt 21h
+	mov di, bx			;Set write offset to BX (address returned by interrupt)
+						;ES was set by interrupt as well.
 
-mov di, bx			;Set write offset to BX (address returned by interrupt)
-					;ES was set by interrupt as well.
+	mov bx, [bp + 14]	;Save old segment to our parameter
+	mov [bx], es
+	mov bx, [bp + 12]	;Save old offset to our parameter
+	mov [bx], di
 
-mov bx, [bp + 14]	;Save old segment to our parameter
-mov [bx], es
-mov bx, [bp + 12]	;Save old offset to our parameter
-mov [bx], di
+	mov dx, [bp + 10]	;Set read segment to New keyboard routine parameter
+	mov ds, dx			
+	mov dx, [bp + 8]	;DX = New keyboard routine offset
 
-mov dx, [bp + 10]	;Set read segment to New keyboard routine parameter
-mov ds, dx			
-mov dx, [bp + 8]	;DX = New keyboard routine offset
+						;Pass DS:DX to the interrupt
+	mov ah, 025h		;Subfunction 25h: Change interrupt handler address
+	mov al, 09h			;Subfunction 09h
+	int 021h
 
-					;Pass DS:DX to the interrupt
-mov ah, 025h		;Subfunction 25h: Change interrupt handler address
-mov al, 09h			;Subfunction 09h
-int 021h
+	pop ds
+	pop bp
 
-pop ds
-pop bp
-
-retf 8
-
+	retf 8
 aKBinit ENDP
-
 aClearList PROC
 
 ;---------------------------------------------------------------------------
@@ -874,7 +870,6 @@ safeRectEnd:
 
 ;--------------------------------------------------------------------------
 aRectList ENDP
-
 aSpriteList PROC
 
 ;---------------------------------------------------------------------------
@@ -1334,7 +1329,6 @@ jmp newSprite
 
 ;============================================================================
 aSpriteList ENDP
-
 aTileArea PROC
 
 ;============================================================================
@@ -1456,7 +1450,6 @@ retf 12
 
 ;============================================================================
 aTileArea ENDP
-
 aTileDraw PROC
 
 ;============================================================================
@@ -1560,7 +1553,6 @@ retf 14
 
 ;================================================================================	
 aTileDraw ENDP
-
 aTilePan PROC
 
 ;============================================================================
@@ -1646,7 +1638,6 @@ retf 6
 
 ;================================================================================	
 aTilePan ENDP
-
 aKBremove PROC
 
 ;------------------------------------------------------------------------------
@@ -1686,7 +1677,6 @@ retf 4
 ;------------------------------------------------------------------------------
 
 aKBremove ENDP
-
 aPrint PROC
 
 ;============================================================================
@@ -1821,7 +1811,6 @@ exit:
 
 ;================================================================================	
 aPrint ENDP
-
 aInitVideo PROC
 
 ;============================================================================
@@ -1960,7 +1949,6 @@ exit:
 
 ;================================================================================	
 aInitVideo ENDP
-
 aExitVideo PROC
 ;============================================================================
 ;
@@ -2010,7 +1998,6 @@ exit:
 	
 	
 aExitVideo ENDP
-
 aTileRead PROC
 ;============================================================================
 ;
@@ -2020,63 +2007,39 @@ aTileRead PROC
 ;
 ;============================================================================
 
-; Parameter stack offsets
-; Order is inverted from qbasic CALL ABSOLUTE parameter order
-
-;00 bp
-;02 Qbasic return segment
-;04 Qbasic return offset
-
-;06 tileMap offset
-;08 tileBuffer Segment
-;10 Tile X
-;12 Tile Y
-;14 Result return offset
-;16 Result return segment
-
-;============================================================================
-
 	push bp
 	mov bp,sp
-
-;---------------------------------------------------------------------------
-
-begin:
-
-	mov ds, [bp + 08]				;DS = Tilebuffer seg
-	mov si, [bp + 06]				;SI = Tilemap tile read offset
-
-	mov es, [bp + 16]				;ES:DI = Result seg:ofs
-	mov di, [bp + 14]
-
-	mov ax, [bp + 10]				;AX = X / 4
-	shr ax, 1
-	shr ax, 1
-	add si, ax						;SI += AX
-
-	mov ax, [bp + 12]				;AX = Y * 8 (from pixel coords to tile index)
-	and ax, 0FFF8h					;Remove pixels from coordinate
-	mov bx, ax						;BX = AX / 2
+	
+	mov ds, gfxTileBank
+	mov si, gfxTileBank + 2
+	
+	mov es, tileRead
+	mov di, tileRead + 2
+	
+	mov bx, [bp + 8]				;BX = X / 4
 	shr bx, 1
-	shl ax, 1						;AX = AX * 2
-	add ax, bx						;AX = Y * 20
-	add si, ax						;SI += AX
+	shr bx, 1
+	add si, bx
 
+	mov ax, [bp + 6]				;AX = Y * 80 (from pixel coords to tile index)
+	xchg al, ah						
+	shr ax, 1
+	shr ax, 1						;y * 64
+	mov bx, ax
+	shr bx, 1
+	shr bx, 1
+	add si, bx
+	add si, ax
+		
 	lodsb							;AL = tile index at (x,y)
 	xor ah, ah						;AH = 0
-
 	stosw							;Store result at ES:DI
 
-;---------------------------------------------------------------------------
-
-exit:
-
 	pop bp
-	retf 12
+	retf 4
 
 ;================================================================================	
 aTileRead ENDP
-
 aTileWrite PROC
 ;============================================================================
 ;
@@ -2137,7 +2100,6 @@ exit:
 
 ;================================================================================	
 aTileWrite ENDP
-
 aSoundNote PROC
 	push bp
 	mov bp, sp
@@ -2150,71 +2112,76 @@ aSoundNote PROC
 	pop bp
 	retf 2
 aSoundNote ENDP
-
 aSoundFX PROC
 	push bp
 	mov bp, sp
+	push ds
+	push si
 	
 	xor ax, ax
 	mov bx, [bp + 8]
-	xor cx, cx
-	mov cl, soundPos
-	add cx, [bp + 6]
-	and cx, 63
+	add bl, soundPos
+	and bx, 63
+	
+	mov ds, soundData
+	mov si, soundData + 2
+	add si, [bp + 6]
 	
 	fillQueue:
-	mov al, soundData[bx]
+	lodsb
 	cmp al, 95
 	ja exit
-	xchg bx, cx
 	mov soundQueue[bx], al
-	xchg bx, cx
-	inc cx
-	and cx, 63
+	inc bx
+	and bx, 63
+	jmp fillQueue
 	
 	exit:
 	pop si
+	pop ds
+	pop bp
 	retf 4	
 aSoundFX ENDP
-
 aSoundPlay PROC
-	push ax
-	push bx
-	
 	xor bx, bx
 	mov bl, soundPos
 	xor ax, ax
-	mov al, soundData[bx]
+	mov al, soundQueue[bx]
+	mov soundQueue[bx], 0
 	cmp	ax, 0
 	jz	noPlay
 	
 	shl ax, 1
-	mov bx, ax
+	xchg bx, ax
 	mov ax, freqData[bx]
+	xchg al, bl
 	cli
 	mov al,	0B6h
 	out	43h, al
-	pop ax
+	xchg al, bl
 	out 42h, al
 	xchg al, ah
 	out 42h, al
+	mov al, soundOn
+	out 61h, al
 	sti
-	jmp exit
+	jmp exitPlay
 	
 	noPlay:
+	in al, 61h
+	and al, 3
+	jz exitPlay
 	cli
 	mov al, soundOff
 	out 61h, al
 	sti
 	
-	exit:
+	exitPlay:
 	inc soundPos
 	and soundPos, 63
-	pop bx
-	pop ax
+	
 	retf
-aPlaySounds ENDP
-
+aSoundPlay ENDP
 aSoundStop PROC
 	cli
 	mov al, soundOff
@@ -2227,12 +2194,12 @@ aSoundStop PROC
 	cmp bx, 64
 	jl clearQueue
 	retf 0
-
 aSoundStop ENDP
-
-aInit PROC
+aSetup PROC
 	push bp
 	mov bp, sp
+	push ds
+	push si
 	
 	mov soundPos, 0			; Setup pc speaker control values.
 	in al, 61h
@@ -2241,10 +2208,24 @@ aInit PROC
 	xor al, 3
 	mov soundOff, al	
 	
+	mov ds, [bp + 8]		; Load external data addresses from
+	mov si, [bp + 6]		; provided string.
+	
+	lodsw
+	mov soundData, ax
+	lodsw
+	mov soundData+2, ax
+	
+	lodsw
+	mov kbArray, ax
+	lodsw
+	mov kbArray+2, ax	
+	
+	pop si
+	pop ds
 	pop bp
 	retf 4
-aInit ENDP
-
+aSetup ENDP
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2296,7 +2277,6 @@ aTimerStart PROC
 		retf 0
 		
 aTimerStart ENDP
-
 aTimerEnd PROC
 		cmp   timerActive, 00h
 		je    done
@@ -2324,7 +2304,6 @@ aTimerEnd PROC
 	done:
 		retf 0
 aTimerEnd ENDP
-
 aTimerWait PROC
 		push ax
 		mov ax, 6
@@ -2339,7 +2318,6 @@ aTimerWait PROC
 		
 		retf 0
 aTimerWait ENDP
-
 aTimerReset PROC
 		mov   timerTick, 0000h
 		retf 0
@@ -2368,57 +2346,6 @@ timerISR:
 
 ;==============================================================================
 ;
-; Keyboard interrupt
-;
-; Modified after Jim Leonard's article for PC/XT machines.
-;
-;==============================================================================
-KeyboardInterrupt:
-	push ds
-	push ax
-	push bx
-
-	mov bx, kbArray			
-	mov ds, bx				
-	mov bx, kbArray + 2		
-
-	xor ah, ah				
-	in al, 060h				
-
-	CMP al, 07f				;0-127 press, 128-255 release
-	JA release
-		shl al, 1			;AL * 2
-		add bx, ax			;BX = Keyboard array offset + Key offset (AX)
-		mov al, 1			;Write a one to enable key
-		mov ds:[bx], al
-		JMP exit			
-	release:
-							;Key released.
-		and al, 07f			;Remove higheset bit of AL
-		shl al, 1			;AL * 2
-		add bx, ax			;BX = Keyboard array offset + Key offset (AX)
-		mov al, 0
-		mov ds:[bx], al		;Write a zero to disable key
-		
-	exit:
-
-	in al, 061h				;Reset keyboard, send EOI to XT keyboard
-	mov ah, al				;Store value to AH
-	or al, 080h				;Set Bit 7 to acknowledge scancode.
-	out 061h, al
-	xchg ah, al
-	out 061h, al
-
-	mov al, 020h			;Send EOI to master PIC
-	out 020h, al
-
-	pop bx					
-	pop ax
-	pop ds
-
-	iret					;Exit interrupt
-;==============================================================================
-;
 ; Code segment variables
 ;
 ;==============================================================================	
@@ -2432,19 +2359,20 @@ KeyboardInterrupt:
 		soundOn			db	0
 		soundPos		db	0
 
-		soundData		db	256	dup(0)
+		soundData		dw	0000h, 0000h
 		
-		soundQueue		db	64	dup(0)
+		soundQueue		db	'0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'
 		
-		freqData		dw	5535, 65535, 65535, 62798, 56818, 54235, 51877, 49715, 45891, 44191, 41144, 38489
+		freqData		dw	0, 0, 0, 62798, 56818, 54235, 51877, 49715, 45891, 44191, 41144, 38489
 		dw 36156 , 34090 , 32248 , 30594 , 29101 , 27117 , 25938 , 24350 , 22945 , 21694 , 20572 , 19244
 		dw 18356 , 17292 , 16344 , 15297 , 14550 , 13714 , 12969 , 12175 , 11472 , 10847 , 10286 , 9700
 		dw 9108 , 8584 , 8116 , 7697 , 7231 , 6818 , 6449 , 6087 , 5736 , 5423 , 5120 , 4870
 		dw 4554 , 4307 , 4058 , 3836 , 3615 , 3418 , 3224 , 3043 , 2875 , 2711 , 2560 , 2415
 		dw 2281 , 2153 , 2032 , 1918 , 1810 , 1709 , 1612 , 1521 , 1435 , 1355 , 1280 , 1207
 		dw 1140 , 1075 , 1015 , 959 , 898 , 854 , 806 , 760 , 718 , 677 , 639 , 604
-		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301
+		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301, 100, 100
 		
+		tileRead		dw	0000h, 0000h
 		gfxSpriteBank	dw	0000h, 0000h
 		gfxTileBank		dw	0000h, 0000h
 		gfxAnims		dw	0000h, 0000h
@@ -2453,7 +2381,9 @@ KeyboardInterrupt:
 		gfxClearList	dw	0000h, 0000h
 		gfxCollList		dw	0000h, 0000h
 		kbArray			dw 	0000h, 0000h
-		
+		kbOld			dw  0000h, 0000h
+		kbFlags			db	00h
+				
 		vOldMode		db	0
 		vAadapter		db	0
 		vWrap			dw	0000h
@@ -2470,45 +2400,46 @@ KeyboardInterrupt:
 		dw 03D4h, 0008h, 03D5h, 0002h
 		dw 03D4h, 0009h, 03D5h, 0003h
 		dw 03D8h, 0008h
+		
+		vEGAregs		dw	36
+		dw 03D4h, 0006h, 03D5h, 0004h
+		dw 03D4h, 0007h, 03D5h, 0011h
+		dw 03D4h, 0008h, 03D5h, 0000h
+		dw 03D4h, 0009h, 03D5h, 0003h
+		dw 03D4h, 0010h, 03D5h, 00E1h
+		dw 03D4h, 0011h, 03D5h, 0024h
+		dw 03D4h, 0012h, 03D5h, 00C7h
+		dw 03D4h, 0015h, 03D5h, 00E0h
+		dw 03D4h, 0016h, 03D5h, 00F0h
+		
+		vVGAregs		dw	4
+		dw 03D4h, 0009h, 03D5h, 0083h 
 					
 		dummyData2		dw	0000h, 0000h, 0000h, 0000h
-
 ;==============================================================================	
 
-public aTimerStart
-
-public aTimerEnd
-
-public aTimerReset
-
-public aTimerWait
-
-public aTileWrite
-
-public aTileRead
-
-public aExitVideo
-
-public aInitVideo
-
-public aPrint
-
-public aKBremove
-
-public aTilePan
-
-public aTileDraw
-
-public aTileArea
-
-public aSpriteList
-
-public aRectList
-
-public aClearList
-
-public aKBinit
-
 public aPageFlip
+public aKBinit
+public aClearList
+public aRectList
+public aSpriteList
+public aTileArea
+public aTileDraw
+public aTilePan
+public aKBremove
+public aPrint
+public aInitVideo
+public aExitVideo
+public aTileRead
+public aTileWrite
+public aSoundNote
+public aSoundFX
+public aSoundPlay
+public aSoundStop
+public aSetup
+public aTimerStart
+public aTimerEnd
+public aTimerWait
+public aTimerReset
 
 end

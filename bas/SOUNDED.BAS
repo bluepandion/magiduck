@@ -1,11 +1,17 @@
-'$INCLUDE: 'libelf.bi'
 DECLARE SUB queueSound (offset%, Note%)
 DECLARE SUB playSounds ()
 DECLARE SUB initLookUps ()
 DECLARE SUB initTimer ()
 
-initLookUps
-initTimer
+TYPE soundType
+ Queue(0 TO 63) AS INTEGER
+ readPos AS INTEGER
+ speakerOn AS INTEGER
+ speakerOff AS INTEGER
+ Track(0 TO 255) AS INTEGER
+END TYPE
+
+DIM SHARED sounds AS soundType
 
 sounds.readPos = 0
 
@@ -198,6 +204,23 @@ DO
    ELSE
    COLOR 7, 0
    LOCATE 1, 50: PRINT "Cancel       "
+  END IF
+ END IF
+
+ IF d$ = "?" THEN
+  COLOR 15, 4
+  LOCATE 1, 48: INPUT "EXPORT Filename:", a$
+  IF LEN(a$) THEN
+   OPEN a$ + ".snd" FOR BINARY AS #1
+    FOR n = 0 TO 255
+     loadStr = CHR$(sounds.track(n))
+     PUT #1, n + 1, loadStr
+    NEXT n
+   CLOSE #1
+   LOCATE 1, 48: PRINT "Export "; TIME$
+   ELSE
+   COLOR 7, 0
+   LOCATE 1, 48: PRINT "Cancel       "
   END IF
  END IF
 
