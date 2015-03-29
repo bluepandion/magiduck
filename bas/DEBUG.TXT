@@ -1,9 +1,13 @@
-13:41:20
+10:57:12
 asetup
 initvideo
 timer
+loading level
+Level load level0
+actor data
 level load ok
 actor setup ok
+spawn 0
 spawn ok
 set screen pos ok
 hud ok

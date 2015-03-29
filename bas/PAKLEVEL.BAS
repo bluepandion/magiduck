@@ -170,6 +170,10 @@ OPEN listFile$ FOR INPUT AS #1
     NEXT fileOfs
    CLOSE #2
     OPEN fileOut$ + ".lvl" FOR BINARY AS #2
+    l = LOF(2)
+    CLOSE #2
+    IF l THEN KILL fileOut$ + ".lvl"
+    OPEN fileOut$ + ".lvl" FOR BINARY AS #2
      PUT #2, 1, levelStr$
      PUT #2, 1601, level
     CLOSE #2

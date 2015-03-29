@@ -25,9 +25,13 @@ aPageFlip PROC
 	;14 video wrap offset
 
 	;============================================================================
-
+		push es
+		push di
+		push ds
+		push si
 		push bp
 		mov bp,sp
+		add bp, 8
 
 	;---------------------------------------------------------------------------
 	; Copy HUD to set page
@@ -174,6 +178,10 @@ aPageFlip PROC
 
 	exit:
 		pop bp
+		pop si
+		pop ds
+		pop di
+		pop es
 		retf 10
 aPageFlip endp
 aKBinit PROC
@@ -206,15 +214,13 @@ aKBinit PROC
 	mov al, 09h			;Subfunction 09h: Get address of int 09h (keyboard handler)
 	int 021h			;Call interrupt 21h
 
-	mov di, bx			;Set write offset to BX (address returned by interrupt)
+	;mov di, bx			;Set write offset to BX (address returned by interrupt)
 						;ES was set by interrupt as well.
-
-	mov bx, [bp + 14]	;Save old segment to our parameter
-	mov [bx], es
-	mov bx, [bp + 12]	;Save old offset to our parameter
-	mov [bx], di
-
-	mov dx, [bp + 10]	;Set read segment to New keyboard routine parameter
+	
+	mov kbOld, es
+	mov kbOld + 2, bx
+	
+	mov dx, [bp + 10]	;DS = New keyboard routine segment
 	mov ds, dx			
 	mov dx, [bp + 8]	;DX = New keyboard routine offset
 
@@ -265,8 +271,13 @@ aClearList PROC
 
 ;----------------------------------------------------------------------------
 
-push bp				
+push es
+push di
+push ds
+push si
+push bp			
 mov bp, sp				;Get stack pointer
+add bp, 8
 
 mov di, [bp + 12]		;Video buffer offset * 2
 shl di, 1
@@ -291,7 +302,11 @@ lodsw					;Sprite Y
 cmp ax, 255				;Has list ended?
 JNZ continuelist		;
 exit:					;----------------------------------------------------
-pop bp					;		Pop BP
+pop bp
+pop si
+pop ds
+pop di
+pop es					;		Pop BP
 retf 12					;		EXIT
 						;----------------------------------------------------
 
@@ -455,9 +470,14 @@ aRectList PROC
 
 	;----------------------------------------------------------------------------
 
-		push bp				
+		push es
+		push di
+		push ds
+		push si
+		push bp			
 		mov bp, sp				;Get stack pointer
-
+		add bp, 8
+		
 		mov di, [bp + 16]		;Video buffer offset * 2
 		shl di, 1
 		mov [bp + 16], di
@@ -482,7 +502,11 @@ aRectList PROC
 		cmp ax, 255				;Has list ended?
 		JNZ continuelist		;
 	exit:					;----------------------------------------------------
-		pop bp					;		Pop BP
+		pop bp
+		pop si
+		pop ds
+		pop di
+		pop es
 		retf 18					;		EXIT
 							;----------------------------------------------------
 
@@ -907,8 +931,13 @@ aSpriteList PROC
 ;16 Video segment
 ;18 Screen buffer Wrap (CGA = 16383, EGA-> = 32767)
 ;----------------------------------------------------------------------------
-				push bp				
+				push es
+				push di
+				push ds
+				push si
+				push bp
 				mov bp, sp				;Get stack pointer
+				add bp, 8
 				
 				mov di, [bp + 14]		;Video buffer offset * 2
 				shl di, 1
@@ -936,7 +965,11 @@ newSprite:
 				JNZ continuelist		;
 				exit:					;----------------------------------------------------
 				pop ax					;		Pop AX															;Pop 1 / Exit
-				pop bp					;		Pop BP
+				pop bp
+				pop si
+				pop ds
+				pop di
+				pop es
 				retf 14					;		EXIT
 										;----------------------------------------------------
 
@@ -1356,8 +1389,13 @@ aTileArea PROC
 ;16 Tilemap read offset
 ;============================================================================
 
+push es
+push di
+push ds
+push si
 push bp
 mov bp,sp
+add bp, 8
 
 ;---------------------------------------------------------------------------
 
@@ -1444,8 +1482,11 @@ JMP loopY
 ;----------------------------------------------------------------------------
 
 exit:
-
 pop bp
+pop si
+pop ds
+pop di
+pop es
 retf 12
 
 ;============================================================================
@@ -1577,9 +1618,13 @@ aTilePan PROC
 ;10 Pan direction (0 = up, 1 = down)
 
 ;============================================================================
-
+push es
+push di
+push ds
+push si
 push bp
 mov bp,sp
+add bp, 8
 
 ;---------------------------------------------------------------------------
 
@@ -1634,6 +1679,10 @@ rep movsw
 
 exit:
 pop bp
+pop si
+pop ds
+pop di
+pop es
 retf 6
 
 ;================================================================================	
@@ -1662,9 +1711,9 @@ push ds
 push bp
 mov bp, sp
 
-mov dx, [bp + 10]
+mov dx, kbOld
 mov ds, dx
-mov dx, [bp + 08]
+mov dx, kbOld + 2
 
 mov ah, 025h
 mov al, 09h
@@ -1710,8 +1759,13 @@ aPrint PROC
 
 ;============================================================================
 
+	push es
+	push di
+	push ds
+	push si
 	push bp
 	mov bp,sp
+	add bp, 8
 
 ;---------------------------------------------------------------------------
 	mov dx, [bp + 20]				;DX = Buffer wrap
@@ -1807,6 +1861,10 @@ exit:
 ;------------------------------------------------------------------------------
 
 	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
 	retf 16
 
 ;================================================================================	
@@ -1835,8 +1893,13 @@ aInitVideo PROC
 
 ;============================================================================
 
+	push es
+	push di
+	push ds
+	push si
 	push bp
 	mov bp,sp
+	add bp, 8
 
 ;---------------------------------------------------------------------------
 	mov es, [bp + 08]				;ES = Write seg (video adapter data)
@@ -1945,6 +2008,10 @@ exit:
 	stosw							;data at ES:[DI]
 	
 	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
 	retf 4
 
 ;================================================================================	
@@ -2006,9 +2073,13 @@ aTileRead PROC
 ; Returns a tile index from the tilemap from position (x,y).
 ;
 ;============================================================================
-
+	push es
+	push di
+	push ds
+	push si
 	push bp
 	mov bp,sp
+	add bp, 8
 	
 	mov ds, gfxTileBank
 	mov si, gfxTileBank + 2
@@ -2036,6 +2107,10 @@ aTileRead PROC
 	stosw							;Store result at ES:DI
 
 	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
 	retf 4
 
 ;================================================================================	
@@ -2064,9 +2139,13 @@ aTileWrite PROC
 
 ;============================================================================
 
+	push es
+	push di
+	push ds
+	push si
 	push bp
 	mov bp,sp
-
+	add bp, 8
 ;---------------------------------------------------------------------------
 
 begin:
@@ -2096,6 +2175,10 @@ begin:
 exit:
 
 	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
 	retf 10
 
 ;================================================================================	
@@ -2113,10 +2196,11 @@ aSoundNote PROC
 	retf 2
 aSoundNote ENDP
 aSoundFX PROC
-	push bp
-	mov bp, sp
 	push ds
 	push si
+	push bp
+	mov bp, sp
+	add bp, 4
 	
 	xor ax, ax
 	mov bx, [bp + 8]
@@ -2137,9 +2221,9 @@ aSoundFX PROC
 	jmp fillQueue
 	
 	exit:
+	pop bp
 	pop si
 	pop ds
-	pop bp
 	retf 4	
 aSoundFX ENDP
 aSoundPlay PROC
@@ -2196,10 +2280,11 @@ aSoundStop PROC
 	retf 0
 aSoundStop ENDP
 aSetup PROC
-	push bp
-	mov bp, sp
 	push ds
 	push si
+	push bp
+	mov bp, sp
+	add bp, 4
 	
 	mov soundPos, 0			; Setup pc speaker control values.
 	in al, 61h
@@ -2221,9 +2306,9 @@ aSetup PROC
 	lodsw
 	mov kbArray+2, ax	
 	
+	pop bp
 	pop si
 	pop ds
-	pop bp
 	retf 4
 aSetup ENDP
 ;==============================================================================

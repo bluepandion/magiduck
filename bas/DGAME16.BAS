@@ -100,9 +100,9 @@ SUB damagePlayer
 END SUB
 
 SUB DEBUGOUT (s$)
-	OPEN "debug.txt" FOR APPEND AS #1
-		PRINT #1, s$
-	CLOSE #1
+	OPEN "debug.txt" FOR APPEND AS #3
+		PRINT #3, s$
+	CLOSE #3
 END SUB
 
 SUB destroyObject (n)
@@ -1402,6 +1402,7 @@ END SUB
 
 SUB main
 	hudTextLoad &HA0, 1
+	debugOut "loading level"
 	loadLevel "level" + MID$(STR$(player.level), 2, 1)
 	
 	debugOut "level load ok"
@@ -1430,6 +1431,7 @@ SUB main
 	player.hasKey = 0
 	player.jumpRelease = -1
 	player.wave = 0
+	player.wavePrev = 0
 	player.scoreBase = player.score
 
 	actor(2).lPrev = 1
@@ -1517,6 +1519,7 @@ SUB main
 END SUB
 
 SUB handleSpawn (wave)
+	debugOut "spawn"+str$(wave)
 	FOR n = 1 TO 16
 		nn = wave * 16 + n
 		o = level.spawner(nn).object

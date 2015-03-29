@@ -531,30 +531,22 @@ END SUB
 
 SUB loadLevel (fileName AS STRING)
 
-	'debugwrite "Level load " + fileName
+	debugOut "Level load " + fileName
 
 	OPEN fileName + ".lvl" FOR BINARY AS #1
-	 
 	 FOR n = 1 TO 1600
 	  GET #1, n, loadStr
 	  MID$(tileBuffer, 9760 + n, 1) = loadStr
 	 NEXT n
 
-	 progressBar 0
-
 	 readOfs = 1601
+	 debugOut "actor data"
 	 GET #1, readOfs, level
 	CLOSE #1
 
-	progressBar 1
-
 	IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
 
-	progressBar 2
-
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
-
-	progressBar 3
 
 	'debugwrite "OK"
 
