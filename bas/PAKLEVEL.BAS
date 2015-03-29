@@ -55,6 +55,7 @@ OPEN listFile$ FOR INPUT AS #1
      INPUT #1, actorConvert(n).name
      INPUT #1, actorConvert(n).id
      INPUT #1, actorConvert(n).xOfs
+     actorConvert(n).xOfs = actorConvert(n).xOfs / 2
      INPUT #1, actorConvert(n).yOfs
      INPUT #1, actorConvert(n).flags
     END IF
@@ -116,6 +117,7 @@ OPEN listFile$ FOR INPUT AS #1
          IF tile > 1 AND tile < 9 THEN
           actorWave = tile - 2
           actorSpawner = 1
+          DO: LOOP WHILE INKEY$ = ""
          END IF
 
          IF tile > 11 AND tile < 19 THEN
@@ -127,7 +129,7 @@ OPEN listFile$ FOR INPUT AS #1
           IF actorWave < 5 THEN addActor tile, actorWave + 1, X, Y
          END IF
 
-         IF tile > 19 THEN
+         IF tile > 19 OR tile = 11 THEN
           addActor tile, actorWave, X, Y
          END IF
         END IF

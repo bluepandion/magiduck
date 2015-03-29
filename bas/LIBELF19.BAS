@@ -205,7 +205,11 @@ FUNCTION getSpawnSlot
 END FUNCTION
 
 SUB handleCamera
-
+ IF screenTargetX < 0 THEN screenTargetX = 0
+ IF screenTargetX > 40 THEN screenTargetX = 40
+ IF screenTargetY < 4 THEN screenTargetY = 4
+ IF screenTargetY > 590 THEN screenTargetY = 590
+ 
 FOR n = 0 TO 1
  
  diffX = screenTargetX - gfx.screenX(n)
@@ -688,7 +692,12 @@ END IF
   IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 
- FOR n = 1 TO 30
+ FOR n = 1 TO 60
+  if actor(n).exist then 
+	color 7
+  else
+	color 8
+  end if
   PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
  NEXT n
 END

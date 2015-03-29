@@ -267,8 +267,8 @@ CASE 260
    switchAnim n, 10
 
    screenTargetX = actor(2).x - 19
-   handleCamera
    screenTargetY = actor(2).y - 36
+   handleCamera
 
    IF gfx.screenY(0) = screenTargetY AND gfx.screenY(1) = screenTargetY THEN actor(2).count = actor(2).count + 1
 
@@ -359,8 +359,6 @@ CASE 255
    c = tileRead(actor(2).x, actor(2).y)
 
    IF c > 29 THEN
-      IF player.vecX = 0 AND player.ShootDelay < 6 THEN switchAnim n, 5
-
       speedMod = 8
       friction = 5
 
@@ -413,22 +411,26 @@ CASE 255
       screenTargetYlock = -1
    END IF
 
-   IF c = 27 OR c = 26 THEN
-      IF kbArray(29) = 0 THEN player.jumpRelease = -1
-         collisionFloor = 2
-         maxY = 5
-         IF c = 27 THEN minY = -15
-         friction = 1
-         speedMod = 4
-      END IF
-   END IF
+	IF c = 27 OR c = 26 THEN
+	  IF kbArray(29) = 0 THEN player.jumpRelease = -1
+		 collisionFloor = 2
+		 maxY = 5
+		 IF c = 27 THEN minY = -15
+		 friction = 1
+		 speedMod = 4
+	  END IF
+	END IF
 
-   IF actor(2).exist > 1 THEN
-      IF kbArray(29) = 0 THEN player.jumpRelease = -1
-      screenTargetYlock = -1
-      collisionFloor = 1
-      player.vecY = 0
-   END IF
+    IF actor(2).exist > 1 THEN
+		IF kbArray(29) = 0 THEN player.jumpRelease = -1
+		screenTargetYlock = -1
+		collisionFloor = 1
+		player.vecY = 0
+    END IF
+   
+    IF collisionFloor = 1 THEN
+		IF player.vecX = 0 AND player.ShootDelay < 6 THEN switchAnim n, 5
+	END IF
 
    c = tileRead(actor(n).x, actor(n).y - 8)
    IF c > 29 THEN
@@ -668,7 +670,34 @@ IF actor(n).exist > 0 THEN
    'SPIKE BALL O+
         actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(counter0))
         actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(counter0))
-   END SELECT
+	
+	'V platform
+    CASE 52
+		actor(n).count = actor(n).count + 1
+        IF actor(n).count > 7 THEN
+			c = tileRead(actor(n).x, actor(n).y)
+			IF c <> 0 THEN
+				actor(n).count = 0
+				IF actor(n).vecY < 0 THEN
+					actor(n).vecY = 10
+				ELSEIF actor(n).vecY > 0 THEN actor(n).vecY = -10
+				END IF
+			END IF
+        END IF        
+        IF actor(2).exist <> n THEN
+			playerDeltaX = ABS(actor(n).x - playerX)
+			playerDeltaY = actor(n).y - playerY
+			IF playerDeltaX < 5 AND playerDeltaY < 1 and playerDeltaY > -4 AND player.vecY > -1 THEN
+				actor(2).y = actor(n).y
+				makeParent 2, n
+				listIDX = actor(n).lNext
+			END IF
+		ELSE
+			playerDeltaX = ABS(actor(n).x - playerX)
+			playerDeltaY = actor(n).y - playerY
+			IF playerDeltaX > 4 OR ABS(playerDeltaY) > 1 OR player.vecY < -5 THEN unParent 2 
+        END IF
+	END SELECT
 
    IF gfx.page > 0 AND actor(n).control THEN
       
@@ -761,30 +790,6 @@ IF actor(n).exist > 0 THEN
           actor(n).vecY = -5
           soundEvent = 104
           level.spawner(actor(n).spawner).object = 0
-         END IF
-
-       'V platform
-       CASE 52
-         actor(n).count = actor(n).count + 1
-         IF actor(n).count > 7 THEN
-          c = tileRead(actor(n).x, actor(n).y)
-          IF c <> 0 THEN
-           actor(n).count = 0
-           IF actor(n).vecY < 0 THEN
-            actor(n).vecY = 10
-            ELSEIF actor(n).vecY > 0 THEN actor(n).vecY = -10
-           END IF
-          END IF
-         END IF
-         
-         IF actor(2).exist <> n THEN
-          IF playerDeltaX < 5 AND playerDeltaY < 6 AND actor(2).vecY > -1 THEN
-           actor(2).y = actor(n).y
-           makeParent 2, n
-		   listIDX = actor(n).lNext
-          END IF
-         ELSE
-          IF playerDeltaX > 4 OR playerDeltaY > 1 THEN unParent 2
          END IF
 
        'Enemy bullet
@@ -1079,23 +1084,27 @@ IF actor(n).exist > 0 THEN
        'CHECKPOINT
        CASE 62
            'IF playerDeltaY < 10 AND player.wave <> actor(n).flags THEN
-		IF playerDeltaY < 52 THEN
+		IF playerDeltaY < 32 THEN
 			check = 0
-			IF actor(2).Y < actor(n).Y - 20 AND player.wave =< actor(n).flags THEN
-				player.wave = actor(n).flags + 1
-				check = 1
-				'debugOut "Checkpoint from Lo"
-			ELSEIF actor(2).Y > actor(n).Y + 20 AND player.wave > actor(n).flags THEN
-				player.wave = actor(n).flags
-				check = 1
-				'debugOut "Checkpoint from Hi"
+			IF player.wave = actor(n).flags THEN
+				IF player.wavePrev < actor(n).flags THEN
+					player.wavePrev = player.wave
+					player.wave = actor(n).flags + 1
+					check = 1
+				END IF
+			ELSE
+				IF player.wave > actor(n).flags THEN
+					IF player.wavePrev > actor(n).flags THEN
+						player.wavePrev = player.wave
+						player.wave = actor(n).flags
+						check = 1
+					END IF
+				END IF
 			END IF
 			IF check THEN
-				'spawnerEnabler(actor(n).spawner) = spawnerEnabler(actor(n).spawner) AND &HFFF
-				'player.wave = actor(n).flags
 				level.spawner(actor(n).spawner).object = 62
 				FOR nn = 3 TO 60
-					IF ABS(actor(nn).y - actor(2).y) > 96 THEN
+					IF ABS(actor(nn).y - actor(2).y) > 160 THEN
 						IF actor(nn).control > 0 AND actor(nn).control < 63 THEN
 							'spawnerEnabler(actor(nn).spawner) = spawnerEnabler(actor(nn).spawner) AND &HFFF
 							level.spawner(actor(nn).spawner).object = level.spawner(actor(nn).spawner).object AND &HFFF
@@ -1431,7 +1440,7 @@ SUB main
 	player.hasKey = 0
 	player.jumpRelease = -1
 	player.wave = 0
-	player.wavePrev = 0
+	player.wavePrev = -1
 	player.scoreBase = player.score
 
 	actor(2).lPrev = 1
@@ -1825,7 +1834,8 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).vecY = 10
 		actor(n).frame = 168
 		actor(n).visX = 999
-		actor(n).visY = 96  
+		actor(n).visY = 96
+		
 	CASE 62	   'Checkpoint / Spawner portal
 		actorListNew n
 		actor(n).control = 62
