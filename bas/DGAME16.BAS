@@ -61,6 +61,7 @@ CONST playerObj = 2
 
 SUB actorListNew (index)
 	'debugOut "actorListNew"
+	actor(index).exist = 1
 	actor(index).lNext = 1
 	actor(actor(1).lPrev).lNext = index
 	actor(index).lPrev = actor(1).lPrev
@@ -232,8 +233,10 @@ CASE 262
             aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 
         CASE 1001
-            CALL aSoundStop
-            actor(n).control = 259
+			CALL aSoundStop
+            player.levelScore(player.level) = player.score
+			player.level = 0
+			actor(n).control = 259
       END SELECT
                
 'Level Clear Wait
@@ -258,9 +261,8 @@ CASE 261
    END IF
 
    screenTargetX = actor(2).x - 19
-   handleCamera
    screenTargetY = actor(2).y - 36
-               
+   handleCamera            
 
 'Level Clear
 CASE 260
@@ -347,6 +349,8 @@ CASE 258
 'Wait after death
 CASE 256
 
+   player.score = 0
+   player.level = 0
    IF kbArray(57) THEN
        CALL aSoundStop
        actor(n).control = 259
@@ -370,7 +374,7 @@ CASE 255
       collisionFloor = 1
       player.Bouncing = 0
       SELECT CASE c
-      CASE 54
+      CASE 52
          spawnObject actor(2).x AND &HFFFC, actor(2).y AND &HFFF8, 99, 2, -5
          player.vecY = -38
          actor(2).y = actor(2).y - 2
@@ -379,11 +383,6 @@ CASE 255
          maxY = 38
          player.jumpRelease = 0
          soundEvent = 98
-      CASE 55
-         friction = 0
-         speedMod = 4
-      CASE 58
-         IF player.vecY > 0 THEN damagePlayer
       END SELECT
       IF player.vecY > 0 THEN soundEvent = 16: player.vecY = 0
       screenTargetY = screenTargetYlock
@@ -436,7 +435,6 @@ CASE 255
    IF c > 29 THEN
       actor(n).y = (actor(n).y AND &HFFF8) + 8
       player.vecY = 0
-      IF c = 57 THEN damagePlayer
    END IF
 
    IF c = 28 THEN
@@ -601,22 +599,22 @@ IF actor(n).exist > 0 THEN
       IF actor(n).control = 100 THEN
          c = tileRead(actor(n).x, actor(n).y)
          IF c > 29 THEN
-            IF c = 39 OR c = 53 OR c = 56 OR c = 49 THEN
+            IF c > 54 THEN
                actor(n).x = actor(n).x AND &HFFFC
                actor(n).y = actor(n).y AND &HFFF8
-               IF c = 39 OR c = 49 THEN
+               SELECT CASE C
+			   CASE 57 TO 59
                   soundEvent = 44
                   a = 130
                   spawnObject actor(n).x, actor(n).y, 99, 0, 0
                   actor(n).vecY = 2
                   actor(n).flash = 16
                   t = 0
-                  IF c = 49 THEN t = 28
-               END IF
-               IF c = 53 THEN
+                  IF c = 58 THEN t = 28
+               CASE 55
                   soundEvent = 122
                   a = 160
-                  t = 52
+                  t = 54
                   actor(n).vecY = 0
                   IF player.hp > 1 THEN
                      o = 88
@@ -624,8 +622,7 @@ IF actor(n).exist > 0 THEN
                      o = 158
                   END IF
                   spawnObject actor(n).x + 2, actor(n).y, 41, o, 0
-               END IF
-               IF c = 56 THEN
+               CASE 56
                   soundEvent = 115
                   IF actor(n).vecX < 0 THEN
                      s = -10
@@ -634,8 +631,7 @@ IF actor(n).exist > 0 THEN
                   END IF
                   a = 144
                   spawnObject actor(n).x, actor(n).y, 99, 3, s
-               END IF
-
+               END SELECT
                addScore 999
                tileWrite actor(n).x, actor(n).y, t
                aUpdateTile actor(n).x, actor(n).y
@@ -1127,12 +1123,36 @@ IF actor(n).exist > 0 THEN
 
          IF playerDeltaX < 16 AND playerDeltaY < 10 THEN
           IF kbArray(72) THEN
-           actor(2).control = 260
+		   actor(2).control = 260
            actor(2).count = 0
            actor(n).control = 0
            actor(n).exist = 0
           END IF
          END IF
+
+		'LEVEL DOOR
+        CASE 64
+			IF actor(n).frame = 166 THEN actor(n).Frame = 162
+			playerDeltaY = actor(2).y - actor(n).y
+			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
+				IF actor(n).count = 0 THEN
+					w40char.text = "         PRESS UP TO ENTER LEVEL        |"
+					aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+				END IF
+				player.hudLock = 999
+				actor(n).count = 1
+				IF kbArray(72) THEN
+					player.level = actor(n).jump
+					player.score = 0
+					actor(2).control = 259
+				END IF
+			ELSE
+				IF actor(n).count THEN
+					player.hudLock = 0
+					hudUpdate 255
+					actor(n).count = 0
+				END IF
+			END IF
 
         'TILE FX
         CASE 99
@@ -1314,64 +1334,47 @@ SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 END SUB
 
 SUB hudUpdate (flags AS INTEGER)
- IF player.hudLock THEN
-   player.hudLock = player.hudLock - 1
-   IF player.hudLock = < 2 THEN
-     flags = 255
-    ELSE
-     EXIT SUB
-   END IF
- END IF
-
-
- IF flags AND 1 THEN
-  'hudPrint 0, "FPS:      0000000              TIME:    ", &HE, &HC
-
-  w40char.text = "FPS:      0000000              TIME: |"
-  aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
-
- END IF
-
-
- IF flags AND 2 THEN
-   IF player.hp < 4 THEN
-    w40char.text = "#$#$#$#$|"
-    aPrint &HFFFF, &H505, w40char.seg, w40char.ofs, 18, 0, hudBufferSeg, hudBufferOfs
-   END IF
-   a$ = "#$#$#$#$"
-   IF player.hp THEN
-    w40char.text = MID$(a$, 1, player.hp * 2) + "|"
-    aPrint &HFFFF, &HCECE, w40char.seg, w40char.ofs, 18, 0, hudBufferSeg, hudBufferOfs
-   END IF
- END IF
-
-
- IF flags AND 4 THEN
-  a$ = STR$(player.score)
-  c = LEN(a$)
-  a$ = MID$(a$, 2, c)
-
-  w40char.text = a$ + "|"
-  aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 18 - c, 0, hudBufferSeg, hudBufferOfs
-
-  'hudPrint 18 - C, a$, &HE, &HC
- END IF
-
-
- IF flags AND 8 THEN
-  a$ = STR$(player.time)
-  w40char.text = a$ + "|"
-  aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
-
-  'hudPrint 39 - LEN(a$), a$, &HF, &HE
- END IF
- IF flags AND 16 THEN
-  'w40char.text = STR$(INT(fps)) + "|"
-  'aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 4, 0, hudBufferSeg, hudBufferOfs
-  'hudPrint 4, STR$(INT(fps)), &HF, &HE
- END IF
- 'w40char.text = STR$(ASC(MID$(hudBuffer, 161, 1))) + "|"
- 'aPrint &HFFFF, &HF0F, w40char.seg, w40char.ofs, 7, 0, hudBufferSeg, hudBufferOfs
+	IF player.hudLock THEN
+		player.hudLock = player.hudLock - 1
+		IF player.hudLock = < 2 THEN
+			flags = 255
+			player.hudLock = 0
+		ELSE
+			EXIT SUB
+		END IF
+	END IF
+	IF flags AND 1 THEN
+		w40char.text = "FPS:      0000000              TIME:  |"
+		aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+	END IF
+	IF flags AND 2 THEN
+		IF player.hp < 4 THEN
+			w40char.text = "#$#$#$#$|"
+			aPrint &HFFFF, &H505, w40char.seg, w40char.ofs, 18, 0, hudBufferSeg, hudBufferOfs
+		END IF
+		a$ = "#$#$#$#$"
+		IF player.hp THEN
+			w40char.text = MID$(a$, 1, player.hp * 2) + "|"
+			aPrint &HFFFF, &HCECE, w40char.seg, w40char.ofs, 18, 0, hudBufferSeg, hudBufferOfs
+		END IF
+	END IF
+	IF flags AND 4 THEN
+		a$ = STR$(player.score)
+		c = LEN(a$)
+		a$ = MID$(a$, 2, c)
+		w40char.text = a$ + "|"
+		aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 18 - c, 0, hudBufferSeg, hudBufferOfs
+	END IF
+	IF flags AND 8 THEN
+		a$ = STR$(player.time)
+		w40char.text = a$ + "|"
+		aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
+	END IF
+	IF flags AND 16 THEN
+		'w40char.text = STR$(INT(fps)) + "|"
+		'aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 4, 0, hudBufferSeg, hudBufferOfs
+		'hudPrint 4, STR$(INT(fps)), &HF, &HE
+	END IF
 END SUB
 
 SUB initGame
@@ -1434,7 +1437,7 @@ SUB main
 	colCount(1) = -1
 	colCount(2) = -1
 	colCount(3) = -1
-
+	
 	player.hp = 4
 	player.time = 300
 	player.hasKey = 0
@@ -1480,7 +1483,7 @@ SUB main
 		player.hudLock = 999
 	ELSE
 		hudTextLoad &H1E0 + player.level * 160, 0
-		player.hudLock = 10
+		player.hudLock = 5
 	END IF
 	
 	debugOut "hud ok"
@@ -1488,6 +1491,8 @@ SUB main
 	CALL aTimerReset
 
 	debugOut "timer ok"
+	
+	player.levelPrev = player.level
 	
 	DO
 		CALL aTimerWait
@@ -1497,7 +1502,7 @@ SUB main
 		handleScroll
 		aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
-		IF actor(2).control = 259 THEN EXIT SUB
+		IF actor(2).control = 259 THEN aSoundStop:EXIT SUB
 		IF actor(2).control = 255 THEN
 			IF kbArray(1) THEN
 				hudTextLoad &H780, 1
@@ -1543,8 +1548,7 @@ SUB handleSpawn (wave)
 END SUB
 
 SUB spawnObject (x, y, object, spawnerFlags, spawner) 
-	n = getSpawnSlot	
-	actor(n).exist = 1
+	n = getSpawnSlot
 	actor(n).spawner = 0
 	actor(n).flash = 0
 	actor(n).count = 0
@@ -1835,7 +1839,6 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 168
 		actor(n).visX = 999
 		actor(n).visY = 96
-		
 	CASE 62	   'Checkpoint / Spawner portal
 		actorListNew n
 		actor(n).control = 62
@@ -1850,8 +1853,21 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		actor(n).frame = 0
 		actor(n).control = 63
-	CASE 71	   'MENU CURSOR
+	CASE 64		'LEVEL
+		actorListNew n
 		actor(n).spawner = spawner
+		actor(n).jump = spawnerFlags
+		IF player.levelScore(spawnerFlags) THEN
+			actor(n).frame = 162
+		ELSE
+			actor(n).frame = 0
+		END IF
+		actor(n).control = 64
+		IF player.levelPrev = spawnerFlags THEN
+			actor(2).x = x
+			actor(2).y = y + 26
+		END IF
+	CASE 71	   'MENU CURSOR
 		actor(2).flash = 0
 		actor(2).control = 258
 		actor(2).exist = 1

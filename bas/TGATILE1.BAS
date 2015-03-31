@@ -6,9 +6,9 @@ DIM tileBank AS STRING * 2000
 tilebankseg = VARSEG(tileBank)
 tilebankofs = VARPTR(tileBank)
 
-inputfile$ = "..\convert\tileset0.tga"
+inputfile$ = "..\convert\tileset1.tga"
 
-outPutFile$ = "tileset0"
+outPutFile$ = "tileset1"
 
 rawpixel$ = ""
 
@@ -114,6 +114,8 @@ BSAVE outPutFile$ + ".ctg", VARPTR(tileBank), 2000
 'CLOSE #1
 
 PRINT "Done."
+
+END
 
 n = 0
 FOR a = 1 TO LEN(compPixel$)

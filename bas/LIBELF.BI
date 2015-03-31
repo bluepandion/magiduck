@@ -154,6 +154,7 @@ TYPE playerType
  shootDelay AS INTEGER
  flying AS INTEGER
  level AS INTEGER
+ levelPrev AS INTEGER
  wave AS INTEGER
  wavePrev AS INTEGER
  hudLock AS INTEGER
@@ -176,6 +177,13 @@ TYPE playerType
  scoreCounterMul AS INTEGER
  tileSet AS STRING * 8
  spriteSet AS STRING * 8
+ episode AS STRING * 8
+ levelScore(1 to 9) AS LONG
+ gotKeys AS INTEGER
+ gotCoins AS INTEGER
+ gotChests AS INTEGER
+ levelKeys AS INTEGER
+ levelCoins AS INTEGER
 END TYPE
 
 TYPE spriteListType

@@ -1,4 +1,4 @@
-14:13:29
+22:39:27
 asetup
 initvideo
 timer
@@ -12,5 +12,63 @@ spawn ok
 set screen pos ok
 hud ok
 timer ok
-spawn 1
-spawn 2
+loading level
+Level load level1
+actor data
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+Level load level0
+actor data
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+Level load level1
+actor data
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+Level load level0
+actor data
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+Level load level2
+actor data
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+Level load level0
+actor data
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok

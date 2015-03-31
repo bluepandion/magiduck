@@ -1,4 +1,6 @@
-DECLARE SUB addActor (actor%, wave%, X%, Y%)
+DECLARE SUB pause ()
+DECLARE SUB clearLevel ()
+DECLARE SUB addActor (actor%, wave%, x%, y%)
 DECLARE SUB exitCode (code%)
 
 
@@ -16,8 +18,16 @@ DIM SHARED actorConvert(1 TO 160) AS actorConv
 
 DIM strGet AS STRING * 1
 
+DIM SHARED rowInfo
+DIM SHARED rowDebug
+
+rowDebug = 8
+rowInfo = 1
+
 tokenLayer$ = "layer"
 tokenData$ = "data encoding"
+
+VIEW PRINT 1 TO 25
 
 CLS
 PRINT COMMAND$
@@ -36,16 +46,20 @@ CLOSE #1
 listMode = 0
 readToggle = 1
 
+VIEW PRINT 1 TO 7
+
 OPEN listFile$ FOR INPUT AS #1
  DO
   IF readToggle THEN INPUT #1, a$
   readToggle = 1
-                     
+
   IF LCASE$(a$) = "actors" THEN
    listMode = 1
    PRINT " Reading actor conversion list."
   END IF
+  
   IF LCASE$(a$) = "/convert" THEN CLOSE #1: END
+
   fileOfs = 1
   IF listMode = 1 THEN
    DO
@@ -66,8 +80,14 @@ OPEN listFile$ FOR INPUT AS #1
 
 '-------------------------------------------------------------------------
   IF LCASE$(a$) = "maps" THEN
+   listMode = 2
+   PRINT " Reading level list"
    INPUT #1, a$
+  END IF
+
+  IF listMode = 2 THEN
    IF a$ <> "/maps" THEN
+   clearLevel
    inFile$ = a$
    INPUT #1, level.tileSet
    INPUT #1, level.spriteSet
@@ -78,10 +98,12 @@ OPEN listFile$ FOR INPUT AS #1
    tileSet = 0
    actorWave = 0
    actorSpawner = 1
-   X = 0
-   Y = 0
+   x = 0
+   y = 0
 '-------------------------------------------------------------------------
-   PRINT "Converting level "; file$
+   
+   PRINT "Converting level "; inFile$
+
    OPEN inFile$ FOR BINARY AS #2
     FOR fileOfs = 1 TO LOF(2)
       'LOCATE 1, 1: PRINT tokenMode
@@ -109,15 +131,14 @@ OPEN listFile$ FOR INPUT AS #1
         IF tile > 0 THEN
 
          IF tile = 1 THEN
-          level.playerX = X
-          level.playerY = Y + 7
+          level.playerX = x
+          level.playerY = y + 7
           PRINT "   Player start"
          END IF
 
          IF tile > 1 AND tile < 9 THEN
           actorWave = tile - 2
           actorSpawner = 1
-          DO: LOOP WHILE INKEY$ = ""
          END IF
 
          IF tile > 11 AND tile < 19 THEN
@@ -125,16 +146,16 @@ OPEN listFile$ FOR INPUT AS #1
           'IF nWave = actorWave THEN
           '  nWave = nWave + 1
           'END IF
-          addActor tile, actorWave, X, Y
-          IF actorWave < 5 THEN addActor tile, actorWave + 1, X, Y
+          addActor tile, actorWave, x, y
+          IF actorWave < 5 THEN addActor tile, actorWave + 1, x, y
          END IF
 
          IF tile > 19 OR tile = 11 THEN
-          addActor tile, actorWave, X, Y
+          addActor tile, actorWave, x, y
          END IF
         END IF
-        X = X + 4
-        IF X > 79 THEN X = 0: Y = Y + 8
+        x = x + 4
+        IF x > 79 THEN x = 0: y = y + 8
        END IF
        token$ = ""
       END IF
@@ -189,36 +210,63 @@ OPEN listFile$ FOR INPUT AS #1
  LOOP WHILE NOT EOF(1)
 CLOSE #1
 
-SUB addActor (actor, wave, X, Y)
- 
+SUB addActor (actor, wave, x, y)
+
+ STATIC aRow
+
+ IF aRow = 0 THEN aRow = 8
+
+ pRow = CSRLIN
+
+ VIEW PRINT 8 TO 25
+ LOCATE aRow
+
  IF actorConvert(actor).id > 0 THEN
   FOR spawner = 1 TO 16
    nn = 16 * wave + spawner
    IF level.spawner(nn).object = 0 THEN
     COLOR 7
     level.spawner(nn).object = actorConvert(actor).id
-    level.spawner(nn).X = actorConvert(actor).xOfs + X
-    level.spawner(nn).Y = actorConvert(actor).yOfs + Y
+    level.spawner(nn).x = actorConvert(actor).xOfs + x
+    level.spawner(nn).y = actorConvert(actor).yOfs + y
     level.spawner(nn).flags = actorConvert(actor).flags
     PRINT "   Wave:"; wave; " Spawner:"; spawner, "Actor: "; actor,
-    PRINT actorConvert(actor).name, X; ","; Y
-    spawner = 999: EXIT SUB
+    PRINT actorConvert(actor).name, x; ","; y
+    spawner = 999: GOTO exitWindow
    END IF
   NEXT spawner
    COLOR 12
    PRINT "     Too many actors per wave "; wave
+   BEEP
+   pause
    COLOR 7
    IF actor > 11 AND actor < 19 THEN
+      COLOR 4
       PRINT "CRITICAL: Checkpoint missing!"
       BEEP
       END
    END IF
   ELSE
    COLOR 4
-   PRINT "     Not found: "; actor
+   PRINT "     Actor not found: "; actor
+   pause
    COLOR 7
  END IF
 
+exitWindow:
+ aRow = CSRLIN
+ VIEW PRINT 1 TO 7
+ LOCATE pRow
+
+END SUB
+
+SUB clearLevel
+ FOR n = 0 TO 80
+  level.spawner(n).object = 0
+  level.spawner(n).x = 0
+  level.spawner(n).y = 0
+  level.spawner(n).flags = 0
+ NEXT n
 END SUB
 
 SUB exitCode (code)
@@ -227,5 +275,22 @@ SUB exitCode (code)
    PRINT "Too many actors per wave."
  END SELECT
  END
+END SUB
+
+SUB pause
+
+r = CSRLIN
+c = POS(0)
+cc = 0
+COLOR 14
+LOCATE 25, 65, 1: PRINT "press a key";
+DO
+LOOP WHILE INKEY$ = ""
+COLOR 7
+LOCATE 25, 65, 0: PRINT "           "
+LOCATE r, c, 0
+END SUB
+
+SUB switchWindow
 END SUB
 
