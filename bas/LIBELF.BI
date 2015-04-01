@@ -119,6 +119,8 @@ TYPE levelType
  playerY AS INTEGER
  tileSet AS STRING * 8
  spriteSet AS STRING * 8
+ keys AS INTEGER
+ coins AS INTEGER
 END TYPE
 
 TYPE animDataType
@@ -145,7 +147,6 @@ END TYPE
 
 TYPE playerType
  score AS LONG
- scoreBase AS LONG
  secrets AS INTEGER
  lives AS INTEGER
  hp AS INTEGER
@@ -182,8 +183,6 @@ TYPE playerType
  gotKeys AS INTEGER
  gotCoins AS INTEGER
  gotChests AS INTEGER
- levelKeys AS INTEGER
- levelCoins AS INTEGER
 END TYPE
 
 TYPE spriteListType

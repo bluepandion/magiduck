@@ -152,17 +152,30 @@ SUB handleBehaviors
 
 SELECT CASE actor(2).control
 
-'Level Clear Score Count
+'Level Clear - Score Count
 CASE 262
       pageOfs = gfx.pageOfs(gfx.page) * 2
 
       SELECT CASE actor(2).jump
-       CASE 0 TO 1
-          myPrint 2, 22, "LEVEL SCORE", &H171E
-          myPrint 2, 28, "TIME   BONUS          X 30", &H1D1D
-          myPrint 2, 32, "LIFE   BONUS          X 2000", &H1D1D
-          myPrint 2, 36, "SECRET BONUS          X 2500", &H1D1D
-          actor(2).jump = actor(2).jump + 1
+       CASE -2 to -1
+		actor(2).jump = actor(2).jump + 1
+	   CASE 0 TO 1
+          myPrint 2, 22, "TIME BONUS            X 30", &H1D1D
+          myPrint 2, 26, "LIFE BONUS            X 2000", &H1D1D
+          myPrint 2, 30, "KEYS                  /"+str$(level.keys), &H1D1D
+		  myPrint 2, 34, "CHESTS                /"+str$(level.keys), &H1D1D
+		  myPrint 2, 38, "COINS                 /"+str$(level.coins), &H1D1D
+		  
+		  myPrint 20, 30, str$(player.gotKeys), &H1E1F
+		  myPrint 20, 34, str$(player.gotChests), &H1E1F
+		  myPrint 20, 38, str$(player.gotCoins), &H1E1F
+		  
+		  a$ = "1000P"
+		  IF player.gotKeys = level.keys THEN player.score = player.score + 1000: myPrint 33, 30, a$, &H1E1E
+		  IF player.gotChests = level.keys THEN player.score = player.score + 1000: myPrint 33, 34, a$, &H1E1E
+		  IF player.gotCoins = level.coins THEN player.score = player.score + 1000: myPrint 33, 38, a$, &H1E1E
+		  
+		  actor(2).jump = actor(2).jump + 1
 
        CASE 2 TO 3
           actor(2).jump = actor(2).jump + 1
@@ -176,12 +189,7 @@ CASE 262
           w40char.text = "        |"
           a$ = STR$(0& + player.scoreCounter)
           MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
-          aPrint gfx.videoWrap, &H1D1D, w40char.seg, w40char.ofs, 16, 28 + player.scoreCounterMode * 4, &HB800, pageOfs
-
-          w40char.text = "         |"
-          a$ = STR$(0& + player.score - player.scoreBase)
-          MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
-          aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 30, 22, &HB800, pageOfs
+          aPrint gfx.videoWrap, &H1D1D, w40char.seg, w40char.ofs, 16, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
 
           IF player.scoreCounter >= player.scoreCounterTarget THEN
                player.scoreCounter = player.scoreCounterTarget
@@ -190,8 +198,7 @@ CASE 262
                player.scoreCounter = 0& + player.scoreCounter + player.scoreCounterInc
                player.score = 0& + player.score + player.scoreCounterMul
           END IF
-
-          IF dtAnims = 1 THEN soundEvent = 52
+          IF gfx.page THEN soundEvent = 52
 
        CASE 7 TO 16
           IF actor(2).jump = 7 THEN
@@ -200,7 +207,7 @@ CASE 262
               a$ = STR$(0& + player.scoreCounter * player.scoreCounterMul / player.scoreCounterInc)
               MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
           END IF
-          aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 30, 28 + player.scoreCounterMode * 4, &HB800, pageOfs
+          aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 30, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
           actor(2).jump = actor(2).jump + 1
 
        CASE 17
@@ -212,18 +219,28 @@ CASE 262
                player.scoreCounterTarget = player.hp
                player.scoreCounterMul = 1000
                actor(2).jump = 4
+			   hudUpdate 4
           CASE 2
                actor(2).jump = 99
                soundEvent = 92
+			   hudUpdate 4
           END SELECT
 
-        CASE 99
-            myPrint 12, 43, "#$ GAME SAVED #$", &H1D1D
+        CASE 99 TO 100
+            actor(2).jump = actor(2).jump + 1
+			IF player.score > player.levelScore(player.level) THEN
+				IF player.levelscore(player.level) > 0 THEN myPrint 8, 43, "YOU IMPROVED YOUR SCORE", &H1E1E
+			END IF
             myPrint 8, 46, "PRESS SPACE TO CONTINUE", &H1717
-            IF kbArray(57) THEN actor(2).jump = 999
+        
+		CASE 101
+			IF kbArray(57) THEN actor(2).jump = 999
 
         CASE 999 TO 1000
-            actor(2).jump = actor(2).jump + 1
+            IF player.score > player.levelScore(player.level) THEN 
+				player.levelScore(player.level) = player.score
+			END IF
+			actor(2).jump = actor(2).jump + 1
             actor(2).frame = 0
             tileCopyList(0, gfx.page).x = 0
             tileCopyList(0, gfx.page).y = 0
@@ -234,12 +251,11 @@ CASE 262
 
         CASE 1001
 			CALL aSoundStop
-            player.levelScore(player.level) = player.score
 			player.level = 0
 			actor(n).control = 259
       END SELECT
                
-'Level Clear Wait
+'Level Clear - fly out of level
 CASE 261
                
    IF actor(2).x < 40 THEN actor(2).x = actor(2).x + 1: actor(2).flags = 0
@@ -253,7 +269,7 @@ CASE 261
           actor(delObj).control = 0
       NEXT delObj
       actor(2).count = 0
-      actor(2).jump = 0
+      actor(2).jump = -2
       actor(2).dir = 0
       actor(2).control = 262
       player.hudLock = 0
@@ -264,28 +280,30 @@ CASE 261
    screenTargetY = actor(2).y - 36
    handleCamera            
 
-'Level Clear
+'Level Clear - sync video pages
 CASE 260
-   switchAnim n, 10
-
-   screenTargetX = actor(2).x - 19
-   screenTargetY = actor(2).y - 36
-   handleCamera
-
-   IF gfx.screenY(0) = screenTargetY AND gfx.screenY(1) = screenTargetY THEN actor(2).count = actor(2).count + 1
-
-   IF actor(2).count > 2 THEN
-    screenFakePos 80
-    DEF SEG = tileBufferSeg
-    FOR n = 0 TO 199
-     writeOfs = 0& + TileMapOfs + n
-     POKE writeOfs, 0
-    NEXT n
-    DEF SEG
-    soundEvent = 220
-    actor(2).control = 261
-   END IF
-               
+	switchAnim n, 10
+	screenTargetX = actor(2).x - 19
+	screenTargetY = actor(2).y - 36
+	handleCamera
+    
+	IF gfx.screenY(0) = screenTargetY AND gfx.screenY(1) = screenTargetY THEN 
+		actor(2).count = actor(2).count + 1
+	ELSE
+		actor(2).count = 0
+	END IF
+	IF actor(2).count > 2 THEN
+		screenFakePos 80
+		DEF SEG = tileBufferSeg
+	FOR n = 0 TO 199
+		writeOfs = 0& + TileMapOfs + n
+		POKE writeOfs, 0
+	NEXT n
+		DEF SEG
+		soundEvent = 220
+		actor(2).control = 261
+	END IF
+			   
 'Menu cursor
 CASE 258
    actor(2).count = actor(2).count + (actor(2).count > -12)
@@ -438,7 +456,8 @@ CASE 255
    END IF
 
    IF c = 28 THEN
-      addScore 998
+      player.gotCoins = player.gotCoins + 1
+	  addScore 998
       soundEvent = 92
       x = (actor(2).x) AND &HFFFC
       y = (actor(2).y - 8) AND &HFFF8
@@ -517,7 +536,7 @@ CASE 255
       aSoundFX 14, 23
       hudTextLoad &H140, 0
       player.hudLock = 999
-      player.score = player.scoreBase
+      player.score = 0
       actor(2).x = 0
       actor(2).y = 0
       player.jumpRelease = -1
@@ -755,12 +774,14 @@ IF actor(n).exist > 0 THEN
             soundEvent = 34
             IF actor(n).anim = 90 THEN
                player.score = player.score + 500
-               player.hasKey = 1
+               player.hasKey = player.hasKey + 1
+			   player.gotKeys = player.gotKeys + 1
                actor(n).control = 0
                actor(n).vecX = 0
                actor(n).vecY = -15
                actor(n).life = 8
                actor(n).flash = 16
+			   hudUpdate 16
             ELSE
                addScore actor(n).frame
                actor(n).y = actor(n).y - 3
@@ -775,17 +796,20 @@ IF actor(n).exist > 0 THEN
        'Chest
        CASE 45
          IF playerDeltaX < 5 AND playerDeltaY < 10 AND player.hasKey THEN
-          player.hasKey = 0
+          player.score = player.score + 1000
+		  player.gotChests = player.gotChests + 1
+		  player.hasKey = player.hasKey - 1
           spawnObject actor(n).x - 6, actor(n).y - 12, 41, 98, 0
           spawnObject actor(n).x - 4, actor(n).y - 14, 41, 98, 0
           spawnObject actor(n).x, actor(n).y - 16, 41, 88, 0
           spawnObject actor(n).x + 4, actor(n).y - 15, 41, 98, 0
           spawnObject actor(n).x + 6, actor(n).y - 14, 41, 98, 0
           actor(n).life = 5
-          actor(n).frame = 195
+          actor(n).frame = 162
           actor(n).vecY = -5
           soundEvent = 104
           level.spawner(actor(n).spawner).object = 0
+		  hudUpdate 16
          END IF
 
        'Enemy bullet
@@ -825,8 +849,6 @@ IF actor(n).exist > 0 THEN
           damagePlayer
           actor(n).life = 0
          END IF
-
-
 
        'Eggy
        CASE 1
@@ -1135,7 +1157,7 @@ IF actor(n).exist > 0 THEN
 			IF actor(n).frame = 166 THEN actor(n).Frame = 162
 			playerDeltaY = actor(2).y - actor(n).y
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
-				IF actor(n).count = 0 THEN
+				IF actor(n).count = 0 AND player.levelScore(actor(n).jump) = 0 THEN
 					w40char.text = "         PRESS UP TO ENTER LEVEL        |"
 					aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 				END IF
@@ -1344,18 +1366,18 @@ SUB hudUpdate (flags AS INTEGER)
 		END IF
 	END IF
 	IF flags AND 1 THEN
-		w40char.text = "FPS:      0000000              TIME:  |"
+		w40char.text = "KEYS:     0000000              TIME:   |"
 		aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 	END IF
 	IF flags AND 2 THEN
 		IF player.hp < 4 THEN
 			w40char.text = "#$#$#$#$|"
-			aPrint &HFFFF, &H505, w40char.seg, w40char.ofs, 18, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &H505, w40char.seg, w40char.ofs, 19, 0, hudBufferSeg, hudBufferOfs
 		END IF
 		a$ = "#$#$#$#$"
 		IF player.hp THEN
 			w40char.text = MID$(a$, 1, player.hp * 2) + "|"
-			aPrint &HFFFF, &HCECE, w40char.seg, w40char.ofs, 18, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HCECE, w40char.seg, w40char.ofs, 19, 0, hudBufferSeg, hudBufferOfs
 		END IF
 	END IF
 	IF flags AND 4 THEN
@@ -1371,9 +1393,8 @@ SUB hudUpdate (flags AS INTEGER)
 		aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
 	END IF
 	IF flags AND 16 THEN
-		'w40char.text = STR$(INT(fps)) + "|"
-		'aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 4, 0, hudBufferSeg, hudBufferOfs
-		'hudPrint 4, STR$(INT(fps)), &HF, &HE
+		w40char.text = STR$(player.hasKey) + "|"
+		aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 5, 0, hudBufferSeg, hudBufferOfs
 	END IF
 END SUB
 
@@ -1427,7 +1448,7 @@ SUB main
 		actor(n).lPrev = 1
 		actor(n).control = 0
 	next n
-	
+		
 	actor(1).x = 0
 	actor(1).y = 0
 	actor(1).lNext = 2
@@ -1444,7 +1465,10 @@ SUB main
 	player.jumpRelease = -1
 	player.wave = 0
 	player.wavePrev = -1
-	player.scoreBase = player.score
+	player.score = 0
+	player.gotCoins = 0
+	player.gotKeys = 0
+	player.gotChests = 0
 
 	actor(2).lPrev = 1
 	actor(2).lNext = 1
@@ -1477,6 +1501,12 @@ SUB main
 	debugOut "set screen pos ok"
 	
 	updateText = 1
+	
+	IF player.level = 0 THEN
+		for n = 1 to 9
+			player.score = player.score + player.levelScore(n)
+		next n
+	END IF
 	
 	IF player.level = 8 THEN
 		hudTextLoad &H6E0, 0

@@ -92,12 +92,16 @@ OPEN listFile$ FOR INPUT AS #1
    INPUT #1, level.tileSet
    INPUT #1, level.spriteSet
    INPUT #1, fileOut$
+   level.playerX = 0
+   level.playerY = 0
    token$ = ""
    tokenMode = 0
    levelStr$ = ""
    tileSet = 0
    actorWave = 0
    actorSpawner = 1
+   level.keys = 0
+   level.coins = 0
    x = 0
    y = 0
 '-------------------------------------------------------------------------
@@ -121,11 +125,14 @@ OPEN listFile$ FOR INPUT AS #1
 
       IF strGet = "," THEN
        strGet = CHR$(255)
+
        IF tokenMode = 2 THEN
         tile = (VAL(token$) - 141) MOD 60
         IF tile < 0 THEN tile = 0
+        IF tile = 28 OR tile = 58 THEN level.coins = level.coins + 1
         levelStr$ = levelStr$ + CHR$(tile)
        END IF
+
        IF tokenMode = 4 THEN
         tile = VAL(token$)
         IF tile > 0 THEN
@@ -192,6 +199,11 @@ OPEN listFile$ FOR INPUT AS #1
 
     NEXT fileOfs
    CLOSE #2
+    IF level.playerX = 0 AND level.playerY = 0 THEN
+     COLOR 4
+     BEEP
+     PRINT "PLAYER START NOT FOUND."
+    END IF
     OPEN fileOut$ + ".lvl" FOR BINARY AS #2
     l = LOF(2)
     CLOSE #2
@@ -226,6 +238,7 @@ SUB addActor (actor, wave, x, y)
    nn = 16 * wave + spawner
    IF level.spawner(nn).object = 0 THEN
     COLOR 7
+    IF actorConvert(actor).id = 44 THEN level.keys = level.keys + 1
     level.spawner(nn).object = actorConvert(actor).id
     level.spawner(nn).x = actorConvert(actor).xOfs + x
     level.spawner(nn).y = actorConvert(actor).yOfs + y
