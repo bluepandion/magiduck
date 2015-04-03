@@ -1,4 +1,3 @@
-DECLARE SUB progressBar (stage AS INTEGER)
 DECLARE FUNCTION getSpawnSlot% ()
 DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
@@ -87,43 +86,6 @@ END SUB
 
 SUB elfInit
 	'--------------------------------------------------------------------------
-	' Store asm-routine variables to KBarray and send them to setup.
-	'--------------------------------------------------------------------------
-	KBarray(0) = VARSEG(soundTrack)
-	KBarray(1) = VARPTR(soundTrack)
-	KBarray(2) = VARSEG(KBarray(0))
-	KBarray(3) = VARPTR(KBarray(0))
-	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
-	aSoundStop
-	
-	FOR n = 0 TO 130
-	 KBarray(n) = 0
-	NEXT n
-	'--------------------------------------------------------------------------
-	' Detect and initialize video adapter
-	'--------------------------------------------------------------------------
-	 aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
-	 'debugOut "initvideo"
-	 gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
-	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
-	 IF gfx.adapter > 0 THEN
-		gfx.pageOfs(0) = 0
-		gfx.pageOfs(1) = 5000
-		gfx.page = 0
-		IF gfx.adapter > 1 THEN
-			gfx.pageWrap = 16383
-			gfx.videoWrap = 32767
-		ELSE
-			gfx.pageWrap = 8191
-			gfx.videoWrap = 16383
-		END IF
-	  ELSE
-		errorMessage$ = "CGA, EGA or VGA compatible display adapter required."
-		quit
-	 END IF
-	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
-	 MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
-	'--------------------------------------------------------------------------
 	' Setup variables
 	'--------------------------------------------------------------------------
 	hudBufferSeg = VARSEG(hudBuffer)
@@ -189,10 +151,53 @@ SUB elfInit
 	'myPrint 2, 1, a$, &H20E0
 	'aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page XOR 1)
 	'myPrint 2, 4, "LOOKUPS...", &H7070
-	hudTextLoad 0, 1
 	initLookUps
 	w40char.seg = VARSEG(w40char.glyph1(32))
 	w40char.ofs = VARPTR(w40char.glyph1(32))
+	'--------------------------------------------------------------------------
+	' Store asm-routine variables to KBarray and send them to setup.
+	'--------------------------------------------------------------------------
+	KBarray(0) = VARSEG(soundTrack)
+	KBarray(1) = VARPTR(soundTrack)
+	KBarray(2) = VARSEG(KBarray(0))
+	KBarray(3) = VARPTR(KBarray(0))
+	'KBarray(4) = spriteBankSeg
+	'KBarray(5) = spriteBankOfs
+	'KBarray(6) = tileBufferSeg
+	'KBarray(7) = tileBankOfs
+	'KBarray(8) = tileMapOfs
+	'KBarray(9) = tileBufferOfs
+	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
+	aSoundStop
+	FOR n = 0 TO 130
+	 KBarray(n) = 0
+	NEXT n
+	'--------------------------------------------------------------------------
+	' Detect and initialize video adapter
+	'--------------------------------------------------------------------------
+	 aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
+	 'debugOut "initvideo"
+	 gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
+	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
+	 IF gfx.adapter > 0 THEN
+		gfx.pageOfs(0) = 0
+		gfx.pageOfs(1) = 5000
+		gfx.page = 0
+		IF gfx.adapter > 1 THEN
+			gfx.pageWrap = 16383
+			gfx.videoWrap = 32767
+		ELSE
+			gfx.pageWrap = 8191
+			gfx.videoWrap = 16383
+		END IF
+	  ELSE
+		errorMessage$ = "CGA, EGA or VGA compatible display adapter required."
+		quit
+	 END IF
+	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
+	 MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
+	
+	'hudTextLoad 0, 1
 	loadSprites "spducks", 0
 	'-----------------------------------------------------------------------
 	' Setup keyboard
@@ -423,20 +428,20 @@ END SUB
 SUB loadLevel (fileName AS STRING)
 
 	'debugOut "Level load " + fileName
-	progressBar 0
+	
 	OPEN fileName + ".lvl" FOR BINARY AS #1
 	 FOR n = 1 TO 1600
 	  GET #1, n, loadStr
 	  MID$(tileBuffer, 9760 + n, 1) = loadStr
 	 NEXT n
-		progressBar 1
+	
 	 readOfs = 1601
 	 'debugOut "actor data"
 	 GET #1, readOfs, level
 	CLOSE #1
 
 	IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
-	progressBar 2
+	
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
 
 	'debugwrite "OK"
@@ -533,17 +538,6 @@ SUB myPrint (x, y, text$, attributes)
 
  w40char.text = text$ + "|"
  aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
-
-END SUB
-
-SUB progressBar (stage AS INTEGER)
-
- n = gfx.pageOfs(gfx.page) * 2 + 40 + stage * 2
- POKE n, 219
- POKE n + 1, &HFE
- n = n + 78
- POKE n, 219
- POKE n + 1, &HFE
 
 END SUB
 

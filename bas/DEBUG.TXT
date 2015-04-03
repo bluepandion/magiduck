@@ -1,4 +1,57 @@
-15:35:42
+18:58:20
+loading level
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+spawn 1
+spawn 2
+loading level
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+spawn 1
+loading level
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+loading level
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
+spawn 1
+spawn 2
+loading level
+level load ok
+actor setup ok
+spawn 0
+spawn ok
+set screen pos ok
+hud ok
+timer ok
 loading level
 level load ok
 actor setup ok

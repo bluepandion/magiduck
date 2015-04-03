@@ -1,0 +1,183 @@
+;-------------------------------------------------------------------------------
+aRenderActors PROC
+	push es
+	push di
+	push ds
+	push si
+	push bp
+	mov bp, sp
+	
+	mov spriteListSeg, [bp + 14]
+	mov spriteListOfs, [bp + 12]
+	mov screenX, [bp + 12]
+	mov screenY, [bp + 10]
+	
+	mov ds, actorList
+	mov si, actorList + 2	
+	mov es, [bp + 8]			;Sprite render list
+	mov di, [bp + 6]	
+	push ds
+	push si
+;-------------------------------------------------------------------------------	
+getActor:
+	pop ds
+	pop si
+	lodsw						; AX = Actor index from list
+	cmp ax, 255
+	je exit
+	
+	mov bCurrActor, al
+	
+	push ds
+	push si
+	
+	mov bx, 44					; * SIZEOF Actor
+	mul bx
+	xchg bx, ax
+	mov ds, actorData			; Read Actor data
+	mov si, actorData + 2
+	add si, bx
+	
+	lodsw						; Load coordinates
+	sub ax, screenX				; and calculate on-screen
+	mov actorX, ax				; position.
+	lodsw
+	sub ax, screenY
+	mov actorY, ax
+	lodsw
+	mov actorCollider, ax
+	lodsw
+	mov actorFlash, ax
+	lodsw						; Load anim frame
+	
+	mov bx, ax					; Anim frame * SIZEOF animdata (10)
+	shl bx, 1
+	shl bx, 1
+	shl bx, 1
+	add bx, ax
+
+	xor cx, cx
+	mov cl, animationData[bx]	; Load jump value from anim data.
+	
+	lodsw						; Load actor Flip status
+	mov dx, ax
+	shl dx, 1
+	add dx, ax
+	add dx, 1
+;-------------------------------------------------------------------------------	
+animationLooper:
+	mov al, animationData[bx]
+	cmp al, 0
+	ja isCollider
+	inc bx
+	mov al, animationData[bx]	; w
+	stosb
+	inc bx
+	mov al, animationData[bx]	; h
+	stosb
+	inc bx
+	mov al, animationData[bx]	; y
+	add al, actorY
+	stosb
+	add bx, dx					; Add flip status to read ofs
+	mov ax, animationData[bx]	; sprite offset
+	stosw
+	inc bx
+	inc bx
+	xor ax, ax
+	mov al, animationData[bx]	; x
+	add al, actorX
+	stosb
+	inc bx						
+	dec cx						; Keep track of loop.
+	jz exitLoop1
+	and dx, 0FFFFh				; Move ahead to next index, 
+	jz animationLooper			; if flip status wasn't set.
+	add bx, 3
+	jmp animationLooper
+exitLoop1:
+jmp getActor
+isCollider:
+	mov al, animationData[bx]	; w
+	stosb
+	dec al
+	mov bCollWrite+2, al
+	inc bx
+	mov al, animationData[bx]	; h
+	stosb
+	dec al
+	mov bCollWrite+3, al
+	inc bx
+	mov al, animationData[bx]	; y
+	add al, actorY
+	mov bCollWrite+1, al
+	stosb
+	add bx, dx					; Add flip status to read ofs
+	mov ax, animationData[bx]	; sprite offset
+	stosw
+	inc bx
+	inc bx
+	xor ax, ax
+	mov al, animationData[bx]	; x
+	add al, actorX
+	mov bCollWrite, al
+	stosb
+	inc bx
+	
+	push es						; Store collision data
+	push di						; as a rectangle (x0,y0,x1,y1).
+	push bx
+	mov es, collisionData
+	mov di, collisionData + 2
+	mov bx, actorCollider
+	add di, collListIdx[bx]
+	xchg bl, bh					;List type * 4 * 32 (SIZEOF * indexes)
+	shr bx, 1
+	add di, bx
+	
+	mov al, bCollWrite
+	stosb
+	mov al, bCollWrite + 1
+	stosb
+	mov al, bCollWrite + 2
+	add al, bCollWrite
+	stosb
+	mov al, bCollWrite + 3
+	add al, bCollWrite + 1
+	stosb
+	pop bx
+	pop di
+	pop es
+	
+	dec cx						; Keep track of loop.
+	jz exitLoop2
+	and dx, 0FFFFh				; Move ahead to next index, 
+	jz nextPart					; if flip status wasn't set.
+	add bx, 3
+	nextPart:
+jmp animationLooper
+exitLoop2:
+jmp getActor
+;-------------------------------------------------------------------------------
+exit:
+	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
+	retf
+aSpriteQueue ENDP
+;-------------------------------------------------------------------------------
+	; animation data:
+	;
+	; [ jmp ][ idx+] [ idx-] [  x+ ] [  x- ] [  y  ]  					= 6 Bytes / 1536 + 512
+	; [ jmp ]:[  w  ]:[  h  ]:[  y  ]:[ ofs+]-[     ]:[  x+ ]:[ ofs-]-[     ]:[  x- ] = 10 Bytes / 2560 bytes
+	;
+	animationData 	db 	2048 dup(0)	
+	
+	; drawList data:
+	;
+	; [  x  ]:[  y  ]:[  w  ]:[  h  ]:[ ofs ]-[     ] = 6 Bytes
+	; Entries: 32 + 32 + 4 = 408 bytes
+	;
+	drawList		db	408 dup(0)

@@ -82,6 +82,9 @@ COMMON SHARED hudBufferOfs AS INTEGER
 TYPE objectType
  X AS INTEGER
  Y AS INTEGER
+ frame AS INTEGER
+ flags AS INTEGER
+ 
  vecX AS INTEGER
  vecY AS INTEGER
  collider AS INTEGER
@@ -89,7 +92,6 @@ TYPE objectType
  parentDY AS INTEGER
 
  anim AS INTEGER
- frame AS INTEGER
  life AS INTEGER
  control AS INTEGER
  jump AS INTEGER
@@ -97,7 +99,6 @@ TYPE objectType
  flash AS INTEGER
  exist AS INTEGER
  spawner AS INTEGER
- flags AS INTEGER
  dir AS INTEGER
  visX AS INTEGER
  visY AS INTEGER
