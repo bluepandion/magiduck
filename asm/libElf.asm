@@ -429,7 +429,6 @@ JMP loopYsafe			;		else { GOTO loopy }
 ;--------------------------------------------------------------------------
 
 aClearList ENDP
-
 aRectList PROC
 
 	;---------------------------------------------------------------------------
@@ -1960,18 +1959,50 @@ detected_MONO:
 detected_VGA:
 	mov ax, 1003h					;Disable blink for VGA one extra time to be sure.
 	xor bx, bx						
-	int 10h
-	
+	int 10h	
 	mov dx, 3						;Video adapter data for game
+	mov si, vVGAregs
+	mov vWrap, 32767
 	jmp get_current_mode
+vVGAregs:
+	dw	2
+	dw 03D4h, 0009h, 03D5h, 0083h 
 
 detected_EGA:
 	mov dx, 2						;Video adapter data for game
+	mov si, vEGAregs
+	mov vWrap, 32767
 	jmp get_current_mode
+vEGAregs:		
+	dw	18
+	dw 03D4h, 0006h, 03D5h, 0004h
+	dw 03D4h, 0007h, 03D5h, 0011h
+	dw 03D4h, 0008h, 03D5h, 0000h
+	dw 03D4h, 0009h, 03D5h, 0003h
+	dw 03D4h, 0010h, 03D5h, 00E1h
+	dw 03D4h, 0011h, 03D5h, 0024h
+	dw 03D4h, 0012h, 03D5h, 00C7h
+	dw 03D4h, 0015h, 03D5h, 00E0h
+	dw 03D4h, 0016h, 03D5h, 00F0h
 
 detected_CGA:
 	mov dx, 1						;Video adapter data for game
+	mov si, vCGAregs
+	mov vWrap, 16383
 	jmp get_current_mode
+vCGAregs:
+	dw	21
+	dw 03D4h, 0000h, 03D5h, 0038h
+	dw 03D4h, 0001h, 03D5h, 0028h
+	dw 03D4h, 0002h, 03D5h, 002Dh
+	dw 03D4h, 0003h, 03D5h, 000Ah
+	dw 03D4h, 0004h, 03D5h, 003Fh
+	dw 03D4h, 0005h, 03D5h, 0006h
+	dw 03D4h, 0006h, 03D5h, 0032h
+	dw 03D4h, 0007h, 03D5h, 0038h
+	dw 03D4h, 0008h, 03D5h, 0002h
+	dw 03D4h, 0009h, 03D5h, 0003h
+	dw 03D8h, 0008h
 
 get_current_mode:
 	mov ax, 0F00h					;Get current video mode
@@ -1984,7 +2015,7 @@ get_current_mode:
 	
 	cmp dx, 1						;If adapter is EGA/VGA
 	ja set_EGAVGA					;set mode with interrupts
-	jmp exit
+	jmp loopVideoRegs
 	
 set_EGAVGA:
 	xor ax, ax
@@ -1998,7 +2029,31 @@ set_EGAVGA:
 	mov ax, 1003h					;Select FG Blink / 16 bg colors (BL = 0)
 	xor bx, bx						;Clear whole BX to avoid problems on some adapters.
 	int 10h
+
+loopVideoRegs:
+	push dx
+	mov cx, cs:[si]
+	inc si
+	inc si
+loopRegs:
+	mov dx, cs:[si]
+	inc si
+	inc si
+	mov ax, cs:[si]
+	inc si
+	inc si
+	out dx, al
+	loop loopRegs
+	pop dx
 	
+	mov es, vSegment
+	mov di, 0
+	mov ax, 00DEh
+	mov cx, vWrap
+	shr cx, 1
+clearLoop:
+		stosw
+	loop clearLoop
 ;------------------------------------------------------------------------------
 exit:
 	mov es, [bp + 08]				;ES = Write seg (video adapter data)
@@ -2232,8 +2287,8 @@ aSoundPlay PROC
 	xor ax, ax
 	mov al, soundQueue[bx]
 	mov soundQueue[bx], 0
-	cmp	ax, 0
-	jz	noPlay
+	cmp	ax, 1
+	jb	noPlay
 	
 	shl ax, 1
 	xchg bx, ax
@@ -2251,10 +2306,7 @@ aSoundPlay PROC
 	sti
 	jmp exitPlay
 	
-	noPlay:
-	in al, 61h
-	and al, 3
-	jz exitPlay
+	noPlay:	
 	cli
 	mov al, soundOff
 	out 61h, al
@@ -2445,17 +2497,17 @@ timerISR:
 		soundPos		db	0
 
 		soundData		dw	0000h, 0000h
+							
+		soundQueue		db	'0000000000000000000000000000000000000000000000000000000000000000'
 		
-		soundQueue		db	'0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'
-		
-		freqData		dw	0, 0, 0, 62798, 56818, 54235, 51877, 49715, 45891, 44191, 41144, 38489
+		freqData		dw	256, 256, 256, 62798, 56818, 54235, 51877, 49715, 45891, 44191, 41144, 38489
 		dw 36156 , 34090 , 32248 , 30594 , 29101 , 27117 , 25938 , 24350 , 22945 , 21694 , 20572 , 19244
 		dw 18356 , 17292 , 16344 , 15297 , 14550 , 13714 , 12969 , 12175 , 11472 , 10847 , 10286 , 9700
 		dw 9108 , 8584 , 8116 , 7697 , 7231 , 6818 , 6449 , 6087 , 5736 , 5423 , 5120 , 4870
 		dw 4554 , 4307 , 4058 , 3836 , 3615 , 3418 , 3224 , 3043 , 2875 , 2711 , 2560 , 2415
 		dw 2281 , 2153 , 2032 , 1918 , 1810 , 1709 , 1612 , 1521 , 1435 , 1355 , 1280 , 1207
 		dw 1140 , 1075 , 1015 , 959 , 898 , 854 , 806 , 760 , 718 , 677 , 639 , 604
-		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301, 100, 100
+		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301, 256, 256
 		
 		tileRead		dw	0000h, 0000h
 		gfxSpriteBank	dw	0000h, 0000h
@@ -2468,38 +2520,12 @@ timerISR:
 		kbArray			dw 	0000h, 0000h
 		kbOld			dw  0000h, 0000h
 		kbFlags			db	00h
-				
+		
+		vSegment		dw	0b800h
 		vOldMode		db	0
 		vAadapter		db	0
 		vWrap			dw	0000h
-		
-		vCGAregs		dw	42
-		dw 03D4h, 0000h, 03D5h, 0038h
-		dw 03D4h, 0001h, 03D5h, 0028h
-		dw 03D4h, 0002h, 03D5h, 002Dh
-		dw 03D4h, 0003h, 03D5h, 000Ah
-		dw 03D4h, 0004h, 03D5h, 003Fh
-		dw 03D4h, 0005h, 03D5h, 0006h
-		dw 03D4h, 0006h, 03D5h, 0032h
-		dw 03D4h, 0007h, 03D5h, 0038h
-		dw 03D4h, 0008h, 03D5h, 0002h
-		dw 03D4h, 0009h, 03D5h, 0003h
-		dw 03D8h, 0008h
-		
-		vEGAregs		dw	36
-		dw 03D4h, 0006h, 03D5h, 0004h
-		dw 03D4h, 0007h, 03D5h, 0011h
-		dw 03D4h, 0008h, 03D5h, 0000h
-		dw 03D4h, 0009h, 03D5h, 0003h
-		dw 03D4h, 0010h, 03D5h, 00E1h
-		dw 03D4h, 0011h, 03D5h, 0024h
-		dw 03D4h, 0012h, 03D5h, 00C7h
-		dw 03D4h, 0015h, 03D5h, 00E0h
-		dw 03D4h, 0016h, 03D5h, 00F0h
-		
-		vVGAregs		dw	4
-		dw 03D4h, 0009h, 03D5h, 0083h 
-					
+									
 		dummyData2		dw	0000h, 0000h, 0000h, 0000h
 ;==============================================================================	
 

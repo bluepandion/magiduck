@@ -47,6 +47,7 @@ listMode = 0
 readToggle = 1
 
 VIEW PRINT 1 TO 7
+LOCATE 1, 1, 1
 
 OPEN listFile$ FOR INPUT AS #1
  DO
@@ -269,7 +270,7 @@ SUB addActor (actor, wave, x, y)
 exitWindow:
  aRow = CSRLIN
  VIEW PRINT 1 TO 7
- LOCATE pRow
+ LOCATE pRow, , 1
 
 END SUB
 

@@ -1,24 +1,32 @@
-DECLARE SUB queueSound (offset%, Note%)
+DECLARE SUB queueSound (offset%, note%)
 DECLARE SUB playSounds ()
 DECLARE SUB initLookUps ()
 DECLARE SUB initTimer ()
+'$INCLUDE: 'libelf.bi'
 
 TYPE soundType
- Queue(0 TO 63) AS INTEGER
+ queue(0 TO 63) AS INTEGER
  readPos AS INTEGER
  speakerOn AS INTEGER
  speakerOff AS INTEGER
- Track(0 TO 255) AS INTEGER
+ track(0 TO 255) AS INTEGER
 END TYPE
 
 DIM SHARED sounds AS soundType
 
-sounds.readPos = 0
-
-sounds.speakerOn = INP(&H61) OR 3
-sounds.speakerOff = sounds.speakerOn XOR 3
-
 CLS
+
+aTimerStart
+
+   KBarray(0) = VARSEG(soundTrack)
+   KBarray(1) = VARPTR(soundTrack)
+   KBarray(2) = VARSEG(KBarray(0))
+   KBarray(3) = VARPTR(KBarray(0))
+   aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
+   FOR n = 0 TO 130
+    KBarray(n) = 0
+   NEXT n
+
 WIDTH 80, 25
 VIEW PRINT 1 TO 25
 
@@ -68,21 +76,18 @@ COLOR 9, 0
 LOCATE 1, 1: PRINT "Octave"
 LOCATE 1, 15: PRINT "Pos"
 
-t! = TIMER
-
 DO
- IF TIMER > t! THEN
-  t! = 0! + TIMER + .3
-  playSounds
+  
+  aSoundPlay
   IF playMode THEN
-   sounds.readPos = 0
-   sounds.queue(0) = sounds.track(selection)
+   aSoundNote sounds.track(selection)
+   aTimerWait
    COLOR 7, 0
    LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
    selection = selection + 1
    IF sounds.track(selection) = 96 THEN playMode = 0: selection = playReturn
   END IF
- END IF
+ 
 
  COLOR 15, 0
   LOCATE 1, 10: PRINT octave
@@ -176,7 +181,9 @@ DO
  IF addNote OR d$ = " " THEN
   sounds.track(selection) = addNote
   sounds.readPos = 0
-  sounds.queue(0) = addNote
+  aSoundNote addNote
+  aSoundPlay
+  aTimerWait
   t& = 0
   COLOR 7, 0
   LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))

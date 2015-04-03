@@ -1,4 +1,4 @@
-&H0000, " MAGIDUCK       0.1410                  ", &HE, &HC
+&H0000, " MAGIDUCK ALPHA    V 0.1504             ", &HE, &HC
 &H00A0, " LOADING, PLEASE WAIT...                ", &HE, &HC
 &H0140, "         PRESS SPACE TO RESTART         ", &HC, &HC
 &H01E0, "          LEVEL 1 - THE LOBBY           ", &HE, &HC

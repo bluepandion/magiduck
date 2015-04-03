@@ -59,13 +59,49 @@ CONST defaultVisX = 25
 CONST defaultVisY = 30
 CONST playerObj = 2
 
+CONST SndExplode = 0
+CONST SndDie = 22
+CONST SndDamage = 4
+CONST SndGetGemSmall = 92
+CONST SndGetGemBig = 59
+CONST SndGetHeart = 34
+CONST SndGetKey = 132
+CONST SndGetChest = 104
+CONST SndGetCoin = 92
+CONST SndShoot = 44
+CONST SndJump = 0
+CONST SndLand = 16
+CONST SndEnemyDie = 0
+CONST SndEggyJumpLo = 100
+CONST SndEggyJumpHi = 158
+CONST SndSlime = 145
+CONST SndFireBreath = 66
+CONST SndHelmetBump = 151
+CONST SndEnemyDrop = 163
+CONST SndExitLevel = 0
+CONST SndEnterLevel = 0
+CONST SndTileBounce = 98
+CONST SndTileMove = 115
+CONST SndTileStop = 127
+CONST SndMenuPrev = 87
+CONST SndMenuNext = 82
+CONST SndPause = 76
+
+'===============================================================================
+
 SUB actorListNew (index)
 	'debugOut "actorListNew"
 	actor(index).exist = 1
-	actor(index).lNext = 1
-	actor(actor(1).lPrev).lNext = index
-	actor(index).lPrev = actor(1).lPrev
-	actor(1).lPrev = index
+	
+	actor(index).lNext = 2
+	actor(index).lPrev = actor(2).lPrev
+	
+	actor(actor(2).lPrev).lNext = index
+	actor(2).lPrev = index
+	
+	'actor(actor(1).lPrev).lNext = index
+	'actor(index).lPrev = actor(1).lPrev
+	'actor(1).lPrev = index
 END SUB
 
 SUB addScore (eventType)
@@ -556,7 +592,7 @@ CASE 255
    END IF
    c = tileRead(actor(n).x - 2, actor(n).y - 4)
    IF c > 29 THEN
-       actor(n).x = (actor(n).x AND &HFFFC) + 1
+       actor(n).x = (actor(n).x AND &HFFFC) + 2
    END IF
 
    screenTargetX = actor(n).x - 19
@@ -613,7 +649,11 @@ IF actor(n).exist > 0 THEN
       IF actor(n).y > 630 THEN actor(n).y = 630
       IF actor(n).x < -7 THEN actor(n).x = -7
       IF actor(n).x > 85 THEN actor(n).x = 85
-'----------------------------------------------------------------------------
+'------------------------------------------------------------------------------
+'
+'	All frames behavior checks:
+'
+'------------------------------------------------------------------------------
       'Player Bullet
       IF actor(n).control = 100 THEN
          c = tileRead(actor(n).x, actor(n).y)
@@ -628,7 +668,7 @@ IF actor(n).exist > 0 THEN
                   spawnObject actor(n).x, actor(n).y, 99, 0, 0
                   actor(n).vecY = 2
                   actor(n).flash = 16
-                  t = 0
+				  t = 0
                   IF c = 58 THEN t = 28
                CASE 55
                   soundEvent = 122
@@ -657,15 +697,16 @@ IF actor(n).exist > 0 THEN
                actor(n).vecX = 0
                actor(n).flags = 0
                actor(n).control = 0
-               actor(n).life = 4
+               actor(n).life = 2
                actor(n).frame = a
+			   actor(n).collider = 0
             ELSE
                soundEvent = 44
                actor(n).flags = 0
                actor(n).control = 0
                actor(n).vecX = 0
                actor(n).collider = 0
-               actor(n).life = 4
+               actor(n).life = 2
                switchAnim n, 110
                actor(n).vecY = -5
                soundEvent = 44
@@ -677,54 +718,114 @@ IF actor(n).exist > 0 THEN
    SELECT CASE actor(n).control
    'SPIKE BALL U
    CASE 17
-        c = angle.y(counter0) + 32
+        c = angle.y(dtMain0) + 32
         actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(c))
         actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(c))
 
    CASE 18
    'SPIKE BALL O+
-        actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(counter0))
-        actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(counter0))
+        actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(dtMain0))
+        actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(dtMain0))
 	
 	'V platform
-    CASE 52
-		actor(n).count = actor(n).count + 1
-        IF actor(n).count > 7 THEN
-			c = tileRead(actor(n).x, actor(n).y)
-			IF c <> 0 THEN
-				actor(n).count = 0
-				IF actor(n).vecY < 0 THEN
-					actor(n).vecY = 10
-				ELSEIF actor(n).vecY > 0 THEN actor(n).vecY = -10
-				END IF
-			END IF
-        END IF        
-        IF actor(2).exist <> n THEN
+    CASE 52		
+        actor(n).vecY = 0
+		IF actor(2).exist <> n THEN
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = actor(n).y - playerY
 			IF playerDeltaX < 5 AND playerDeltaY < 1 and playerDeltaY > -4 AND player.vecY > -1 THEN
+				soundEvent = 115
 				actor(2).y = actor(n).y
 				makeParent 2, n
-				listIDX = actor(n).lNext
+				actor(n).vecY = -10
+			END IF
+			IF actor(n).y < level.spawner(actor(n).spawner).y - 2 THEN actor(n).vecY = 20
+			IF actor(n).y > level.spawner(actor(n).spawner).y + 2 THEN actor(n).vecY = -20
+		ELSE
+			actor(n).vecY = -10
+			c = tileRead(actor(n).x, actor(n).y)
+			IF c <> 0 THEN
+				actor(n).vecY = 0
+			END IF
+			playerDeltaX = ABS(actor(n).x - playerX)
+			'playerDeltaY = actor(n).y - playerY
+			IF playerDeltaX > 4 OR playerDeltaY > 2 OR player.vecY < -5 THEN unParent 2 
+        END IF
+	
+	'Eggy
+	CASE 1
+		speed = 5
+		SELECT CASE actor(n).count
+		CASE 0 
+			soundEvent = SndEggyJumpHi
+			actor(n).vecY = -30
+			actor(n).frame = 62
+			actor(n).count = actor(n).count + 1
+		CASE 5
+			soundEvent = SndEggyJumpLo
+			actor(n).vecY = -20
+			actor(n).frame = 62
+			actor(n).count = actor(n).count + 1
+		CASE 10
+			soundEvent = SndEggyJumpLo
+			actor(n).vecY = -20
+			actor(n).frame = 62
+			actor(n).count = actor(n).count + 1
+		CASE 15
+			actor(n).count = -1
+		END SELECT
+		IF actor(n).vecY > 0 THEN
+			c = tileRead(actor(n).x, actor(n).y)
+			IF c > 29 THEN
+				actor(n).frame = 60
+				actor(n).y = actor(n).y AND &HFFF8
+				actor(n).vecY = 0
+				actor(n).count = actor(n).count + 1
+				speed = 0
 			END IF
 		ELSE
-			playerDeltaX = ABS(actor(n).x - playerX)
-			playerDeltaY = actor(n).y - playerY
-			IF playerDeltaX > 4 OR ABS(playerDeltaY) > 1 OR player.vecY < -5 THEN unParent 2 
-        END IF
+			c = tileRead(actor(n).x, actor(n).y - 6)
+			IF c > 29 THEN
+				actor(n).y = actor(n).y AND &HFFF8 + 6
+				actor(n).vecY = 0
+			END IF
+		END IF
+		IF actor(n).vecY < 20 THEN
+			actor(n).vecY = actor(n).vecY + 2
+		END IF	
+		
+		IF actor(n).flags THEN
+			actor(n).vecX = -speed
+			s = -2
+			p = 1
+		ELSE
+			actor(n).vecX = speed
+			s = 2
+			p = 3
+		END IF
+		c = tileRead(actor(n).x + s, actor(n).y - 2)
+		IF c > 29 THEN
+			actor(n).vecX = 0
+			actor(n).flags = actor(n).flags XOR 1
+			actor(n).x = (actor(n).x AND &HFFFC) + p
+		END IF
 	END SELECT
-
-   IF gfx.page > 0 AND actor(n).control THEN
-      
+'------------------------------------------------------------------------------
+'
+'	Every-other-frame behavior checks, animations and life checks.
+'
+'------------------------------------------------------------------------------
+	IF gfx.page > 0 THEN
+		
 		actor(n).frame = actor(n).frame + animation(actor(n).frame).jump
 		IF animation(actor(n).frame).jump < 0 THEN
 			actor(n).frame = actor(n).frame + animation(actor(n).frame).jump
 		END IF
 		  
-	  playerDeltaX = ABS(actor(n).x - playerX)
-      playerDeltaY = ABS(actor(n).y - playerY)
+		playerDeltaX = ABS(actor(n).x - playerX)
+		playerDeltaY = ABS(actor(n).y - playerY)
       
-      SELECT CASE actor(n).control
+	SELECT CASE actor(n).control
 
       CASE 99
       'Tile FX
@@ -741,226 +842,175 @@ IF actor(n).exist > 0 THEN
              actor(n).y = actor(n).y AND &HFFF8
              tileWrite actor(n).x, actor(n).y, 56
              aUpdateTile actor(n).x, actor(n).y
-             actor(n).life = 3
+             actor(n).life = 2
              actor(n).control = 0
              actor(n).vecX = 0
              actor(n).vecY = 0
              soundEvent = 127
           END IF
        
-       'Dropping particle
-       CASE 200
-            IF actor(n).vecY < 20 THEN actor(n).vecY = actor(n).vecY + 4
+	'Dropping particle
+	CASE 200
+		IF actor(n).vecY < 20 THEN actor(n).vecY = actor(n).vecY + 4
        
-       'Pickup
-       CASE 41
-         c = tileRead(actor(n).x, actor(n).y)
-         IF actor(n).vecY < 30 THEN actor(n).vecY = actor(n).vecY + 4
+	'Pickup
+	CASE 41
+		c = tileRead(actor(n).x, actor(n).y)
+		IF actor(n).vecY < 30 THEN actor(n).vecY = actor(n).vecY + 4
             
-         IF c > 29 AND actor(n).y > actor(n).count THEN
+		IF c > 29 AND actor(n).y > actor(n).count THEN
             IF actor(n).vecY > 15 THEN
-               actor(n).y = actor(n).y AND &HFFF8
-               actor(n).vecY = (NOT actor(n).vecY) \ 2
-               soundEvent = 32
+				actor(n).y = actor(n).y AND &HFFF8
+				actor(n).vecY = (NOT actor(n).vecY) \ 2
+				soundEvent = 32
             ELSE
-               actor(n).vecY = 0
+				actor(n).vecY = 0
             END IF
-         END IF
+		END IF
 
-         IF actor(n).life < 37 AND actor(n).anim <> 90 THEN actor(n).flash = 36
+		IF actor(n).life < 37 AND actor(n).anim <> 90 THEN actor(n).flash = 36
 
-         IF playerDeltaX < 5 AND ABS(actor(2).y - actor(n).y) < 8 THEN
+		IF playerDeltaX < 5 AND ABS(actor(2).y - actor(n).y) < 8 THEN
             level.spawner(actor(n).spawner).object = 0
-            soundEvent = 34
+            soundEvent = 110
             IF actor(n).anim = 90 THEN
-               player.score = player.score + 500
-               player.hasKey = player.hasKey + 1
-			   player.gotKeys = player.gotKeys + 1
-               actor(n).control = 0
-               actor(n).vecX = 0
-               actor(n).vecY = -15
-               actor(n).life = 8
-               actor(n).flash = 16
-			   hudUpdate 16
-            ELSE
-               addScore actor(n).frame
-               actor(n).y = actor(n).y - 3
-               actor(n).vecY = 0
-               actor(n).flash = 0
-               actor(n).life = 9
-               actor(n).control = 0
-               switchAnim n, 93
-            END IF
-         END IF
+				player.score = player.score + 500
+				player.hasKey = player.hasKey + 1
+				player.gotKeys = player.gotKeys + 1
+				actor(n).control = 0
+				actor(n).vecX = 0
+				actor(n).vecY = -15
+				actor(n).life = 4
+				actor(n).flash = 16
+				hudUpdate 16
+				soundEvent = 132
+			ELSE
+				addScore actor(n).frame
+				actor(n).y = actor(n).y - 3
+				actor(n).vecY = 0
+				actor(n).flash = 0
+				actor(n).life = 5
+				actor(n).control = 0
+				switchAnim n, 93
+				if actor(n).anim = 98 THEN soundEvent = 110
+			END IF
+		END IF
 
-       'Chest
-       CASE 45
-         IF playerDeltaX < 5 AND playerDeltaY < 10 AND player.hasKey THEN
-          player.score = player.score + 1000
-		  player.gotChests = player.gotChests + 1
-		  player.hasKey = player.hasKey - 1
-          spawnObject actor(n).x - 6, actor(n).y - 12, 41, 98, 0
-          spawnObject actor(n).x - 4, actor(n).y - 14, 41, 98, 0
-          spawnObject actor(n).x, actor(n).y - 16, 41, 88, 0
-          spawnObject actor(n).x + 4, actor(n).y - 15, 41, 98, 0
-          spawnObject actor(n).x + 6, actor(n).y - 14, 41, 98, 0
-          actor(n).life = 5
-          actor(n).frame = 162
-          actor(n).vecY = -5
-          soundEvent = 104
-          level.spawner(actor(n).spawner).object = 0
-		  hudUpdate 16
-         END IF
+	'Chest
+	CASE 45
+		IF playerDeltaX < 5 AND playerDeltaY < 10 AND player.hasKey THEN
+			player.score = player.score + 1000
+			player.gotChests = player.gotChests + 1
+			player.hasKey = player.hasKey - 1
+			spawnObject actor(n).x - 6, actor(n).y - 12, 41, 98, 0
+			spawnObject actor(n).x - 4, actor(n).y - 14, 41, 98, 0
+			spawnObject actor(n).x, actor(n).y - 16, 41, 88, 0
+			spawnObject actor(n).x + 4, actor(n).y - 15, 41, 98, 0
+			spawnObject actor(n).x + 6, actor(n).y - 14, 41, 98, 0
+			actor(n).control = 0
+			actor(n).life = 3
+			actor(n).frame = 162
+			actor(n).vecY = -5
+			soundEvent = SndGetChest
+			level.spawner(actor(n).spawner).object = 0
+			hudUpdate 16
+		END IF
 
-       'Enemy bullet
-       CASE 102
-         IF playerDeltaX < 4 AND playerDeltaY < 6 THEN
-          damagePlayer
-          actor(n).life = 0
-         END IF
+	'Enemy bullet
+	CASE 102
+		IF playerDeltaX < 4 AND playerDeltaY < 6 THEN
+			damagePlayer
+			actor(n).life = 0
+		END IF
 
-       'Drip
-       CASE 104
-         IF actor(n).vecX > 0 THEN
-           actor(n).vecX = actor(n).vecX - 1
-          ELSEIF actor(n).vecX < 0 THEN
-           actor(n).vecX = actor(n).vecX + 1
-         END IF
-         IF actor(n).vecY < 30 THEN actor(n).vecY = actor(n).vecY + 4
-         IF playerDeltaX < 2 AND playerDeltaY < 5 THEN
-          damagePlayer
-          actor(n).flash = 16
-          actor(n).life = 0
-          actor(n).control = 0
-          actor(n).vecY = -10
-         END IF
+	'Drip
+	CASE 104
+		IF actor(n).vecX > 0 THEN
+			actor(n).vecX = actor(n).vecX - 1
+		ELSEIF actor(n).vecX < 0 THEN
+			actor(n).vecX = actor(n).vecX + 1
+		END IF
+		IF actor(n).vecY < 30 THEN actor(n).vecY = actor(n).vecY + 4
+		IF playerDeltaX < 2 AND playerDeltaY < 5 THEN
+			damagePlayer
+			actor(n).flash = 16
+			actor(n).life = 0
+			actor(n).control = 0
+			actor(n).vecY = -10
+		END IF
 
-       'Fire Bomb
-       CASE 112
+	'Fire Bomb
+	CASE 112
         IF actor(n).count < 10 THEN
          'c = tileRead(actor(n).x, actor(n).y)
          'IF c > 29 THEN
          ' actor(n).life = 6
          ' actor(n).count = 10
          'END IF
-         IF actor(n).vecY < 35 THEN actor(n).vecY = actor(n).vecY + 2
+			IF actor(n).vecY < 35 THEN actor(n).vecY = actor(n).vecY + 2
         END IF
-         IF playerDeltaX < 4 AND playerDeltaY < 6 THEN
-          damagePlayer
-          actor(n).life = 0
-         END IF
-
-       'Eggy
-       CASE 1
-           actor(n).vecY = 20
-           IF actor(n).dir = 2 THEN
-             IF actor(n).count < 0 AND actor(n).count > -8 THEN
-               actor(n).vecY = angle.y(actor(n).jump)
-               actor(n).jump = (actor(n).jump + 2) AND 63
-               c = tileRead(actor(n).x, actor(n).y - 8)
-               IF c > 29 THEN actor(n).vecY = 0: actor(n).y = actor(n).y AND &HFFF8 + 7
-              ELSE
-               actor(n).jump = 0
-             END IF
-            ELSE
-             IF actor(n).count < 0 AND actor(n).count > -5 THEN
-               actor(n).vecY = angle.y(actor(n).jump)
-               actor(n).jump = (actor(n).jump + 4) AND 63
-               c = tileRead(actor(n).x, actor(n).y - 8)
-               IF c > 29 THEN actor(n).vecY = 0: actor(n).y = actor(n).y AND &HFFF8 + 7
-              ELSE
-               actor(n).jump = 0
-             END IF
-           END IF
-
-            IF actor(n).vecY > -1 THEN
-             c = tileRead(actor(n).x, actor(n).y)
-             IF c > 29 THEN
-               actor(n).vecX = 0
-               actor(n).frame = 60
-               actor(n).vecY = 0
-               actor(n).y = actor(n).y AND &HFFF8
-               IF actor(n).count = 0 AND actor(n).jump = 0 THEN
-                actor(n).frame = 62
-                actor(n).vecX = 5 + (actor(n).flags > 0) * 10
-               END IF
-             END IF
-            END IF
-
-            actor(n).count = actor(n).count + (actor(n).count < 1)
-
-            IF actor(n).count < -10 AND c > 29 THEN
-             actor(n).count = 0
-             actor(n).jump = 0
-             actor(n).dir = actor(n).dir + 1
-             IF actor(n).dir > 2 THEN actor(n).dir = 0
-             soundEvent = 142
-            END IF
-
-         IF actor(n).flags THEN
-           s = -2
-           p = 1
-          ELSE
-           s = 2
-           p = 3
-         END IF
-         c = tileRead(actor(n).x + s, actor(n).y - 1)
-         IF c > 29 THEN
-            actor(n).flags = actor(n).flags XOR 1
-            actor(n).vecX = 0
-            actor(n).x = (actor(n).x AND &HFFFC) + p
-         END IF
-
+		IF playerDeltaX < 4 AND playerDeltaY < 6 THEN
+			damagePlayer
+			actor(n).life = 0
+		END IF
        
        'HELMET
        CASE 2
         c = tileRead(actor(n).x, actor(n).y)
         IF c > 30 THEN
-          actor(n).y = actor(n).y AND &HFFF8
-          actor(n).vecY = 0
-         ELSE
-          actor(n).vecX = 0
-          actor(n).vecY = 20
+			actor(n).y = actor(n).y AND &HFFF8
+			actor(n).vecY = 0
+        ELSE
+			'actor(n).vecX = 0
+			actor(n).vecY = 20
         END IF
-        IF actor(n).life > -50 THEN
-         actor(n).y = actor(n).y - 6
-         actor(n).life = -50
-         actor(n).count = 32
-         actor(n).collider = 0
-         actor(n).dir = actor(n).vecX
-         actor(n).vecX = 0
+		IF actor(n).life > -50 THEN
+			actor(n).y = actor(n).y - 6
+			actor(n).life = -50
+			actor(n).count = 32
+			actor(n).collider = 2
+			actor(n).visY = 50
+			'actor(n).dir = actor(n).vecX
+			'actor(n).vecX = 0
         END IF
-       IF actor(n).count = 0 THEN
-        IF c > 30 THEN
-           IF actor(n).flags THEN
-             actor(n).vecX = -4
-             c = tileRead(actor(n).x - 2, actor(n).y - 2)
-             c2 = tileRead(actor(n).x - 2, actor(n).y + 2)
-              IF c > 29 OR c2 < 30 THEN
-               actor(n).flags = 0
-               actor(n).vecX = 4
-               actor(n).x = actor(n).x AND &HFFFC + 2
-              END IF
-           ELSE
-             actor(n).vecX = 4
-             c = tileRead(actor(n).x + 2, actor(n).y - 2)
-             c2 = tileRead(actor(n).x + 2, actor(n).y + 2)
-              IF c > 29 OR c2 < 30 THEN
-               actor(n).flags = 1
-               actor(n).vecX = -4
-               actor(n).x = actor(n).x AND &HFFFC + 2
-              END IF
-           END IF
-        END IF
-       ELSE
-        actor(n).count = actor(n).count - 1
-        actor(n).frame = 239
-        IF actor(n).count = 0 THEN
-         actor(n).frame = 232
-         actor(n).collider = 1
-         actor(n).vecX = actor(n).dir
-        END IF
-       END IF
+        
+		IF actor(n).count = 0 THEN 
+			speed = 4
+		ELSE
+			speed = 10
+			actor(n).count = actor(n).count - 1
+			actor(n).frame = 239
+			IF actor(n).count = 0 THEN
+				actor(n).frame = 232
+				actor(n).collider = 1
+				actor(n).visY = 35
+				'actor(n).vecX = actor(n).dir
+			END IF
+		END IF
+		
+		'IF c > 30 THEN
+		IF actor(n).flags THEN
+			xp = -2
+			flags = 0
+			speed = -speed
+		ELSE
+			xp = 2
+			speed = speed
+			flags = 1
+		END IF
+		
+		actor(n).vecX = speed
+		c = tileRead(actor(n).x + xp, actor(n).y - 2)
+		c2 = tileRead(actor(n).x + xp, actor(n).y + 2)
+		IF actor(n).count THEN c2 = 999
+		IF c > 29 OR c2 < 30 THEN
+			IF  actor(n).count THEN soundEvent = SndHelmetBump
+			actor(n).flags = flags
+			actor(n).vecX = -speed
+			actor(n).x = actor(n).x AND &HFFFC + 2
+		END IF
+		'END IF
+		
 
        'Dragon
        CASE 3
@@ -1068,12 +1118,12 @@ IF actor(n).exist > 0 THEN
            actor(n).vecX = 8
            IF actor(n).x > screenX + 44 THEN actor(n).flags = 1 ' soundEvent = 151
          END IF
-         c = (counter0 + actor(n).count) AND 63
+         c = (dtMain0 + actor(n).count) AND 63
          actor(n).y = actor(n).count + mulTable(1, angle.y(c))
 
          'FIRE BREATH
        CASE 11
-         x = (counter1 + actor(n).y) AND 31
+         x = (dtMain1 + actor(n).y) AND 31
          IF x > 10 THEN
           IF x = 11 THEN
            actor(n).frame = 152: soundEvent = 66
@@ -1137,7 +1187,7 @@ IF actor(n).exist > 0 THEN
 
         'EXIT
         CASE 63
-         IF (counter1 AND 3) = 2 THEN
+         IF (dtMain1 AND 3) = 2 THEN
           x = actor(n).x - 4 + INT(RND * 10)
           y = actor(n).y - 22 + INT(RND * 15)
           spawnObject x, y, 93, 0, 0
@@ -1181,10 +1231,42 @@ IF actor(n).exist > 0 THEN
          IF actor(n).jump = 1 THEN
          END IF
 
-       END SELECT
-
-      END IF 'Page check
-
+	END SELECT
+		IF actor(n).life > -1 THEN
+			IF actor(n).life = 0 THEN
+				'debugOut "destroy " + STR$(n)
+				IF actor(n).control > 0 AND actor(n).control < 63 THEN
+				'spawnerEnabler(actor(n).spawner) = 0
+				level.spawner(actor(n).spawner).object = 0
+				'spawnerEnabler(actor(n).spawner) = spawnerEnabler(actor(n).spawner) AND &HFFF
+				END IF
+				IF actor(n).control > 0 AND actor(n).control < 11 THEN
+					soundEvent = SndEnemyDrop
+					actor(n).exist = 1
+					actor(n).flags = 0
+					actor(n).control = 41
+					actor(n).flash = 4
+					actor(n).vecX = 0
+					actor(n).vecY = -20
+					actor(n).y = actor(n).y - 4
+					actor(n).collider = 0
+					actor(n).life = 30
+					actor(n).frame = 98
+					c = tileRead(actor(n).x, actor(n).y)
+					IF c > 29 THEN
+						actor(n).count = actor(n).y + 8
+					ELSE
+						actor(n).count = actor(n).y
+					END IF
+				ELSE
+					destroyObject n    ' getObject
+					'listIDX = actor(n).lNext
+					'getObject = getObject - 1
+				END IF
+			END IF
+				actor(n).life = actor(n).life - 1
+		END IF    
+	END IF 'Page check
 '----------------------------------------------------------------------------
 
       parts = animation(actor(n).frame).jump AND actor(n).frame > 0
@@ -1245,43 +1327,10 @@ IF actor(n).exist > 0 THEN
       END IF
   END IF 'visibility check
 '----------------------------------------------------------------------------
-   IF actor(n).life > -1 THEN
-    IF actor(n).life = 0 THEN
-     'debugOut "destroy " + STR$(n)
-     IF actor(n).control > 0 AND actor(n).control < 63 THEN
-	  'spawnerEnabler(actor(n).spawner) = 0
-	  level.spawner(actor(n).spawner).object = 0
-      'spawnerEnabler(actor(n).spawner) = spawnerEnabler(actor(n).spawner) AND &HFFF
-     END IF
-     IF actor(n).control > 0 AND actor(n).control < 11 THEN
-          actor(n).exist = 1
-          actor(n).flags = 0
-          actor(n).control = 41
-          actor(n).flash = 4
-          actor(n).vecX = 0
-          actor(n).vecY = -20
-          actor(n).y = actor(n).y - 4
-          actor(n).collider = 0
-          actor(n).life = 113
-          actor(n).frame = 98
-          c = tileRead(actor(n).x, actor(n).y)
-          IF c > 29 THEN
-            actor(n).count = actor(n).y + 8
-           ELSE
-            actor(n).count = actor(n).y
-          END IF
-      ELSE
-          destroyObject n    ' getObject
-          'listIDX = actor(n).lNext
-          'getObject = getObject - 1
-     END IF
-    END IF
-    actor(n).life = actor(n).life - 1
-   END IF
-   END IF 'exist check
+  END IF 'exist check
 LOOP WHILE actor(listIDX).lNext > 1
 
- IF gfx.page THEN counter1 = (counter1 + 1) AND 63
+ IF gfx.page THEN dtMain1 = (dtMain1 + 1) AND 63
 
  spriteList(spriteListIndex, gfx.page).y = 255
 
@@ -1291,7 +1340,7 @@ LOOP WHILE actor(listIDX).lNext > 1
   hudUpdate 4
  END IF
 
- counter0 = (counter0 + 1) AND 63
+ dtMain0 = (dtMain0 + 1) AND 63
 
 END SUB
 
@@ -1301,6 +1350,8 @@ SUB handleCollision
 	' 1 = Affect Player
 	' 2 = Affect Enemy
 	' 3 = Affect Bullet
+	
+	'Affect player
 	IF actor(2).control = 255 AND actor(2).flash = 0 THEN
 		px = actor(2).x - gfx.screenX(gfx.page) + 20
 		py = actor(2).y - gfx.screenY(gfx.page) + 14
@@ -1312,7 +1363,7 @@ SUB handleCollision
 			END IF
 		NEXT a
 	END IF
-
+	'Affect enemy
 	FOR b = 0 TO colCount(2)
 		n = colList(2, b).index
 		px = actor(n).x - gfx.screenX(gfx.page) + 20
@@ -1320,39 +1371,39 @@ SUB handleCollision
 		FOR a = 0 TO colCount(1)
 			IF px > colList(1, a).x0 - 2 AND px < colList(1, a).x1 + 2 AND py > colList(1, a).y0 - 3 AND py < colList(1, a).y1 + 3 THEN
 				n2 = colList(1, a).index
-				actor(n).collider = 0
-				actor(n).life = 4
-				actor(n).vecY = -5
-				actor(n).control = 0
-				actor(n).vecX = 0
-				actor(n).flags = 0
-				'actor(n).flash = 20
-				IF actor(n2).life > -999 THEN
-					actor(n2).flash = 10
-					actor(n2).life = actor(n2).life + 1
+				IF actor(n2).control = 2 THEN
+					IF actor(n).vecX > 0 THEN
+						actor(n2).flags = 0
+					ELSE
+						actor(n2).flags = 1
+					END IF
 				END IF
-				IF actor(n2).life > -1 THEN
-					actor(n).x = actor(n2).x
-					actor(n).frame = 162
-					soundEvent = 44
-				ELSE
-					actor(n).frame = 110
-					soundEvent = 44
+				IF actor(n2).life > -999 THEN
+						actor(n2).flash = 10
+						actor(n2).life = actor(n2).life + 1
+				END IF
+				IF actor(n).control = 100 THEN
+					actor(n).collider = 0
+					actor(n).life = 4
+					actor(n).vecY = -5
+					actor(n).control = 0
+					actor(n).vecX = 0
+					actor(n).flags = 0
+					'actor(n).flash = 20
+					IF actor(n2).life > -1 THEN
+						actor(n).x = actor(n2).x
+						actor(n).frame = 162
+						soundEvent = 44
+					ELSE
+						actor(n).frame = 110
+						soundEvent = 44
+					END IF
 				END IF
 			END IF
 		NEXT a
 	NEXT b
 
 	IF soundEvent > -1 THEN aSoundFX 0, soundEvent
-END SUB
-
-SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
-	loadStr = MID$(hudBuffer, 161, 1)
-	OPEN "ducktext.ctt" FOR BINARY AS #1
-		GET #1, offset + 1, hudBuffer
-	CLOSE #1
-	MID$(hudBuffer, 161, 1) = loadStr
-	IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 END SUB
 
 SUB hudUpdate (flags AS INTEGER)
@@ -1427,7 +1478,7 @@ SUB initMainMenu
 END SUB
 
 SUB initTestGame
-	player.level = 0
+	player.level = 1
 	DO
 		main
 	LOOP
@@ -1599,7 +1650,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 257	'Player Die
 		actorListNew n
 		actor(n).control = 0
-		actor(n).life = 25
+		actor(n).life = 15
 		actor(n).frame = 110
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = spawner
@@ -1608,7 +1659,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 200	'Explode
 		actorListNew n
 		actor(n).control = 0
-		actor(n).life = 15
+		actor(n).life = 12
 		actor(n).spawner = 0
 		actor(n).collider = 0
 		actor(n).frame = 110
@@ -1658,13 +1709,13 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actorListNew n   
 		actor(n).control = 0
 		actor(n).frame = 93
-		actor(n).life = 10
+		actor(n).life = 6
 		actor(n).vecY = 3
 		actor(n).spawner = 0
 	CASE 100	'Player Bullet
 		actorListNew n
 		actor(n).control = 100
-		actor(n).life = 20   
+		actor(n).life = 15
 		actor(n).spawner = 0
 		actor(n).flags = spawnerFlags
 		actor(n).collider = 2
@@ -1674,7 +1725,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 102	'Enemy Bullet
 		actorListNew n
 		actor(n).control = 102
-		actor(n).life = 20   
+		actor(n).life = 24
 		actor(n).spawner = 0
 		actor(n).vecX = 10 + (spawnerFlags <> 0) * 20
 		actor(n).vecY = 5
@@ -1685,17 +1736,17 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 104	'DRIP
 		actorListNew n
 		actor(n).control = 104   
-		actor(n).life = 20
+		actor(n).life = 24
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = -30
 		actor(n).frame = 214
 		actor(n).anim = 214
-		actor(n).visY = 30
+		actor(n).visY = 40
 		actor(n).spawner = 0		
 	CASE 111	'FIRE PARTICLE
 		actorListNew n
 		actor(n).control = 102
-		actor(n).life = 20   
+		actor(n).life = 15
 		actor(n).spawner = 0
 		actor(n).vecX = 7 + (spawnerFlags <> 0) * 14
 		actor(n).vecY = spawner
@@ -1705,7 +1756,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 112	'FIRE BOMB
 		actorListNew n
 		actor(n).control = 112
-		actor(n).life = 30   
+		actor(n).life = 18
 		actor(n).spawner = 0
 		actor(n).vecX = 0
 		actor(n).vecY = 5
@@ -1731,6 +1782,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 232
 		actor(n).count = 0
 		actor(n).visY = 35
+		actor(n).visX = 60
 	CASE 3	'DRAGON
 		actorListNew n
 		actor(n).control = 3   
@@ -1774,7 +1826,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	   actorListNew n
 	   actor(n).control = 11   
 	   actor(n).spawner = spawner
-	   actor(n).life = -9999
+	   actor(n).life = -999
 	   actor(n).frame = 150
 	   actor(n).anim = 150
 	   actor(n).visY = 25
@@ -1786,14 +1838,14 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actorListNew n
 		actor(n).collider = 1
 		actor(n).control = 15    
-		actor(n).life = -9999
+		actor(n).life = -999
 		actor(n).frame = 146
 		actor(n).visX = 24
 		actor(n).visY = 50 
 	CASE 16  		'SPAWNER
 		actorListNew n
 		actor(n).control = 16    
-		actor(n).life = -9999
+		actor(n).life = -999
 		actor(n).frame = 0
 		actor(n).visX = 30
 		actor(n).visY = 70
@@ -1836,7 +1888,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actorListNew n
 		actor(n).control = 41
 		actor(n).spawner = 0
-		actor(n).life = 113
+		actor(n).life = 60
 		actor(n).count = y
 		actor(n).vecY = -20
 		actor(n).frame = spawnerFlags

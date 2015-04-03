@@ -41,9 +41,9 @@ COMMON SHARED KBarray() AS INTEGER
 
 COMMON SHARED fps AS DOUBLE
 COMMON SHARED dtAnims AS INTEGER
-COMMON SHARED Counter0 AS INTEGER
-COMMON SHARED Counter1 AS INTEGER
-COMMON SHARED Counter2 AS INTEGER
+COMMON SHARED dtMain0 AS INTEGER
+COMMON SHARED dtMain1 AS INTEGER
+COMMON SHARED dtMain2 AS INTEGER
 
 DIM mulTable(1 TO 20, -20 TO 20) AS INTEGER
 COMMON SHARED mulTable() AS INTEGER
@@ -138,13 +138,6 @@ TYPE collisionType
  y1 AS INTEGER
 END TYPE
 
-TYPE flagsType
- jump AS INTEGER
- flip AS INTEGER
- animFinished AS INTEGER
- flash AS INTEGER
-END TYPE
-
 TYPE playerType
  score AS LONG
  secrets AS INTEGER
@@ -231,8 +224,6 @@ DIM tileCopyList(0 TO 2, 0 TO 1) AS spriteListType
 COMMON SHARED tileCopyList() AS spriteListType
                                                
 COMMON SHARED player AS playerType
-
-COMMON SHARED flags AS flagsType
 
 DIM actor(1 TO 60) AS objectType
 COMMON SHARED actor()  AS objectType

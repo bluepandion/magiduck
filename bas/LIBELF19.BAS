@@ -10,13 +10,13 @@ DECLARE SUB loadLevel (fileName AS STRING)
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB elfInit ()
 DECLARE SUB initLookUps ()
-DECLARE SUB InitScreen ()
 DECLARE SUB loadSprites (file$, offset%)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
 DECLARE SUB loadKeyboard ()
 DECLARE SUB quit ()
-declare sub debugOut(text$)
+DECLARE SUB debugOut (text$)
+DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 
 DECLARE FUNCTION tileRead% (x%, y%)
 
@@ -24,9 +24,9 @@ DEFINT A-Z
 
 '$INCLUDE: 'libelf.bi'
 
-'-------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
 ' Variables and types
-'-------------------------------------------------------------------------
+'-------------------------------------------------------------------------------
 
 DIM SHARED p0%
 DIM SHARED p1%
@@ -89,24 +89,34 @@ SUB elfInit
 	'--------------------------------------------------------------------------
 	' Store asm-routine variables to KBarray and send them to setup.
 	'--------------------------------------------------------------------------
-	KBarray(0) = varseg(soundTrack)
-	KBarray(1) = varptr(soundTrack)
-	KBarray(2) = varseg(KBarray(0))
-	KBarray(3) = varptr(KBarray(0))
-	aSetup varseg(KBarray(0)), varptr(KBarray(0))
-	debugOut "asetup"
-	for n = 0 to 130
+	KBarray(0) = VARSEG(soundTrack)
+	KBarray(1) = VARPTR(soundTrack)
+	KBarray(2) = VARSEG(KBarray(0))
+	KBarray(3) = VARPTR(KBarray(0))
+	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
+	aSoundStop
+	
+	FOR n = 0 TO 130
 	 KBarray(n) = 0
-	next n
+	NEXT n
 	'--------------------------------------------------------------------------
 	' Detect and initialize video adapter
-	'-------------------------------------------------------------------------- 
+	'--------------------------------------------------------------------------
 	 aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
-	 debugOut "initvideo"
+	 'debugOut "initvideo"
 	 gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
-	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1)) 
+	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
 	 IF gfx.adapter > 0 THEN
-		PRINT MID$("CEV", gfx.adapter, 1); "GA detected."
+		gfx.pageOfs(0) = 0
+		gfx.pageOfs(1) = 5000
+		gfx.page = 0
+		IF gfx.adapter > 1 THEN
+			gfx.pageWrap = 16383
+			gfx.videoWrap = 32767
+		ELSE
+			gfx.pageWrap = 8191
+			gfx.videoWrap = 16383
+		END IF
 	  ELSE
 		errorMessage$ = "CGA, EGA or VGA compatible display adapter required."
 		quit
@@ -116,7 +126,6 @@ SUB elfInit
 	'--------------------------------------------------------------------------
 	' Setup variables
 	'--------------------------------------------------------------------------
-	
 	hudBufferSeg = VARSEG(hudBuffer)
 	hudBufferOfs = VARPTR(hudBuffer)
 
@@ -171,19 +180,20 @@ SUB elfInit
 	 spriteList(2, n).y = 255
 	NEXT n
 	'------------------------------------------------------
-	debugOut "timer"
+	'debugOut "timer"
 	CALL aTimerStart
 	'-----------------------------------------------------------------------
 	' Set up lookups, preload some data and setup screen
 	'-----------------------------------------------------------------------
-	
-	PRINT "Lookups..."
+	'a$ = MID$("CEV", gfx.adapter, 1) + "GA DETECTED."
+	'myPrint 2, 1, a$, &H20E0
+	'aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page XOR 1)
+	'myPrint 2, 4, "LOOKUPS...", &H7070
+	hudTextLoad 0, 1
 	initLookUps
-	PRINT "Sprites..."
-	loadSprites "spducks", 0
 	w40char.seg = VARSEG(w40char.glyph1(32))
 	w40char.ofs = VARPTR(w40char.glyph1(32))
-	InitScreen
+	loadSprites "spducks", 0
 	'-----------------------------------------------------------------------
 	' Setup keyboard
 	'-----------------------------------------------------------------------
@@ -329,7 +339,6 @@ SUB handleScroll
 
 END SUB
 
-
 SUB initLookUps
 
 OPEN "w40char.def" FOR BINARY AS #1
@@ -390,133 +399,11 @@ NEXT n
  FOR n = -19 TO 19
   speed = 0
   IF ABS(n) > 0 THEN speed = 1
-  IF ABS(n) > 11 THEN speed = 2
+  IF ABS(n) > 6 THEN speed = 2
+  IF ABS(n) > 12 THEN speed = 3
   IF n < 0 THEN speed = -speed
   camSpeedY(n) = speed
  NEXT n
-
-END SUB
-
-SUB InitScreen
-
-SELECT CASE gfx.adapter
-
- CASE 3  'VGA
-
-  gfx.videoWrap = 32767
-  gfx.pageWrap = 16383
-
-  OUT &H3D4, &H9            'Maximum scan line
-  OUT &H3D5, &H83           'Bit 7 true = 200 to 400 scanline conversion
-									 'Bits 3-0   = Glyph height
- CASE 2  'EGA
-
-  gfx.videoWrap = 32767
-  gfx.pageWrap = 16383
-
-  OUT &H3D4, &H6            'Vertical total
-  OUT &H3D5, &H4
-
-  OUT &H3D4, &H7            'Overflow
-  OUT &H3D5, &H11
-
-  OUT &H3D4, &H8            'Preset row SC
-  OUT &H3D5, &H0
-
-  OUT &H3D4, &H9            'Maximum scan line
-  OUT &H3D5, &H3            'Bits 3-0   = Glyph height
-
-  OUT &H3D4, &H10           'Vert retrace start
-  OUT &H3D5, &HE1
-
-  OUT &H3D4, &H11           'Vert retrace end
-  OUT &H3D5, &H24
-
-  OUT &H3D4, &H12           'Vert display end
-  OUT &H3D5, &HC7
-
-  OUT &H3D4, &H15           'Start vBlank
-  OUT &H3D5, &HE0
-
-  OUT &H3D4, &H16           'End vBlank
-  OUT &H3D5, &HF0
-
- CASE 1  'CGA
-
-  gfx.videoWrap = 16383
-  gfx.pageWrap = 8191
-
-  OUT &H3D4, &H0            'Horizontal total
-  OUT &H3D5, &H38
-
-  OUT &H3D4, &H1            'Horizontal displayed
-  OUT &H3D5, &H28
-
-  OUT &H3D4, &H2            'Horizontal sync pos
-  OUT &H3D5, &H2D
-
-  OUT &H3D4, &H3            'Horizontal sync width
-  OUT &H3D5, &HA
- 
-  OUT &H3D4, &H4            'Vertical total
-  OUT &H3D5, &H3F           '(nearest 2^ to row count = 63)
-
-  OUT &H3D4, &H5            'Vertical total adjust
-  OUT &H3D5, 6              '
-
-  OUT &H3D4, &H6            'Vertical displayed
-  OUT &H3D5, 50             '
-
-  OUT &H3D4, &H7            'Vertical sync position
-  OUT &H3D5, 56             'Row count + 6
-
-  OUT &H3D4, &H8            'Interlace mode
-  OUT &H3D5, 2
- 
-  OUT &H3D4, &H9            'Maximum scan line address, or glyph height.
-  OUT &H3D5, 3
-
-
-  'Enable video,             Bit 0 = 0, for low resolution text mode.
-  '                          Bit 3 = 1, to enable video.
-  '                          Bit 5 = 1, to enable blink.
- 
-  OUT &H3D8, &H8   '&H8 = 40 column, &H9 = 80 column
- 
-END SELECT
-
-clearCount = 3
-IF gfx.adapter >= 1 THEN clearCount = 7
-
-gfx.page = 0
-gfx.pageOfs(0) = 0
-FOR n = 0 TO clearCount
- tileCopyList(0, gfx.page).x = 0
- tileCopyList(0, gfx.page).y = 0
- tileCopyList(0, gfx.page).w = 40
- tileCopyList(0, gfx.page).h = 50
- tileCopyList(1, gfx.page).y = 255
-
- aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
-
- gfx.pageOfs(0) = gfx.pageOfs(0) + 2000
-NEXT n
-
-v1 = 16000
-v2 = 16382
-IF gfx.adapter > 1 THEN v1 = 32000: v2 = 32766
-
-DEF SEG = &HB800
-FOR a& = v1 TO v2 STEP 2
- POKE a& + 1, 0
- POKE a&, 222
-NEXT a&
-DEF SEG
-
-gfx.pageOfs(0) = 0
-gfx.pageOfs(1) = 5000
-gfx.page = 0
-
 
 END SUB
 
@@ -535,21 +422,21 @@ END SUB
 
 SUB loadLevel (fileName AS STRING)
 
-	debugOut "Level load " + fileName
-
+	'debugOut "Level load " + fileName
+	progressBar 0
 	OPEN fileName + ".lvl" FOR BINARY AS #1
 	 FOR n = 1 TO 1600
 	  GET #1, n, loadStr
 	  MID$(tileBuffer, 9760 + n, 1) = loadStr
 	 NEXT n
-
+		progressBar 1
 	 readOfs = 1601
-	 debugOut "actor data"
+	 'debugOut "actor data"
 	 GET #1, readOfs, level
 	CLOSE #1
 
 	IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
-
+	progressBar 2
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
 
 	'debugwrite "OK"
@@ -651,7 +538,7 @@ END SUB
 
 SUB progressBar (stage AS INTEGER)
 
- n = gfx.pageOfs(gfx.page) * 2 + 40
+ n = gfx.pageOfs(gfx.page) * 2 + 40 + stage * 2
  POKE n, 219
  POKE n + 1, &HFE
  n = n + 78
@@ -692,12 +579,12 @@ END IF
   IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 
- FOR n = 1 TO 60
-  if actor(n).exist then 
-	color 7
-  else
-	color 8
-  end if
+ FOR n = 1 TO 30
+  IF actor(n).exist THEN
+	COLOR 7
+  ELSE
+	COLOR 8
+  END IF
   PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
  NEXT n
 END
@@ -862,3 +749,11 @@ SUB tileWrite (x AS INTEGER, y AS INTEGER, index AS INTEGER)
 
 END SUB
 
+SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
+	loadStr = MID$(hudBuffer, 161, 1)
+	OPEN "ducktext.ctt" FOR BINARY AS #1
+		GET #1, offset + 1, hudBuffer
+	CLOSE #1
+	MID$(hudBuffer, 161, 1) = loadStr
+	IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+END SUB
