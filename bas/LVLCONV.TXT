@@ -1,18 +1,19 @@
 'mapID  name   ID  X+  Y+  Flags
 "convert"
 "actors"
-021, " EGGY>", 01, 04, 07, 00
+021, "EGGY >", 01, 04, 07, 00
 022, "HELMET", 02, 04, 07, 00
 023, "SKULL>", 06, 04, 07, 00
 024, "FLAM >", 11, 04, 00, 00
-031, " EGGY<", 01, 04, 07, 01
+031, "EGGY <", 01, 04, 07, 01
 032, "HELMET", 02, 04, 07, 01
 033, "SKULL<", 06, 04, 07, 01
-034, "FLAM <", 12, 04, 00, 00
+034, "FLAM <", 12, 04, 00, 01
+041, "BABAT ", 05, 04, 00, 00
 042, "DRAGON", 03, 04, 07, 00
 043, "DROOLY", 04, 04, 08, 00
-041, "BABAT ", 05, 04, 00, 00
-034, "SPIKEY", 08, 04, 04, 00
+044, "SPIKEY", 08, 00, 00, 00
+045, "SPIKEY", 09, 00, 00, 00
 051, "SPKB B", 15, 04, 04, 00
 052, "SPKB U", 17, 04, 04, 00
 053, "SPKB+O", 18, 04, 04, 00
@@ -21,7 +22,7 @@
 062, "CHEST ", 45, 04, 08, 00
 063, "SUPER ", 46, 00, 00, 00
 071, "H PLAT", 51, 00, 04, 00
-072, "V PLAT", 52, 08, 04, 00
+072, "V PLAT", 52, 08, 00, 00
 011, " EXIT ", 63, 04, 04, 00
 012, "CHECK0", 62, 04, 04, 00
 013, "CHECK1", 62, 04, 04, 01
@@ -43,7 +44,9 @@
 "/actors"
 "maps"
 "..\convert\hubworld.tmx", "tileset2", "spenemy0", "level0"
-"..\convert\test.tmx", "tileset0", "spenemy0", "level1"
-"..\convert\level2.tmx", "tileset1", "spenemy0", "level2"
+"..\convert\prototyp.tmx", "tileset0", "spenemy0", "level1"
+"..\convert\test.tmx", "tileset0", "spenemy0", "level2"
+"..\convert\hicoin.tmx", "tileset0", "spenemy0", "level3"
+"..\convert\level2.tmx", "tileset1", "spenemy0", "level4"
 "/maps"
 "/convert"

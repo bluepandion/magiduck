@@ -67,6 +67,13 @@ OPEN listFile$ FOR INPUT AS #1
     INPUT #1, a$
     n = VAL(a$)
     IF n THEN
+     IF actorConvert(n).id > 0 THEN
+      COLOR 4
+      PRINT " Duplicate Actor conversion definition: "; n
+      PRINT " "; actorConvert(n).name
+      BEEP
+      END
+     END IF
      INPUT #1, actorConvert(n).name
      INPUT #1, actorConvert(n).id
      INPUT #1, actorConvert(n).xOfs
@@ -147,6 +154,8 @@ OPEN listFile$ FOR INPUT AS #1
          IF tile > 1 AND tile < 9 THEN
           actorWave = tile - 2
           actorSpawner = 1
+          'pause
+          CLS 1
          END IF
 
          IF tile > 11 AND tile < 19 THEN

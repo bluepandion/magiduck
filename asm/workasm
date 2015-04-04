@@ -173,7 +173,7 @@ aSpriteQueue ENDP
 	; [ jmp ][ idx+] [ idx-] [  x+ ] [  x- ] [  y  ]  					= 6 Bytes / 1536 + 512
 	; [ jmp ]:[  w  ]:[  h  ]:[  y  ]:[ ofs+]-[     ]:[  x+ ]:[ ofs-]-[     ]:[  x- ] = 10 Bytes / 2560 bytes
 	;
-	animationData 	db 	2048 dup(0)	
+	animationData 	db 	2560 dup(0)	
 	
 	; drawList data:
 	;
