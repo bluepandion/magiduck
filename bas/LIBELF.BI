@@ -160,6 +160,7 @@ TYPE playerType
  menuMode AS INTEGER
  menuContext AS INTEGER
  menuItem AS INTEGER
+ menuPrev AS INTEGER
  targetX AS INTEGER
  targetY AS INTEGER
  keyPrev AS INTEGER

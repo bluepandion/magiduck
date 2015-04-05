@@ -1,4 +1,4 @@
-25:51:55
+18:11:58
 loading level
 level load ok
 actor setup ok
@@ -7,4 +7,10 @@ spawn ok
 set screen pos ok
 hud ok
 timer ok
-spawn 1
+Menu Load  0
+ 0
+ 1
+ 2
+ 3
+ 4
+player: 1

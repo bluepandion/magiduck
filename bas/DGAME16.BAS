@@ -16,6 +16,7 @@ DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB aUpdateTile (x%, y%)
 DECLARE SUB handleCollision ()
 DECLARE SUB screenResetPos (x%, y%)
+DECLARE SUB menuLoad (menuNo%)
 
 '$INCLUDE: 'libelf.bi'
 
@@ -346,26 +347,67 @@ CASE 260
 'Menu cursor
 CASE 258
 	SELECT CASE player.menuMode
-	CASE 0		'Load and display menu
+	CASE 0		'Display menu load message
+		w40char.text = " LOADING PAGE ...                      |"
+		player.hudLock = 999
+		aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		player.menuMode = 1
 		actor(2).jump = actor(1).lNext
 		actor(1).lNext = 1
-		loadMenu player.menuContext
+	CASE 1		'Load and display menu
+		aSoundStop
+		menuLoad player.menuContext - 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
-		player.menuMode = 1
-	CASE 1		'Item highlight and wait for input
+		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
+		aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		player.hudLock = 999
+		player.menuMode = 2
+		spriteList(0, 0).y = 255
+		spriteList(0, 1).y = 255
+	CASE 2
+		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
+		player.menuMode = 3
+	CASE 3		'Item highlight and wait for input
+		IF actor(2).count THEN
+			x = ASC(menuItem(player.menuPrev).x)
+			y = ASC(menuItem(player.menuPrev).y)
+			w = ASC(menuItem(player.menuPrev).w)
+			h = ASC(menuItem(player.menuPrev).h)
+			aMenuHiLite x, y, w, h, menuItem(player.menuPrev).colours, gfx.pageOfs(gfx.page)	
+			actor(2).count = actor(2).count - 1
+		ELSE
+			player.menuPrev = player.menuItem
+			IF kbArray(80) THEN 
+				player.menuItem = ASC(menuItem(player.menuItem).iNext)
+				soundEvent = sndMenuNext
+				actor(2).count = 2
+			END IF
+			IF kbArray(72) THEN 
+				player.menuItem = ASC(menuItem(player.menuItem).iPrev)
+				soundEvent = sndMenuPrev
+				actor(2).count = 2
+			END IF
+			IF kbArray(28) THEN soundEvent=0: player.menuMode = 5
+		END IF
 		x = ASC(menuItem(player.menuItem).x)
-		y = ASC(menuItem(player.menuItem).x)
+		y = ASC(menuItem(player.menuItem).y)
 		w = ASC(menuItem(player.menuItem).w)
 		h = ASC(menuItem(player.menuItem).h)
 		aMenuHiLite x, y, w, h, &HCECF, gfx.pageOfs(gfx.page)
-	CASE 2 to 3	'Item change, clear previous item
-		x = ASC(menuItem(player.menuPrev).x)
-		y = ASC(menuItem(player.menuPrev).x)
-		w = ASC(menuItem(player.menuPrev).w)
-		h = ASC(menuItem(player.menuPrev).h)
-		aMenuHiLite x, y, w, h, menuItem(player.menuPrev).colours, gfx.pageOfs(gfx.page)
-	CASE 4 to 5	'Item change pause
-	
+	CASE 5			'Process selected menu item
+		player.menuMode = 3
+		SELECT CASE player.menuContext
+		CASE 1	'Pause menu
+			SELECT CASE player.menuItem
+			CASE 1
+				player.menuMode = 999
+				player.menuContext = 0
+			CASE 4
+				actor(2).control = 259
+				player.level = -1
+			END SELECT
+		END SELECT
+	'CASE 4 to 5	'Item change pause	
 	CASE 999 to 1000
 		tileCopyList(0, gfx.page).x = 0
 		tileCopyList(0, gfx.page).y = 0
@@ -373,12 +415,16 @@ CASE 258
 		tileCopyList(0, gfx.page).h = 50
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
-		aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset, VARPTR(tileCopyList(0, gfx.page).offset)
+		aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 		player.menuMode = player.menuMode + 1
 	CASE 1001
-		actor(1).lNext = actor(2).jump
-		actor(2).control = 255
-		player.menuMode = 0
+		IF player.menuContext THEN
+			player.menuMode = 0
+		ELSE
+			actor(1).lNext = actor(2).jump
+			actor(2).control = 255
+			player.menuMode = 0
+		END IF		
 	END SELECT
 	
 'Wait after death
@@ -1567,6 +1613,7 @@ SUB initTestGame
 	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)
 	DO
 		main
+		IF player.level = -1 THEN quit
 	LOOP
 END SUB
 
@@ -1672,19 +1719,9 @@ SUB main
 		IF actor(2).control = 259 THEN aSoundStop:EXIT SUB
 		IF actor(2).control = 255 THEN
 			IF kbArray(1) THEN
-				hudTextLoad &H780, 1
-				aSoundFX 0, 76
-				DO
-					CALL aTimerWait
-					CALL aSoundPlay		 
-					IF kbArray(21) THEN
-						quit
-						EXIT SUB
-					END IF
-				LOOP WHILE kbArray(49) = 0
-				aSoundFX 0, 76
-				player.hudLock = 0
-				hudUpdate 255
+				actor(2).control = 258
+				player.menuContext = 1
+				player.menuMode = 0				
 			END IF
 			updateText = updateText + 1
 			IF updateText = 24 THEN
@@ -2065,8 +2102,6 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(2).frame = 10
 		actor(2).flags = 0
 		screenResetPos x - 20, actor(2).y
-		player.menutarget = 0
-		player.mode = 0
 		player.targetX = x
 		player.targetY = y
 		actor(2).count = 0
@@ -2122,39 +2157,4 @@ SUB unParent (index)
 	actor(index).parentDX = 0
 	actor(index).parentDY = 0
 	actor(index).exist = 1
-END SUB
-
-SUB menuLoad (menuNo)
-	OPEN "menu.cmm" FOR BINARY AS #1
-		GET #1, menuNo * 6, loadOfs
-		GET #1, menuNo * 6 + 2, loadInt
-		GET #1, menuNo * 6 + 4, player.menuItem
-		itemCount = loadInt
-		item = 0
-		DO
-			SELECT CASE readMode
-			CASE 0
-				GET #1, loadOfs, loadStr
-				itemIDX = ASC(loadStr)
-				loadOfs = loadOfs + 1
-				GET #1, loadOfs, menuItem(itemIDX)
-				loadOfs = loadOfs + 1
-				GET #1, loadOfs, loadStr
-				itemLen = ASC(loadStr)
-				loadOfs = loadOfs + 1
-				FOR n = 1 to itemLen
-					GET #1, loadOfs, loadStr
-					MID$(w40char.text, n, 1) = loadStr
-					loadOfs = loadOfs + 1
-					nn = n
-				next n
-				nn = nn + 1
-				MID$(w40char.text, nn, 1) = "|"
-        x = ASC(menuItem(itemIDX).x)
-		y = ASC(menuItem(itemIDX).y)
-		aPrint gfx.videoWrap, menuItem(itemIDX).colours, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
-		END SELECT
-		item = item + 1
-		LOOP WHILE item < itemCount
-	CLOSE #1
 END SUB

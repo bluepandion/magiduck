@@ -2378,10 +2378,15 @@ aCopyPage PROC
 	mov si, [bp + 8]
 	shl di, 1
 	shl si, 1
+	add di, 160
+	add si, 160
 	
-	mov cx, 2000
+	mov dx, vWrap
+	mov cx, 1840
 copyPage:
-	rep movsw
+	and di, dx
+	and si, dx
+	movsw
 loop copyPage
 	
 	pop bp
@@ -2389,6 +2394,7 @@ loop copyPage
 	pop ds
 	pop di
 	pop es
+	retf 4
 aCopyPage ENDP
 aMenuHiLite PROC
 	; Stack parameters:
@@ -2434,12 +2440,12 @@ aMenuHiLite PROC
 	
 	mov bx, [bp + 08]
 	
-	xor ch, ch
-	mov ch, [bp + 11]
+	xor cx, cx
+	mov ch, [bp + 10]
 loopY:
 	push cx
 	xor ch, ch
-	mov cl, [bp + 13]
+	mov cl, [bp + 12]
 	push dx
 	mov dx, vWrap
 loopX:
@@ -2462,6 +2468,7 @@ jnz loopY
 	pop ds
 	pop di
 	pop es
+	retf 12
 aMenuHiLite ENDP
 
 ;==============================================================================

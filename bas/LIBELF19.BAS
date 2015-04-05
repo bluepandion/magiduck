@@ -16,7 +16,7 @@ DECLARE SUB loadKeyboard ()
 DECLARE SUB quit ()
 DECLARE SUB debugOut (text$)
 DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
-
+DECLARE SUB menuLoad (menuNo%)
 DECLARE FUNCTION tileRead% (x%, y%)
 
 DEFINT A-Z
@@ -181,7 +181,7 @@ SUB elfInit
 	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
 	 IF gfx.adapter > 0 THEN
 		gfx.pageOfs(0) = 0
-		gfx.pageOfs(1) = 5000
+		gfx.pageOfs(1) = 4000
 		gfx.page = 0
 		IF gfx.adapter > 1 THEN
 			gfx.pageWrap = 16383
@@ -560,10 +560,7 @@ END IF
  'SHELL "cls"
  PRINT errorMessage$
  PRINT FRE(-1)
- PRINT
- PRINT "fps:"; fps
- PRINT
-
+ PRINT gfx.pageOfs(0), gfx.pageOfs(1)
  C = 1
 
  FOR n = 1 TO 80
@@ -573,29 +570,18 @@ END IF
   IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 
- FOR n = 1 TO 30
-  IF actor(n).exist THEN
-	COLOR 7
-  ELSE
-	COLOR 8
-  END IF
-  PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
- NEXT n
+ 'FOR n = 1 TO 30
+ ' IF actor(n).exist THEN
+'	COLOR 7
+'  ELSE
+'	COLOR 8
+'  END IF
+'  PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
+' NEXT n
+for n = 0 to 20
+	print asc(menuItem(n).x); asc(menuItem(n).y), asc(menuItem(n).iPrev); asc(menuItem(n).iNext),
+next n
 END
-
-END SUB
-
-SUB saveLevel (fileName AS STRING)
-
-	OPEN fileName + ".lvl" FOR OUTPUT AS #1
-	 PRINT #1, MID$(tileBuffer, 9761, 1600)
-	 PRINT #1, SPACE$(254)
-	CLOSE #1
-
-	OPEN fileName + ".lvl" FOR BINARY AS #1
-	 writeOfs = 1601
-	 PUT #1, writeOfs, level
-	CLOSE #1
 
 END SUB
 
@@ -750,4 +736,50 @@ SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 	CLOSE #1
 	MID$(hudBuffer, 161, 1) = loadStr
 	IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+END SUB
+
+SUB menuLoad (menuNo%)
+	debugOut "Menu Load "+str$(menuNo%)
+	if menuNo% < 0 THEN menuNo% = 0
+	OPEN "menu.cmm" FOR BINARY AS #1
+		GET #1, menuNo% * 6 + 1, loadOfs
+		GET #1, menuNo% * 6 + 3, loadInt
+		GET #1, menuNo% * 6 + 5, player.menuItem
+		itemCount = loadInt
+		GET #1, loadOfs, loadStr
+		tileCopyList(0, gfx.page).x = ASC(loadStr)
+		GET #1, loadOfs + 1, loadStr
+		tileCopyList(0, gfx.page).y = ASC(loadStr)
+		GET #1, loadOfs + 2, loadStr
+		tileCopyList(0, gfx.page).w = ASC(loadStr)
+		GET #1, loadOfs + 3, loadStr
+		tileCopyList(0, gfx.page).h = ASC(loadStr)
+		GET #1, loadOfs + 4, loadInt
+		loadOfs = loadOfs + 6		
+		tileCopyList(1, gfx.page).y = 255
+		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		for item = 1 to itemCount
+				GET #1, loadOfs, loadStr
+				itemIDX = ASC(loadStr)
+				loadOfs = loadOfs + 1
+				GET #1, loadOfs, menuItem(itemIDX)
+				loadOfs = loadOfs + 8
+				GET #1, loadOfs, loadStr
+				itemLen = ASC(loadStr)
+				loadOfs = loadOfs + 1
+				FOR n = 1 to itemLen
+					GET #1, loadOfs, loadStr
+					MID$(w40char.text, n, 1) = loadStr
+					loadOfs = loadOfs + 1
+					nn = n
+				next n
+				nn = nn + 1
+				MID$(w40char.text, nn, 1) = "|"
+				x = ASC(menuItem(itemIDX).x) + 1
+				y = ASC(menuItem(itemIDX).y) + 1
+				debugOut str$(itemIDX)
+		aPrint gfx.videoWrap, menuItem(itemIDX).colours, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
+		NEXT item
+		debugOut "player:"+str$(player.menuItem)
+	CLOSE #1
 END SUB
