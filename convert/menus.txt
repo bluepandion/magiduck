@@ -1,4 +1,16 @@
--1, &H0001, "MAIN MENU", "NEW GAME", 0, "LOAD GAME", 1, "HIGH SCORES", 2, "HELP", 3, "QUIT TO DOS", 4, -1
--1, &H0002, "GAME PAUSED", "RETURN TO GAME", 0, "MAIN MENU", 1, -1
--1, &H0012, "RETURN TO GAME", 0, "MAIN MENU", 1, -1
-0
+0000, 01
+00, 00, 00, "main menu  ", 10, 10, 14, 4, &H0E, &H0C
+01, 01, 01, "new game   ", 10, 14, 14, 4, &H0E, &H0C
+02, 01, 03, "high scores", 10, 14, 14, 4, &H0E, &H0C
+03, 02, 04, "credits    ", 10, 14, 14, 4, &H0E, &H0C
+04, 03, 04, "quit       ", 10, 14, 14, 4, &H0E, &H0C
+-1
+0002, 01
+00, 00, 00, "example of a multi-line item", 10, 10, 30, 4, &H0E, &H0C
+01, 01, 02, "this                        ", 10, 14, 30, 10, &H0E, &H0C
+00, 00, 00, "      item                  ", 10, 16, 30, 4, &H0E, &H0C
+00, 00, 00, "            is              ", 10, 18, 30, 4, &H0E, &H0C
+00, 00, 00, "                multi-line  ", 10, 20, 30, 4, &H0E, &H0C
+02, 01, 03, "this item is single line    ", 10, 24, 30, 4, &H0E, &H0C
+03, 02, 03, "sweet!                      ", 10, 27, 30, 4, &H0E, &H0C
+-1

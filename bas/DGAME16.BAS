@@ -345,64 +345,42 @@ CASE 260
 			   
 'Menu cursor
 CASE 258
-   actor(2).count = actor(2).count + (actor(2).count > -12)
-   IF player.keyPrev AND kbArray(player.keyPrev) = 0 THEN
-      actor(2).count = -12
-      player.keyPrev = 0
-   END IF
-   
-   IF kbArray(28) AND actor(2).vecY = 0 THEN
-       IF player.menutarget = 3 THEN quit
-   END IF
-
-   IF player.menutarget = 1 THEN
-      hudTextLoad &H0, 1
-      loadTiles "tileset0"
-      player.level = 1
-      main
-   END IF
-   
-   IF kbArray(80) AND actor(2).count = -12 THEN
-       soundEvent = 82
-       player.keyPrev = 80
-       actor(2).count = 0
-       player.menutarget = player.menutarget + 1
-       menuFind = -1
-   END IF
-
-   IF kbArray(72) AND actor(2).count = -12 THEN
-       soundEvent = 87
-       player.keyPrev = 72
-       actor(2).count = 0
-       player.menutarget = player.menutarget - 1
-       menuFind = 1
-   END IF
-
-   IF menuFind THEN
-       Find = 0
-       FOR s = 4 TO 60
-           IF actor(s).control = 72 THEN
-               IF actor(s).flags = player.menutarget THEN
-                   Find = 1
-                   player.targetX = actor(s).x
-                   player.targetY = actor(s).y
-                   s = 999
-               END IF
-            END IF
-        NEXT s
-       IF Find = 0 THEN
-           player.menutarget = player.menutarget + menuFind
-           soundEvent = -1
-       END IF
-       menuFind = 0
-   END IF
-
-   actor(2).vecX = speedDiff%(actor(2).x, player.targetX)
-   actor(2).vecY = speedDiff%(actor(2).y, player.targetY)
-
-   screenTargetY = actor(2).y - 34
-   handleCamera
-
+	SELECT CASE player.menuMode
+	CASE 0		'Load and display menu
+		actor(2).jump = actor(1).lNext
+		actor(1).lNext = 1
+		loadMenu player.menuContext
+		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
+		player.menuMode = 1
+	CASE 1		'Item highlight and wait for input
+		x = ASC(menuItem(player.menuItem).x)
+		y = ASC(menuItem(player.menuItem).x)
+		w = ASC(menuItem(player.menuItem).w)
+		h = ASC(menuItem(player.menuItem).h)
+		aMenuHiLite x, y, w, h, &HCECF, gfx.pageOfs(gfx.page)
+	CASE 2 to 3	'Item change, clear previous item
+		x = ASC(menuItem(player.menuPrev).x)
+		y = ASC(menuItem(player.menuPrev).x)
+		w = ASC(menuItem(player.menuPrev).w)
+		h = ASC(menuItem(player.menuPrev).h)
+		aMenuHiLite x, y, w, h, menuItem(player.menuPrev).colours, gfx.pageOfs(gfx.page)
+	CASE 4 to 5	'Item change pause
+	
+	CASE 999 to 1000
+		tileCopyList(0, gfx.page).x = 0
+		tileCopyList(0, gfx.page).y = 0
+		tileCopyList(0, gfx.page).w = 40
+		tileCopyList(0, gfx.page).h = 50
+		tileCopyList(1, gfx.page).y = 255
+		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset, VARPTR(tileCopyList(0, gfx.page).offset)
+		player.menuMode = player.menuMode + 1
+	CASE 1001
+		actor(1).lNext = actor(2).jump
+		actor(2).control = 255
+		player.menuMode = 0
+	END SELECT
+	
 'Wait after death
 CASE 256
 
@@ -985,11 +963,11 @@ IF actor(n).exist > 0 THEN
 			player.score = player.score + 1000
 			player.gotChests = player.gotChests + 1
 			player.hasKey = player.hasKey - 1
-			spawnObject actor(n).x - 6, actor(n).y - 12, 41, 98, 0
-			spawnObject actor(n).x - 4, actor(n).y - 14, 41, 98, 0
+			spawnObject actor(n).x - 5, actor(n).y - 12, 41, 98, 0
+			spawnObject actor(n).x - 3, actor(n).y - 14, 41, 98, 0
 			spawnObject actor(n).x, actor(n).y - 16, 41, 88, 0
-			spawnObject actor(n).x + 4, actor(n).y - 15, 41, 98, 0
-			spawnObject actor(n).x + 6, actor(n).y - 14, 41, 98, 0
+			spawnObject actor(n).x + 3, actor(n).y - 15, 41, 98, 0
+			spawnObject actor(n).x + 5, actor(n).y - 14, 41, 98, 0
 			actor(n).control = 0
 			actor(n).life = 3
 			actor(n).frame = 162
@@ -1012,7 +990,7 @@ IF actor(n).exist > 0 THEN
 		IF actor(n).life > -50 THEN
 			actor(n).y = actor(n).y - 6
 			actor(n).life = -50
-			actor(n).count = 32
+			actor(n).count = 16
 			actor(n).collider = 2
 			actor(n).visY = 50
 			'actor(n).dir = actor(n).vecX
@@ -1094,7 +1072,8 @@ IF actor(n).exist > 0 THEN
         IF actor(n).jump = 15 THEN
 			actor(n).count = actor(n).vecX
 			actor(n).vecX = 0
-			spawnObject actor(n).x + 1, actor(n).y + 2, 104, 0, 0
+			xp = INT(RND * 30) - 15
+			spawnObject actor(n).x + 1, actor(n).y + 2, 104, xp, 0
 			soundEvent = 145
         END IF
 		IF actor(n).jump > 25 THEN
@@ -1104,8 +1083,8 @@ IF actor(n).exist > 0 THEN
 		IF actor(n).life = 0 THEN
 			actor(n).count = actor(n).vecX
 			actor(n).vecX = 0
-			spawnObject actor(n).x + 1, actor(n).y - 5, 104, -13, 0
-			spawnObject actor(n).x + 1, actor(n).y - 5, 104, 13, 0
+			spawnObject actor(n).x + 1, actor(n).y - 5, 104, -15, 0
+			spawnObject actor(n).x + 1, actor(n).y - 5, 104, 15, 0
         END IF
 
        'Babat
@@ -1310,7 +1289,7 @@ IF actor(n).exist > 0 THEN
 
 		'LEVEL DOOR
         CASE 64
-			IF actor(n).frame = 166 THEN actor(n).Frame = 162
+			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 162
 			playerDeltaY = actor(2).y - actor(n).y
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
 				IF actor(n).count = 0 AND player.levelScore(actor(n).jump) = 0 THEN
@@ -1843,7 +1822,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 104	'DRIP
 		actorListNew n
 		actor(n).control = 104   
-		actor(n).life = 24
+		actor(n).life = 18
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = -30
 		actor(n).frame = 214
@@ -1907,7 +1886,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).vecX = 2
 		actor(n).frame = 208
 		actor(n).anim = 208
-		actor(n).visY = 30   
+		actor(n).visY = 35   
 	CASE 5	'BABAT
 		actorListNew n
 		actor(n).control = 5   
@@ -2143,4 +2122,39 @@ SUB unParent (index)
 	actor(index).parentDX = 0
 	actor(index).parentDY = 0
 	actor(index).exist = 1
+END SUB
+
+SUB menuLoad (menuNo)
+	OPEN "menu.cmm" FOR BINARY AS #1
+		GET #1, menuNo * 6, loadOfs
+		GET #1, menuNo * 6 + 2, loadInt
+		GET #1, menuNo * 6 + 4, player.menuItem
+		itemCount = loadInt
+		item = 0
+		DO
+			SELECT CASE readMode
+			CASE 0
+				GET #1, loadOfs, loadStr
+				itemIDX = ASC(loadStr)
+				loadOfs = loadOfs + 1
+				GET #1, loadOfs, menuItem(itemIDX)
+				loadOfs = loadOfs + 1
+				GET #1, loadOfs, loadStr
+				itemLen = ASC(loadStr)
+				loadOfs = loadOfs + 1
+				FOR n = 1 to itemLen
+					GET #1, loadOfs, loadStr
+					MID$(w40char.text, n, 1) = loadStr
+					loadOfs = loadOfs + 1
+					nn = n
+				next n
+				nn = nn + 1
+				MID$(w40char.text, nn, 1) = "|"
+        x = ASC(menuItem(itemIDX).x)
+		y = ASC(menuItem(itemIDX).y)
+		aPrint gfx.videoWrap, menuItem(itemIDX).colours, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
+		END SELECT
+		item = item + 1
+		LOOP WHILE item < itemCount
+	CLOSE #1
 END SUB

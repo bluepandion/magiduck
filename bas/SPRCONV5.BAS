@@ -1,3 +1,4 @@
+DECLARE FUNCTION getCmdToken$ (n!)
 ' Sprite convert
 '
 ' Converts sprites from TGA (File$) to two pixels / byte + mask.
@@ -8,11 +9,22 @@
 '---------------------------------------------------------------------------
 ' Arguments:
 '---------------------------------------------------------------------------
- file$ = "spducks"
- isAuxBank = 0
+ 
+ IF COMMAND$ = "" THEN PRINT " Parameters: [filename] [1, if aux bank]": END
+
+ 'file$ = "spenemy0"
+ 'isAuxBank = 1
+ CLS
+ file$ = getCmdToken$(0)
+ isAuxBank = VAL(getCmdToken$(1))
+ 'PRINT file$
+ 'PRINT isauxbank
+ 'DO: LOOP WHILE INKEY$ = ""
+ 'END
+
  alphacolor = 11
 
- infile$ = "..\convert\" + file$ + ".tga"
+ inFile$ = "..\convert\" + file$ + ".tga"
  outFile$ = file$
 
 '---------------------------------------------------------------------------
@@ -61,7 +73,7 @@ a = 67 + 80 * 9
 DEF SEG = &HB800
 vofs = 3998
 
-OPEN infile$ FOR BINARY AS #1
+OPEN inFile$ FOR BINARY AS #1
 
 spriteimport = ""
 lineget$ = ""
@@ -253,8 +265,13 @@ PRINT "Press ESC to exit, Any other for debug."
 DO
 d$ = INKEY$
 LOOP WHILE d$ = ""
-IF d$ = CHR$(27) THEN END
-
+IF d$ = CHR$(27) THEN
+   CLS
+   COLOR 7
+   PRINT "Converted "; inFile$; " to "; outFile$; ".CSG and "; outFile$; ".CSD ";
+   IF isAuxBank THEN PRINT " As AUX bank."
+   END
+END IF
 '---------------------------------------------------------------------------
 PRINT "Saving info."
 OPEN "sprdebug.txt" FOR OUTPUT AS #1
@@ -270,4 +287,32 @@ FOR n = 1 TO LEN(conversion) - 79 STEP 80
 NEXT n
 CLOSE #1
 PRINT "See sprdebug.txt for full info."
+
+
+
+FUNCTION getCmdToken$ (n)
+ 'PRINT COMMAND$
+ token$ = ""
+ num = 0
+ FOR nn = 1 TO LEN(COMMAND$)
+   a$ = MID$(COMMAND$, nn, 1)
+   'PRINT a$; " -";
+   IF a$ = " " THEN
+      IF num = n THEN
+         getCmdToken$ = token$
+         'PRINT
+         'PRINT n;
+         'PRINT "RETURN "; token$
+         EXIT FUNCTION
+      END IF
+      a$ = ""
+      token$ = ""
+      num = num + 1
+   END IF
+   token$ = token$ + a$
+ NEXT nn
+ 'PRINT
+ 'PRINT "........................ FINAL TOKEN "; token$
+ getCmdToken$ = token$
+END FUNCTION
 

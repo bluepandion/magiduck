@@ -1,0 +1,34 @@
+Text strings get dumped on the screen on menu load.
+After that, only attribute data is used to highlight menu items.
+
+-------------------------------------------
+DATA format:
+-------------------------------------------
+	1	Byte		X
+	1	Byte		Y
+	1	Byte		W
+	1	Byte		H
+	1	Byte		Previous item
+	1	Byte		Menu item index
+	1	Byte		Next item
+
+	7	Bytes * 20	items = 140 bytes
+-------------------------------------------
+FILE format:
+-------------------------------------------
+menu offsets:	(4 * 64) = 256 bytes
+	2	Bytes		OFFSET
+	1	Byte		Starting item
+	1	Byte		Number of items
+
+menu data:
+	1	Byte		Text Lenght
+	xx				Text String
+	2	Bytes		Text attributes
+	1	Byte		X
+	1	Byte		Y
+	1	Byte		W
+	1	Byte		H
+	1	Byte		Previous item
+	1	Byte		Menu item index
+	1	Byte		Next item

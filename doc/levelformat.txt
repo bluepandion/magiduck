@@ -1,0 +1,20 @@
+0001-0032	2 * 16 level pointers
+
+0033-xxxx	Level data as follows:
+			0001-0008	Tileset
+			
+			0009-0016	Spriteset
+			
+			0017-xxxx	Tile map encoded in RLE as follows:
+						[ byte: Rep  ] [ byte: Tile ]
+						255, 255 = end of tile map.
+			
+			xxxx-xxxx	Number of spawners as [ byte ]
+						Spawner data as follows:
+						[ byte: index ]
+						[ byte: x	  ]
+						[ byte: y	  ]
+						[ byte: actor ]
+						[ byte: flags ]
+			END OF ENTRY			
+

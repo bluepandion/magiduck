@@ -19,6 +19,8 @@ DECLARE SUB aSoundNote (BYVAL note%)
 DECLARE SUB aSoundStop ()
 DECLARE SUB aSoundPlay ()
 DECLARE SUB aSetup (BYVAL dataSeg%, BYVAL dataOfs%)
+DECLARE SUB aCopyPage (BYVAL sourceOfs%, BYVAL destOfs%)
+DECLARE SUB aMenuHiLite (BYVAL x%, BYVAL y%, BYVAL w%, BYVAL h%, BYVAL attribs%, BYVAL pageOfs%)
 DECLARE SUB aTimerStart ()
 DECLARE SUB aTimerEnd ()
 DECLARE SUB aTimerWait ()
@@ -33,6 +35,7 @@ DECLARE SUB aTimerReset ()
 COMMON SHARED loadStr AS STRING * 1            'General purpose file read
 COMMON SHARED loadInt AS INTEGER               ' variables
 COMMON SHARED loadLong AS LONG
+COMMON SHARED loadOfs AS INTEGER
 
 COMMON SHARED hudBuffer AS STRING * 164
 
@@ -154,7 +157,9 @@ TYPE playerType
  wavePrev AS INTEGER
  hudLock AS INTEGER
  mode AS INTEGER
- menuTarget AS INTEGER
+ menuMode AS INTEGER
+ menuContext AS INTEGER
+ menuItem AS INTEGER
  targetX AS INTEGER
  targetY AS INTEGER
  keyPrev AS INTEGER
@@ -267,5 +272,16 @@ TYPE w40textType
  seg AS INTEGER
  ofs AS INTEGER
 END TYPE
-
 COMMON SHARED w40char AS w40textType
+
+TYPE menuType
+	iPrev AS STRING * 1
+	iNext AS STRING * 1
+	x AS STRING * 1
+	y AS STRING * 1
+	w AS STRING * 1
+	h AS STRING * 1
+	colours AS INTEGER
+END TYPE
+DIM menuItem(0 to 29) AS menuType
+COMMON SHARED menuItem() AS menuType

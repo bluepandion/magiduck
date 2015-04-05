@@ -6,9 +6,9 @@ DIM tileBank AS STRING * 2000
 tilebankseg = VARSEG(tileBank)
 tilebankofs = VARPTR(tileBank)
 
-inputfile$ = "..\convert\tileset1.tga"
+inputfile$ = "..\convert\tileset2.tga"
 
-outPutFile$ = "tileset1"
+outPutFile$ = "tileset2"
 
 rawpixel$ = ""
 

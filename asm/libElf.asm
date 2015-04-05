@@ -2194,7 +2194,6 @@ aTileWrite PROC
 ;14 Tile index to write.
 
 ;============================================================================
-
 	push es
 	push di
 	push ds
@@ -2364,6 +2363,107 @@ aSetup PROC
 	pop ds
 	retf 4
 aSetup ENDP
+aCopyPage PROC
+	push es
+	push di
+	push ds
+	push si
+	push bp
+	mov bp,sp
+	add bp, 8
+	
+	mov es, vSegment
+	mov di, [bp + 6]
+	mov ds, vSegment
+	mov si, [bp + 8]
+	shl di, 1
+	shl si, 1
+	
+	mov cx, 2000
+copyPage:
+	rep movsw
+loop copyPage
+	
+	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
+aCopyPage ENDP
+aMenuHiLite PROC
+	; Stack parameters:
+	;	06 page offset
+	;	08 attribute
+	;	10 h
+	;	12 w
+	;	14 y
+	;	16 x
+	push es
+	push di
+	push ds
+	push si
+	push bp
+	mov bp,sp
+	add bp, 8
+	
+	mov es, vSegment
+	mov di, [bp + 6]
+	mov ds, vSegment		
+	mov si, [bp + 6]
+	shl di, 1
+	shl si, 1
+							; Write offset =
+	mov dx, [bp + 14]		; y * 80
+	xchg dl, dh
+	shr dx, 1
+	shr dx, 1
+	mov cx, dx
+	shr dx, 1
+	shr dx, 1
+	add dx, cx
+	add di, dx
+	add di, [bp + 16]		; + x * 2
+	add di, [bp + 16]
+	add di, 1
+	mov si, di
+	
+	mov dx, 80				; CR value
+	mov ax, [bp + 12]
+	sub dx, ax
+	sub dx, ax
+	
+	mov bx, [bp + 08]
+	
+	xor ch, ch
+	mov ch, [bp + 11]
+loopY:
+	push cx
+	xor ch, ch
+	mov cl, [bp + 13]
+	push dx
+	mov dx, vWrap
+loopX:
+	and di, dx
+	and si, dx
+	lodsw
+	mov al, bl
+	stosw
+loop loopX
+	pop dx
+	add di, dx
+	add si, dx
+	xchg bh, bl
+	pop cx
+	dec ch
+jnz loopY
+
+	pop bp
+	pop si
+	pop ds
+	pop di
+	pop es
+aMenuHiLite ENDP
+
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2551,6 +2651,8 @@ public aSoundFX
 public aSoundPlay
 public aSoundStop
 public aSetup
+public aCopyPage
+public aMenuHiLite
 public aTimerStart
 public aTimerEnd
 public aTimerWait
