@@ -1,8 +1,8 @@
-10:58:56
+14:03:50
 loading level
  level
  spawners
- 23
+ 16
 level load ok
 actor setup ok
 spawn 0
@@ -10,11 +10,9 @@ spawn ok
 set screen pos ok
 hud ok
 timer ok
-Menu Load  0
+Menu Load  1
  0
  1
- 2
- 3
  4
  5
 player: 1

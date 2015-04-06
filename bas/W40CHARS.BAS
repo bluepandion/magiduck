@@ -16,14 +16,14 @@ TYPE convCharType
  letter2(48 TO 90) AS STRING * 1
 END TYPE
 
-DIM w40Char AS charPair
+'DIM w40Char AS charPair
 DIM convChar AS convCharType
 
 OPEN "w40char.def" FOR BINARY AS #1
  IF LOF(1) < 2 THEN
   FOR n = 32 TO 90
-   w40Char.letter1(n) = CHR$(n)
-   w40Char.letter2(n) = CHR$(n)
+	w40Char.glyph1(n) = CHR$(n)
+	w40Char.glyph2(n) = CHR$(n)
   NEXT n
   CLOSE #1
  ELSE
@@ -32,12 +32,12 @@ OPEN "w40char.def" FOR BINARY AS #1
  END IF
 
 'FOR a = 48 TO 90
-' w40char.letter1(a) = convChar.letter1(a)
-' w40char.letter2(a) = convChar.letter2(a)
+' w40char.glyph1(a) = convChar.glyph1(a)
+' w40char.glyph2(a) = convChar.glyph2(a)
 'NEXT a
 'FOR a = 32 TO 47
-' w40char.letter1(a) = CHR$(a)
-' w40char.letter2(a) = CHR$(a)
+' w40char.glyph1(a) = CHR$(a)
+' w40char.glyph2(a) = CHR$(a)
 'NEXT a
 
 initScreen
@@ -61,12 +61,12 @@ row = 1
 col = 1
 COLOR 8
 FOR n = 32 TO 90
- LOCATE row, col: PRINT w40Char.letter1(n)
- LOCATE row + 1, col: PRINT w40Char.letter2(n)
+ LOCATE row, col: PRINT w40Char.glyph1(n)
+ LOCATE row + 1, col: PRINT w40Char.glyph2(n)
  IF editc = n THEN
   COLOR 9
-  LOCATE row, col: PRINT w40Char.letter1(n)
-  LOCATE row + 1, col: PRINT w40Char.letter2(n)
+  LOCATE row, col: PRINT w40Char.glyph1(n)
+  LOCATE row + 1, col: PRINT w40Char.glyph2(n)
   COLOR 8
  END IF
  col = col + 1
@@ -79,40 +79,40 @@ DO
 
  IF d$ = CHR$(13) THEN
   OPEN "w40char.def" FOR BINARY AS #1
-   PUT #1, 1, w40Char
+	PUT #1, 1, w40Char
   CLOSE #1
   LOCATE 15, 1: PRINT "Saved "; TIMER
  END IF
  IF d$ = CHR$(0) + "K" AND editc > 32 THEN editc = editc - 1: GOTO updateScreen
  IF d$ = CHR$(0) + "M" AND editc < 90 THEN editc = editc + 1: GOTO updateScreen
 
- IF d$ = "q" AND ASC(w40Char.letter1(editc)) > 0 THEN w40Char.letter1(editc) = CHR$(ASC(w40Char.letter1(editc)) - 1): GOTO updateScreen
- IF d$ = "w" AND ASC(w40Char.letter1(editc)) < 255 THEN w40Char.letter1(editc) = CHR$(ASC(w40Char.letter1(editc)) + 1): GOTO updateScreen
- IF d$ = "a" AND ASC(w40Char.letter2(editc)) > 0 THEN w40Char.letter2(editc) = CHR$(ASC(w40Char.letter2(editc)) - 1): GOTO updateScreen
- IF d$ = "s" AND ASC(w40Char.letter2(editc)) < 255 THEN w40Char.letter2(editc) = CHR$(ASC(w40Char.letter2(editc)) + 1): GOTO updateScreen
+ IF d$ = "q" AND ASC(w40Char.glyph1(editc)) > 0 THEN w40Char.glyph1(editc) = CHR$(ASC(w40Char.glyph1(editc)) - 1): GOTO updateScreen
+ IF d$ = "w" AND ASC(w40Char.glyph1(editc)) < 255 THEN w40Char.glyph1(editc) = CHR$(ASC(w40Char.glyph1(editc)) + 1): GOTO updateScreen
+ IF d$ = "a" AND ASC(w40Char.glyph2(editc)) > 0 THEN w40Char.glyph2(editc) = CHR$(ASC(w40Char.glyph2(editc)) - 1): GOTO updateScreen
+ IF d$ = "s" AND ASC(w40Char.glyph2(editc)) < 255 THEN w40Char.glyph2(editc) = CHR$(ASC(w40Char.glyph2(editc)) + 1): GOTO updateScreen
  
  IF d$ = "c" THEN copy = editc
  IF d$ = "v" AND copy > 32 THEN
-  w40Char.letter1(editc) = w40Char.letter1(copy)
-  w40Char.letter2(editc) = w40Char.letter2(copy)
+  w40Char.glyph1(editc) = w40Char.glyph1(copy)
+  w40Char.glyph2(editc) = w40Char.glyph2(copy)
   GOTO updateScreen
  END IF
 
  IF d$ = "t" OR d$ = "i" THEN
-  IF d$ = "i" THEN testString$ = STR$(ASC(w40Char.letter1(editc))) + STR$(ASC(w40Char.letter2(editc)))
+  IF d$ = "i" THEN testString$ = STR$(ASC(w40Char.glyph1(editc))) + STR$(ASC(w40Char.glyph2(editc)))
   COLOR 7, 0
   row = 15
   col = 1
   FOR n = 1 TO LEN(testString$)
-   c = ASC(MID$(testString$, n, 1))
-   IF c > 40 THEN
-   COLOR 14
-   LOCATE row, col: PRINT w40Char.letter1(c)
-   COLOR 7
-   LOCATE row + 1, col: PRINT w40Char.letter2(c)
-   END IF
-   col = col + 1
-   IF col = 41 THEN col = 1: row = row + 2
+	c = ASC(MID$(testString$, n, 1))
+	IF c > 40 THEN
+	COLOR 14
+	LOCATE row, col: PRINT w40Char.glyph1(c)
+	COLOR 7
+	LOCATE row + 1, col: PRINT w40Char.glyph2(c)
+	END IF
+	col = col + 1
+	IF col = 41 THEN col = 1: row = row + 2
   NEXT n
  END IF
  
@@ -159,12 +159,12 @@ continueInit:
 
  'Blink disable
  IF gfx.adapter = 1 THEN
-   OUT &H3D8, 8
+	OUT &H3D8, 8
   ELSE
-   b = INP(&H3DA)
-   b = INP(&H3C1)
-   OUT &H3C0, &H10
-   OUT &H3C0, 16
+	b = INP(&H3DA)
+	b = INP(&H3C1)
+	OUT &H3C0, &H10
+	OUT &H3C0, 16
  END IF
 
 END SUB

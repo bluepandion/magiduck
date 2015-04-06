@@ -1797,7 +1797,7 @@ aPrint PROC
 	
 	xor ax, ax						;AX = 0
 	
-	mov ch, [bp + 18] 				;CH = Color attribute 1
+	mov ch, [bp + 19] 				;CH = Color attribute 1
 	
 printLoop1:							;Print Glpyh row 1 ------------------------
 	lodsb							;AL = Character from text
@@ -1831,7 +1831,7 @@ printPrep2:
 	
 	add bx, 59						;BX = Glyph 2 lookUp offset
 		
-	mov ch, [bp + 19] 				;CH = Color attribute 2
+	mov ch, [bp + 18] 				;CH = Color attribute 2
 	
 printLoop2:							;Print Glpyh row 1 ------------------------
 	lodsb							;AL = Character from text

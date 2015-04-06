@@ -5,7 +5,7 @@ DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
 DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB aDrawTiles (area%, forceOfs%)
-DECLARE SUB loadLevel (fileName AS STRING)
+DECLARE SUB loadLevel ()
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB elfInit ()
 DECLARE SUB initLookUps ()
@@ -425,7 +425,7 @@ MID$(asmKBroutine, 10, 2) = MKI$(VARPTR(KBarray(0)))    'Offset
 
 END SUB
 
-SUB loadLevel (fileName AS STRING)
+SUB loadLevel
 
 	'debugOut "Level load " + fileName
 	
@@ -439,6 +439,9 @@ SUB loadLevel (fileName AS STRING)
 	' 'debugOut "actor data"
 	' GET #1, readOfs, level
 	'CLOSE #1
+	FOR n = 1 to 80
+		level.spawner(n).object = 0
+	NEXT n
 	OPEN "levels.clp" FOR BINARY as # 1
 		GET #1, player.level * 2 + 1, fileOfs
 		
@@ -609,10 +612,10 @@ END IF
 FOR n = 1 TO 60
  IF actor(n).exist THEN
 	COLOR 7
+	PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
   ELSE
 	COLOR 8
   END IF
-  PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
  NEXT n
 'for n = 0 to 20
 	'print asc(menuItem(n).x); asc(menuItem(n).y), asc(menuItem(n).iPrev); asc(menuItem(n).iNext),

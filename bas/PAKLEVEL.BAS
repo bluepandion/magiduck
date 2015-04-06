@@ -229,6 +229,7 @@ OPEN listFile$ FOR INPUT AS #1
 	  COLOR 4
 	  BEEP
 	  PRINT "PLAYER START NOT FOUND."
+	  pause
 	 END IF
 	 'OPEN fileOut$ + ".lvl" FOR BINARY AS #2
 	 'l = LOF(2)
@@ -241,7 +242,7 @@ OPEN listFile$ FOR INPUT AS #1
 	 PRINT " Saving at "; ofsDATA; "..."
 	 saveLevel pakFile$, levelNo
 	 PRINT " Level converted and saved to "; pakFile$ + ".clp"
-	 pause
+	 'pause
 	ELSE
 	readToggle = 0
 	listMode = 0
@@ -333,11 +334,13 @@ r = CSRLIN
 c = POS(0)
 cc = 0
 COLOR 14
-LOCATE 25, 65, 1: PRINT "press a key";
+LOCATE 25, 65, 1: PRINT "continue y/n";
 DO
-LOOP WHILE INKEY$ = ""
+d$ = INKEY$
+LOOP WHILE d$ = ""
+IF LCASE$(d$) = "n" THEN END
 COLOR 7
-LOCATE 25, 65, 0: PRINT "           "
+LOCATE 25, 65, 0: PRINT "            "
 LOCATE r, c, 0
 END SUB
 

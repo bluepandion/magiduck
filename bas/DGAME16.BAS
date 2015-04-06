@@ -26,7 +26,7 @@ DECLARE SUB elfInit ()
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB handleSpawn (wave)
-DECLARE SUB loadLevel (fileName AS STRING)
+DECLARE SUB loadLevel ()
 DECLARE SUB loadSprites (file$, offset%)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
@@ -191,6 +191,12 @@ SUB handleBehaviors
 	n = 2
 
 SELECT CASE actor(2).control
+'Main menu pan
+CASE 263
+	screenTargetY = actor(2).y - 50
+	handleCamera
+	actor(2).count = actor(2).count + 1
+	if actor(2).count > 2 THEN actor(2).control = 258
 
 'Level Clear - Score Count
 CASE 262
@@ -291,7 +297,7 @@ CASE 262
 
         CASE 1001
 			CALL aSoundStop
-			player.level = 0
+			player.level = 1
 			actor(n).control = 259
       END SELECT
                
@@ -415,15 +421,40 @@ CASE 258
 		w = ASC(menuItem(player.menuItem).w)
 		h = ASC(menuItem(player.menuItem).h)
 		aMenuHiLite x, y, w, h, player.menuHLcolor, gfx.pageOfs(gfx.page)
-	CASE 5			'Process selected menu item
+	CASE 5			'MENUCONTEXT Process selected menu item
 		player.menuMode = 2
 		SELECT CASE player.menuContext
-		CASE 1	'Pause menu
+		CASE 1 TO 2	'Pause menu
 			SELECT CASE player.menuItem
 			CASE 1
 				player.menuMode = 999
 				player.menuContext = 0
 			CASE 4
+				player.level = 0
+				player.menuContext = -1
+				player.menuMode = 999
+			CASE 5
+				actor(2).control = 259
+				player.level = -1
+			END SELECT
+		CASE 3	'Death menu
+			SELECT CASE player.menuItem
+				CASE 1
+					player.score = 0
+					player.menuContext = -1
+					player.menuMode = 999
+				CASE 2
+					player.level = 1
+					player.menuContext = -1
+					player.menuMode = 999
+			END SELECT
+		CASE 10 'Main menu
+			SELECT CASE player.menuItem
+			CASE 1
+				player.level = 1
+				player.menuContext = -1
+				player.menuMode = 999
+			CASE 5
 				actor(2).control = 259
 				player.level = -1
 			END SELECT
@@ -438,26 +469,29 @@ CASE 258
 		aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 		player.menuMode = player.menuMode + 1
 	CASE 1001
-		IF player.menuContext THEN
+		IF player.menuContext > 0 THEN
 			player.menuMode = 0
-		ELSE
+		END IF
+		IF player.menuContext = 0 THEN
 			actor(1).lNext = actor(2).jump
 			actor(2).control = 255
 			player.menuMode = 0
 			player.hudLock = 0
 			hudUpdate 255
-		END IF		
+		END IF
+		IF player.menuContext < 0 THEN
+			actor(2).control = 259
+		END IF
 	END SELECT
 	
 'Wait after death
 CASE 256
-
-   player.score = 0
-   player.level = 0
-   IF kbArray(57) THEN
-       CALL aSoundStop
-       actor(n).control = 259
-   END IF
+	actor(2).count = actor(2).count + 1
+	IF actor(2).count > 32 THEN
+		actor(2).count = 0
+		player.menuContext = 3
+		actor(2).control = 258
+	END IF
 
 'Normal player
 CASE 255
@@ -606,23 +640,24 @@ CASE 255
    END IF
 
    IF player.hp = 0 THEN
-      actor(n).collider = 0
-      actor(n).control = 256
-      actor(n).frame = 0
-      actor(n).vecX = 0
-      actor(n).vecY = 0
+      actor(2).collider = 0
+      actor(2).control = 256
+      actor(2).count = 0
+	  actor(2).frame = 0
+      actor(2).vecX = 0
+      actor(2).vecY = 0
       FOR b = 0 TO 63 STEP 8
          xs = angle.x(b) \ 2
          ys = angle.y(b) \ 2
-         spawnObject actor(n).x, actor(n).y, 257, xs, ys
+         spawnObject actor(2).x, actor(2).y, 257, xs, ys
       NEXT b
       aSoundFX 4, 22
       aSoundFX 14, 23
       hudTextLoad &H140, 0
       player.hudLock = 999
       player.score = 0
-      actor(2).x = 0
-      actor(2).y = 0
+      'actor(2).x = 0
+      'actor(2).y = 0
       player.jumpRelease = -1
    END IF
 
@@ -1628,7 +1663,7 @@ SUB initMainMenu
 END SUB
 
 SUB initTestGame
-	player.level = 1
+	player.level = 0
 	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)
 	DO
 		main
@@ -1639,7 +1674,7 @@ END SUB
 SUB main
 	hudTextLoad &HA0, 1
 	debugOut "loading level"
-	loadLevel "level" + MID$(STR$(player.level), 2, 1)
+	loadLevel
 	
 	debugOut "level load ok"
 	
@@ -1672,7 +1707,8 @@ SUB main
 	player.gotCoins = 0
 	player.gotKeys = 0
 	player.gotChests = 0
-
+	
+	actor(2).flash = 0
 	actor(2).lPrev = 1
 	actor(2).lNext = 1
 	actor(2).exist = 1
@@ -1692,6 +1728,7 @@ SUB main
 	actor(2).anim = 10
 	actor(2).visX = 999
 	actor(2).visY = 999
+	actor(2).count = 0
 	playerOldX = -999
 	playerOldY = -999
 	
@@ -1705,15 +1742,18 @@ SUB main
 	
 	updateText = 1
 	
-	IF player.level = 0 THEN
-		for n = 1 to 9
+	IF player.level = 1 THEN
+		for n = 2 to 10
 			player.score = player.score + player.levelScore(n)
 		next n
 	END IF
 	
-	IF player.level = 8 THEN
-		hudTextLoad &H6E0, 0
+	IF player.level = 0 THEN
+		'hudTextLoad &H6E0, 0
 		player.hudLock = 999
+		actor(2).control = 263
+		actor(2).frame = 0
+		player.menuContext = 10
 	ELSE
 		hudTextLoad &H1E0 + player.level * 160, 0
 		player.hudLock = 5
@@ -1739,8 +1779,9 @@ SUB main
 		IF actor(2).control = 255 THEN
 			IF kbArray(1) THEN
 				actor(2).control = 258
-				player.menuContext = 1
-				player.menuMode = 0				
+				player.menuContext = 2
+				IF player.level = 1 THEN player.menuContext = 1
+				player.menuMode = 0		
 			END IF
 			updateText = updateText + 1
 			IF updateText = 24 THEN
