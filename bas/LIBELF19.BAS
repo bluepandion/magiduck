@@ -454,7 +454,6 @@ SUB loadLevel
 		GET #1, fileOfs, level.coins
 		GET #1, fileOfs + 2, level.keys
 		fileOfs = fileOfs + 4
-		debugOut " level"
 		n = 1
 		DO
 			GET #1, fileOfs, loadStr
@@ -466,11 +465,9 @@ SUB loadLevel
 			NEXT nn
 			n = n + loadInt
 		LOOP WHILE n < 1600
-		debugOut " spawners"
 		GET #1, fileOfs, loadStr
 		fileOfs = fileOfs + 1
 		loadInt = ASC(loadStr)
-		debugOut str$(loadInt)
 		FOR n = 1 TO loadInt
 			GET #1, fileOfs, loadStr
 			fileOfs = fileOfs + 1
@@ -778,8 +775,12 @@ SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 END SUB
 
 SUB menuLoad (menuNo%)
-	debugOut "Menu Load "+str$(menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
+	
+	FOR n = 1 to 16
+		menuItem(n) = 0
+	NEXT n
+	
 	OPEN "menu.cmm" FOR BINARY AS #1
 		GET #1, menuNo% * 6 + 1, loadOfs
 		GET #1, menuNo% * 6 + 3, loadInt
@@ -797,28 +798,71 @@ SUB menuLoad (menuNo%)
 		loadOfs = loadOfs + 6		
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		
 		for item = 1 to itemCount
-				GET #1, loadOfs, loadStr
-				itemIDX = ASC(loadStr)
-				loadOfs = loadOfs + 1
-				GET #1, loadOfs, menuItem(itemIDX)
-				loadOfs = loadOfs + 8
+				GET #1, loadOfs, loadInt
+				loadOfs = loadOfs + 2
+				itemIDX = loadInt
+				
+				n = getSpawnSlot
+				IF itemIDX > 0 THEN 
+					actor(n).exist = 1
+					actor(n).control = 0
+					actor(n).frame = 0
+					menuItem(itemIDX) = n
+					'debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
+				END IF
+				
+				GET #1, loadOfs, actor(n).lPrev
+				GET #1, loadOfs + 2, actor(n).lNext
+				GET #1, loadOfs + 4, actor(n).x
+				GET #1, loadOfs + 6, actor(n).y
+				GET #1, loadOfs + 8, actor(n).vecX
+				GET #1, loadOfs + 10, actor(n).vecY
+				GET #1, loadOfs + 12, actor(n).frame
+				loadOfs = loadOfs + 14
+
+				'debugOut str$(actor(n).x)+str$(actor(n).y)+str$(actor(n).vecX)+str$(actor(n).vecY)+str$(actor(n).frame)
+				
 				GET #1, loadOfs, loadStr
 				itemLen = ASC(loadStr)
 				loadOfs = loadOfs + 1
-				FOR n = 1 to itemLen
-					GET #1, loadOfs, loadStr
-					MID$(w40char.text, n, 1) = loadStr
-					loadOfs = loadOfs + 1
-					nn = n
-				next n
-				nn = nn + 1
-				MID$(w40char.text, nn, 1) = "|"
-				x = ASC(menuItem(itemIDX).x) + 1
-				y = ASC(menuItem(itemIDX).y) + 1
-				debugOut str$(itemIDX)
-		aPrint gfx.videoWrap, menuItem(itemIDX).colours, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
+				loadVarStr = SPACE$(itemLen)
+				GET #1, loadOfs, loadVarStr
+				w40char.text = loadVarStr
+				loadOfs = loadOfs + itemLen
+		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page) * 2
 		NEXT item
-		debugOut "player:"+str$(player.menuItem)
+		
 	CLOSE #1
 END SUB
+
+
+'		for item = 1 to itemCount
+'				GET #1, loadOfs, loadStr
+'				itemIDX = ASC(loadStr)
+'				
+'				n = getSpawnSlot
+'				IF itemIDX > 0 THEN 
+'					actor(n).exist = 1					
+'				END IF
+'				
+'				loadOfs = loadOfs + 1
+'				GET #1, loadOfs, menuItem(itemIDX)
+'				loadOfs = loadOfs + 8
+'				GET #1, loadOfs, loadStr
+'				itemLen = ASC(loadStr)
+'				loadOfs = loadOfs + 1
+'				FOR n = 1 to itemLen
+'					GET #1, loadOfs, loadStr
+'					MID$(w40char.text, n, 1) = loadStr
+'					loadOfs = loadOfs + 1
+'					nn = n
+'				next n
+'				nn = nn + 1
+'				MID$(w40char.text, nn, 1) = "|"
+'				x = ASC(menuItem(itemIDX).x) + 1
+'				y = ASC(menuItem(itemIDX).y) + 1
+'		aPrint gfx.videoWrap, menuItem(itemIDX).colours, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
+'		NEXT item
+		

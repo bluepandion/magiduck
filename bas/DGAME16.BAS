@@ -111,22 +111,16 @@ END SUB
 SUB addScore (eventType)
 	s = 0
 	SELECT CASE eventType
-	CASE 1
-		s = 25
-	CASE 8
-		s = 50
 	CASE 98
-		s = 25
+		s = 100
 	CASE 88
-		s = player.hp * 1000
+		s = player.hp * 50
 	CASE 158
 		s = 0
 		IF player.hp < 4 THEN player.hp = player.hp + 1
 		hudUpdate 2
 	CASE 998
-		s = 20
-	CASE 999
-		s = 10
+		s = 15
 	END SELECT
 	player.score = player.score + s
 END SUB
@@ -274,8 +268,9 @@ CASE 262
 
         CASE 99 TO 100
             actor(2).jump = actor(2).jump + 1
-			IF player.score > player.levelScore(player.level) THEN
-				IF player.levelscore(player.level) > 0 THEN myPrint 8, 43, "YOU IMPROVED YOUR SCORE", &H1E1E
+			IF player.score > player.levelScore(player.level - 1) THEN
+				IF player.levelscore(player.level - 1) > 0 THEN myPrint 8, 43, "YOU IMPROVED YOUR SCORE", &H1E1E
+				player.levelScore(player.level - 1) = player.score
 			END IF
             myPrint 8, 46, "PRESS SPACE TO CONTINUE", &H1717
         
@@ -283,9 +278,6 @@ CASE 262
 			IF kbArray(57) THEN actor(2).jump = 999
 
         CASE 999 TO 1000
-            IF player.score > player.levelScore(player.level) THEN 
-				player.levelScore(player.level) = player.score
-			END IF
 			actor(2).jump = actor(2).jump + 1
             actor(2).frame = 0
             tileCopyList(0, gfx.page).x = 0
@@ -379,11 +371,12 @@ CASE 258
 	CASE 2		'Item highlight and wait for input
 		IF actor(2).count > 0 THEN
 			IF actor(2).count > 3 THEN
-				x = ASC(menuItem(player.menuPrev).x)
-				y = ASC(menuItem(player.menuPrev).y)
-				w = ASC(menuItem(player.menuPrev).w)
-				h = ASC(menuItem(player.menuPrev).h)
-				aMenuHiLite x, y, w, h, menuItem(player.menuPrev).colours, gfx.pageOfs(gfx.page)
+				nn = menuItem(player.menuPrev)
+				x = actor(nn).x
+				y = actor(nn).y
+				w = actor(nn).vecX
+				h = actor(nn).vecY
+				aMenuHiLite x, y, w, h, actor(nn).frame, gfx.pageOfs(gfx.page)
 				player.menuHLcolor = &H6E6E
 			END IF
 			IF actor(2).count < 5 THEN
@@ -395,9 +388,10 @@ CASE 258
 			player.menuPrev = player.menuItem
 			'IF kbArray(player.keyRelease) = 0 THEN
 			'	player.keyRelease = 0
+				nn = menuItem(player.menuItem)
 				IF kbArray(80) THEN 
-					IF player.menuItem <> ASC(menuItem(player.menuItem).iNext) THEN
-						player.menuItem = ASC(menuItem(player.menuItem).iNext)
+					IF player.menuItem <> actor(nn).lNext THEN
+						player.menuItem = actor(nn).lNext
 						soundEvent = sndMenuNext
 						actor(2).count = 5
 						player.menuHLcolor = &H4747
@@ -405,8 +399,8 @@ CASE 258
 					END IF
 				END IF
 				IF kbArray(72) THEN 
-					IF player.menuItem <> ASC(menuItem(player.menuItem).iPrev) THEN
-						player.menuItem = ASC(menuItem(player.menuItem).iPrev)
+					IF player.menuItem <> actor(nn).lPrev THEN
+						player.menuItem = actor(nn).lPrev
 						soundEvent = sndMenuPrev
 						actor(2).count = 5
 						player.menuHLcolor = &H4747
@@ -416,10 +410,11 @@ CASE 258
 				IF kbArray(28) THEN player.menuMode = 5
 			'END IF
 		END IF
-		x = ASC(menuItem(player.menuItem).x)
-		y = ASC(menuItem(player.menuItem).y)
-		w = ASC(menuItem(player.menuItem).w)
-		h = ASC(menuItem(player.menuItem).h)
+		nn = menuItem(player.menuItem)
+		x = actor(nn).x
+		y = actor(nn).y
+		w = actor(nn).vecX
+		h = actor(nn).vecY
 		aMenuHiLite x, y, w, h, player.menuHLcolor, gfx.pageOfs(gfx.page)
 	CASE 5			'MENUCONTEXT Process selected menu item
 		player.menuMode = 2
@@ -562,6 +557,7 @@ CASE 255
 		screenTargetYlock = -1
 		collisionFloor = 1
 		player.vecY = 0
+		screenTargetY = actor(2).y - 30
     END IF
    
     IF collisionFloor THEN
@@ -607,10 +603,10 @@ CASE 255
       actor(n).flags = 1
       IF collisionFloor THEN
          switchAnim n, 40
-         IF fraction(2, fractionC) THEN
-            'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
-            player.walkCounter = (player.walkCounter + 1) AND 7
-         END IF
+         'IF fraction(2, fractionC) THEN
+         '   'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
+         '   player.walkCounter = (player.walkCounter + 1) AND 7
+         'END IF
       END IF
    END IF
 
@@ -619,10 +615,10 @@ CASE 255
       actor(n).flags = 0
       IF collisionFloor THEN
          switchAnim n, 40
-         IF fraction(2, fractionC) THEN
-            'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
-            player.walkCounter = (player.walkCounter + 1) AND 7
-         END IF
+         'IF fraction(2, fractionC) THEN
+         '   'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
+         '   player.walkCounter = (player.walkCounter + 1) AND 7
+         'END IF
       END IF
    END IF
 
@@ -678,7 +674,7 @@ CASE 255
        actor(n).x = (actor(n).x AND &HFFFC) + 2
    END IF
 
-   screenTargetX = actor(n).x - 19
+   screenTargetX = actor(n).x - 20
    handleCamera
    IF screenTargetYlock = -1 THEN
       screenTargetY = actor(2).y - 28
@@ -900,7 +896,6 @@ IF actor(n).exist > 0 THEN
 					a = 144
 					spawnObject actor(n).x, actor(n).y, 99, 3, s
 				END SELECT
-				addScore 999
 				tileWrite actor(n).x, actor(n).y, t
 				aUpdateTile actor(n).x, actor(n).y
 				actor(n).vecX = 0
@@ -1601,9 +1596,26 @@ SUB hudUpdate (flags AS INTEGER)
 			EXIT SUB
 		END IF
 	END IF
-	IF flags AND 1 THEN
-		w40char.text = "KEYS:     0000000              TIME:   |"
-		aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+	IF player.level > 1 THEN
+		IF flags AND 1 THEN
+			w40char.text = "KEYS:     0000000              TIME:    |"
+			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		END IF
+		IF flags AND 8 THEN
+			a$ = STR$(player.time)
+			w40char.text = a$ + "|"
+			aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
+		END IF
+		IF flags AND 16 THEN
+			w40char.text = STR$(player.hasKey) + "|"
+			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 5, 0, hudBufferSeg, hudBufferOfs
+		END IF
+		EXIT SUB
+	ELSE
+		IF flags AND 1 THEN
+			w40char.text = "          0000000                       |"
+			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		END IF
 	END IF
 	IF flags AND 2 THEN
 		IF player.hp < 4 THEN
@@ -1622,15 +1634,6 @@ SUB hudUpdate (flags AS INTEGER)
 		a$ = MID$(a$, 2, c)
 		w40char.text = a$ + "|"
 		aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 18 - c, 0, hudBufferSeg, hudBufferOfs
-	END IF
-	IF flags AND 8 THEN
-		a$ = STR$(player.time)
-		w40char.text = a$ + "|"
-		aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
-	END IF
-	IF flags AND 16 THEN
-		w40char.text = STR$(player.hasKey) + "|"
-		aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 5, 0, hudBufferSeg, hudBufferOfs
 	END IF
 END SUB
 
@@ -1673,10 +1676,8 @@ END SUB
 
 SUB main
 	hudTextLoad &HA0, 1
-	debugOut "loading level"
+
 	loadLevel
-	
-	debugOut "level load ok"
 	
 	for n = 1 to 60
 		actor(n).exist = 0
@@ -1706,8 +1707,7 @@ SUB main
 	player.score = 0
 	player.gotCoins = 0
 	player.gotKeys = 0
-	player.gotChests = 0
-	
+	player.gotChests = 0	
 	actor(2).flash = 0
 	actor(2).lPrev = 1
 	actor(2).lNext = 1
@@ -1732,18 +1732,12 @@ SUB main
 	playerOldX = -999
 	playerOldY = -999
 	
-	debugOut "actor setup ok"
-	
 	handleSpawn 0
-	debugOut "spawn ok"
-	
-	screenResetPos actor(2).x - 20, actor(2).y - 46
-	debugOut "set screen pos ok"
 	
 	updateText = 1
 	
 	IF player.level = 1 THEN
-		for n = 2 to 10
+		for n = 1 to 10
 			player.score = player.score + player.levelScore(n)
 		next n
 	END IF
@@ -1754,16 +1748,14 @@ SUB main
 		actor(2).control = 263
 		actor(2).frame = 0
 		player.menuContext = 10
+		screenResetPos actor(2).x - 20, actor(2).y - 46
 	ELSE
 		hudTextLoad &H1E0 + player.level * 160, 0
 		player.hudLock = 5
+		screenResetPos actor(2).x - 20, actor(2).y - 80
 	END IF
-	
-	debugOut "hud ok"
-	
+		
 	CALL aTimerReset
-
-	debugOut "timer ok"
 	
 	player.levelPrev = player.level
 	
@@ -1797,7 +1789,6 @@ SUB main
 END SUB
 
 SUB handleSpawn (wave)
-	debugOut "spawn"+str$(wave)
 	FOR n = 1 TO 16
 		nn = wave * 16 + n
 		o = level.spawner(nn).object

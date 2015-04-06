@@ -4,6 +4,8 @@ DEFINT A-Z
 
 testString$ = ".,?!'0123456789  MAGIDUCK  WAVE  LIVES"
 
+DIM tBox(320 * 24 + 2)
+
 DIM copy AS INTEGER
 
 TYPE charPair
@@ -40,20 +42,23 @@ OPEN "w40char.def" FOR BINARY AS #1
 ' w40char.glyph2(a) = CHR$(a)
 'NEXT a
 
-initScreen
+'initScreen
+
+SCREEN 13
 
 editc = 48
-COLOR 9, 1
-FOR a = 1 TO 40
- LOCATE 23, a: PRINT CHR$(221)
- LOCATE 24, a: PRINT CHR$(222)
-NEXT a
 
-COLOR 7, 0
-LOCATE 20, 1
-FOR n = 32 TO 255
- PRINT CHR$(n);
-NEXT n
+COLOR 1
+'FOR a = 1 TO 40
+' LOCATE 23, a: PRINT CHR$(221)
+' LOCATE 24, a: PRINT CHR$(222)
+'NEXT a
+
+'COLOR 7, 0
+'LOCATE 20, 1
+'FOR n = 32 TO 255
+' PRINT CHR$(n);
+'NEXT n
 
 updateScreen:
 LOCATE 11, 1: PRINT TIMER
@@ -64,7 +69,7 @@ FOR n = 32 TO 90
  LOCATE row, col: PRINT w40Char.glyph1(n)
  LOCATE row + 1, col: PRINT w40Char.glyph2(n)
  IF editc = n THEN
-  COLOR 9
+  COLOR 7
   LOCATE row, col: PRINT w40Char.glyph1(n)
   LOCATE row + 1, col: PRINT w40Char.glyph2(n)
   COLOR 8
@@ -72,9 +77,13 @@ FOR n = 32 TO 90
  col = col + 1
  IF col = 41 THEN col = 1: row = row + 4
 NEXT n
+GET (0, 8)-(319, 11), tBox
+PUT (0, 4), tBox, PSET
+LINE (0, 8)-(319, 15), 0, BF
 LOCATE 12, 1: PRINT TIMER
 
 DO
+ LOCATE 3, 1: PRINT CHR$(editc)
  d$ = INKEY$
 
  IF d$ = CHR$(13) THEN
@@ -100,25 +109,28 @@ DO
 
  IF d$ = "t" OR d$ = "i" THEN
   IF d$ = "i" THEN testString$ = STR$(ASC(w40Char.glyph1(editc))) + STR$(ASC(w40Char.glyph2(editc)))
-  COLOR 7, 0
+  COLOR 2
   row = 15
   col = 1
   FOR n = 1 TO LEN(testString$)
 	c = ASC(MID$(testString$, n, 1))
-	IF c > 40 THEN
-	COLOR 14
-	LOCATE row, col: PRINT w40Char.glyph1(c)
+	IF c > 32 THEN
 	COLOR 7
+	LOCATE row, col: PRINT w40Char.glyph1(c)
+	COLOR 12
 	LOCATE row + 1, col: PRINT w40Char.glyph2(c)
 	END IF
 	col = col + 1
 	IF col = 41 THEN col = 1: row = row + 2
   NEXT n
+  GET (0, 15 * 8)-(319, 15 * 8 + 3), tBox
+  PUT (0, 15 * 8 - 4), tBox, PSET
+  LINE (0, 120)-(319, 127), 0, BF
  END IF
  
 LOOP WHILE d$ <> CHR$(27)
 
-WIDTH 80, 25
+SCREEN 0
 SHELL "cls"
 
 SUB initScreen

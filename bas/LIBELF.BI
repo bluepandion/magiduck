@@ -33,6 +33,7 @@ DECLARE SUB aTimerReset ()
 '$STATIC
 
 COMMON SHARED loadStr AS STRING * 1            'General purpose file read
+COMMON SHARED loadVarStr AS STRING
 COMMON SHARED loadInt AS INTEGER               ' variables
 COMMON SHARED loadLong AS LONG
 COMMON SHARED loadOfs AS INTEGER
@@ -274,14 +275,17 @@ TYPE w40textType
 END TYPE
 COMMON SHARED w40char AS w40textType
 
-TYPE menuType
-	iPrev AS STRING * 1
-	iNext AS STRING * 1
-	x AS STRING * 1
-	y AS STRING * 1
-	w AS STRING * 1
-	h AS STRING * 1
-	colours AS INTEGER
-END TYPE
-DIM menuItem(0 to 29) AS menuType
-COMMON SHARED menuItem() AS menuType
+'TYPE menuType
+'	iPrev AS STRING * 1
+'	iNext AS STRING * 1
+'	x AS STRING * 1
+'	y AS STRING * 1
+'	w AS STRING * 1
+'	h AS STRING * 1
+'	colours AS INTEGER
+'END TYPE
+'DIM menuItem(0 to 29) AS menuType
+'COMMON SHARED menuItem() AS menuType
+
+DIM menuItem(1 to 16) AS INTEGER
+COMMON SHARED menuItem() AS INTEGER

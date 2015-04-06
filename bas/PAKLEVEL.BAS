@@ -163,7 +163,7 @@ OPEN listFile$ FOR INPUT AS #1
 
 			IF tile = 1 THEN
 			 level.playerX = x
-			 level.playerY = y + 7
+			 level.playerY = y + 8
 			 PRINT "   Player start"
 			END IF
 

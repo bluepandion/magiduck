@@ -29,16 +29,16 @@ OPEN "menu.cmm" FOR BINARY AS #2
       INPUT #1, clearAttr
          PUT #2, ofsOFFSETS + menuNo * 6, ofsDATA
          PUT #2, ofsOFFSETS + menuNo * 6 + 4, startItem
-         byte = CHR$(clearX - 1)
+         byte = CHR$(clearX)
          PUT #2, ofsDATA, byte
             ofsDATA = ofsDATA + 1
-         byte = CHR$(clearY - 1)
+         byte = CHR$(clearY)
          PUT #2, ofsDATA, byte
             ofsDATA = ofsDATA + 1
          byte = CHR$(clearW)
          PUT #2, ofsDATA, byte
             ofsDATA = ofsDATA + 1
-         byte = CHR$(clearH + 1)
+         byte = CHR$(clearH)
          PUT #2, ofsDATA, byte
             ofsDATA = ofsDATA + 1
          byte = clearchar$
@@ -49,18 +49,23 @@ OPEN "menu.cmm" FOR BINARY AS #2
             ofsDATA = ofsDATA + 1
          itemCount = 0
          DO
-            INPUT #1, itemIdx
-            IF itemIdx > -1 THEN
+            INPUT #1, itemIDX
+            IF itemIDX > -1 THEN
                itemCount = itemCount + 1
-               PRINT itemIdx;
+               PRINT itemIDX;
                INPUT #1, itemPrev
                INPUT #1, itemNext
                INPUT #1, itemText$
+               itemText$ = itemText$ + "|"
                itemLen = LEN(itemText$)
                INPUT #1, itemX
+               'itemX = itemX
                INPUT #1, itemY
+               'itemY = itemY
                INPUT #1, itemW
                INPUT #1, itemH
+               itemW = itemLen - 1
+               itemH = 4
                INPUT #1, itemColor2
                INPUT #1, itemColor1
 
@@ -72,37 +77,48 @@ OPEN "menu.cmm" FOR BINARY AS #2
                DO
                   SELECT CASE dataMode
                   CASE 0
-                     byte = CHR$(itemIdx)
+                     PUT #2, ofsDATA, itemIDX
+                     ofsDATA = ofsDATA + 2
                   CASE 1
-                     byte = CHR$(itemPrev)
-                     PRINT itemPrev;
+                     PUT #2, ofsDATA, itemPrev
+                     ofsDATA = ofsDATA + 2
                   CASE 2
-                     byte = CHR$(itemNext)
-                     PRINT itemNext
+                     PUT #2, ofsDATA, itemNext
+                     ofsDATA = ofsDATA + 2
                   CASE 3
-                     byte = CHR$(itemX - 1)
+                     PUT #2, ofsDATA, itemX
+                     ofsDATA = ofsDATA + 2
                   CASE 4
-                     byte = CHR$(itemY - 1)
+                     PUT #2, ofsDATA, itemY
+                     ofsDATA = ofsDATA + 2
                   CASE 5
-                     byte = CHR$(itemW - 1)
+                     PUT #2, ofsDATA, itemW
+                     ofsDATA = ofsDATA + 2
                   CASE 6
-                     byte = CHR$(itemH)
+                     PUT #2, ofsDATA, itemH
+                     ofsDATA = ofsDATA + 2
                   CASE 7
                      byte = CHR$(itemColor1)
+                     PUT #2, ofsDATA, byte
+                     ofsDATA = ofsDATA + 1
                   CASE 8
                      byte = CHR$(itemColor2)
+                     PUT #2, ofsDATA, byte
+                     ofsDATA = ofsDATA + 1
                   CASE 9
                      byte = CHR$(itemLen)
+                     PUT #2, ofsDATA, byte
+                     ofsDATA = ofsDATA + 1
                   CASE 10 TO 50
                      byte = UCASE$(MID$(itemText$, dataMode - 9, 1))
+                     PUT #2, ofsDATA, byte
+                     ofsDATA = ofsDATA + 1
                   END SELECT
-                  PUT #2, ofsDATA, byte
-                  ofsDATA = ofsDATA + 1
                   dataMode = dataMode + 1
                   IF dataMode = itemLen + 10 THEN dataWrite = 0
                LOOP WHILE dataWrite
             END IF
-         LOOP WHILE itemIdx > -1
+         LOOP WHILE itemIDX > -1
          PUT #2, ofsOFFSETS + menuNo * 6 + 2, itemCount
    LOOP WHILE NOT EOF(1)
    CLOSE #1

@@ -1,18 +1,1 @@
-14:03:50
-loading level
- level
- spawners
- 16
-level load ok
-actor setup ok
-spawn 0
-spawn ok
-set screen pos ok
-hud ok
-timer ok
-Menu Load  1
- 0
- 1
- 4
- 5
-player: 1
+18:01:51
