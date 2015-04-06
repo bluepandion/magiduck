@@ -896,7 +896,7 @@ aRectList ENDP
 aSpriteList PROC
 
 ;---------------------------------------------------------------------------
-; Sprite drawing routine version 8.1
+; Sprite CLIP & BLIT routine version 8.1
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
@@ -2382,7 +2382,7 @@ aCopyPage PROC
 	add si, 160
 	
 	mov dx, vWrap
-	mov cx, 1840
+	mov cx, 1920
 copyPage:
 	and di, dx
 	and si, dx

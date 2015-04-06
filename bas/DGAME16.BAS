@@ -188,7 +188,6 @@ SUB handleBehaviors
 SELECT CASE actor(2).control
 'Main menu pan
 CASE 263
-	screenTargetY = actor(2).y - 50
 	handleCamera
 	actor(2).count = actor(2).count + 1
 	if actor(2).count > 2 THEN actor(2).control = 258
@@ -343,7 +342,7 @@ CASE 260
 		actor(2).control = 261
 	END IF
 			   
-'Menu cursor
+'Menu
 CASE 258
 	SELECT CASE player.menuMode
 	CASE 0		'Display menu load message
@@ -355,6 +354,7 @@ CASE 258
 		actor(1).lNext = 1
 	'CASE 1		'Load and display menu
 		aSoundStop
+		handleScroll
 		menuLoad player.menuContext - 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
@@ -499,6 +499,7 @@ CASE 258
 		menuClear
 		IF player.menuContext > 0 THEN
 			player.menuMode = 0
+			EXIT SUB
 		END IF
 		IF player.menuContext = 0 THEN
 			actor(2).control = 255
@@ -681,7 +682,7 @@ CASE 255
       NEXT b
       aSoundFX 4, 22
       aSoundFX 14, 23
-      hudTextLoad &H140, 0
+      'hudTextLoad &H140, 0
       player.hudLock = 999
       player.score = 0
       'actor(2).x = 0
@@ -1472,7 +1473,7 @@ IF actor(n).exist > 0 THEN
            spriteList(spriteListIndex, gfx.page).y = y' + 20
            spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
            spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
-           spriteListIndex = spriteListIndex + 1
+           spriteListIndex = (spriteListIndex + 1) AND 31
           END IF
           ctype = actor(n).collider AND (animation(animPart).jump > 0)
             IF ctype THEN
@@ -1642,7 +1643,6 @@ SUB hudUpdate (flags AS INTEGER)
 			w40char.text = STR$(player.hasKey) + "|"
 			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 5, 0, hudBufferSeg, hudBufferOfs
 		END IF
-		EXIT SUB
 	ELSE
 		IF flags AND 1 THEN
 			w40char.text = "          0000000                       |"
@@ -1777,10 +1777,10 @@ SUB main
 	IF player.level = 0 THEN
 		'hudTextLoad &H6E0, 0
 		player.hudLock = 999
-		actor(2).control = 263
+		actor(2).control = 258
 		actor(2).frame = 0
 		player.menuContext = 10
-		screenResetPos actor(2).x - 20, actor(2).y - 46
+		screenResetPos actor(2).x - 20, actor(2).y - 52
 		for n = 1 to 16
 			player.levelScore(n) = 0
 		next n
@@ -1788,7 +1788,7 @@ SUB main
 	ELSE
 		hudTextLoad &H1E0 + player.level * 160, 0
 		player.hudLock = 5
-		screenResetPos actor(2).x - 20, actor(2).y - 80
+		screenResetPos actor(2).x - 20, actor(2).y - 46
 	END IF
 		
 	CALL aTimerReset

@@ -678,30 +678,32 @@ SUB screenResetPos (x%, y%)
  
  IF x% < 0 THEN x% = 0
  IF x% > 40 THEN x% = 40
+ IF y% < 0 THEN y% = 0
+ IF y% > 615 THEN y% = 615
 
  screenTargetYlock = -1
  screenTargetX = x%
  screenTargetY = y%
+
+ yp = y% - (y% AND &HFFF8)
  
- x% = x% AND &HFFFC
- y% = y% AND &HFFF8
-
- 'IF Y% < 24 THEN Y% = 24
- 'IF Y% > 590 THEN Y% = 590
- IF y% < 0 THEN y% = 0
- IF y% > 615 THEN y% = 615
-
  FOR n = 0 TO 1
   gfx.screenX(n) = x%
   gfx.screenY(n) = y%
   gfx.screenOldX(n) = x%
   gfx.screenOldY(n) = y%
   gfx.windowX(n) = x%
-  gfx.windowY(n) = 24
-  gfx.windowOfs(n) = 1920 + x%
+  gfx.windowY(n) = 24 + yp
+  gfx.windowOfs(n) = 1920 + x% + yp * 80
   spriteList(0, n).y = 255
  NEXT n
 
+ x% = x% AND &HFFFC
+ y% = y% AND &HFFF8
+
+ 'IF Y% < 24 THEN Y% = 24
+ 'IF Y% > 590 THEN Y% = 590
+ 
  gfx.tileOfs = tilePosYlookUp(y%) - 60
  gfx.tileArea = 0
 
@@ -729,6 +731,12 @@ SUB screenResetPos (x%, y%)
  
  aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
+' FOR n = 0 to 1
+'	 handleScroll
+'	 aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+'	 gfx.Page = gfx.Page xor 1
+' NEXT n
+ 
 END SUB
 
 DEFINT A-Z
