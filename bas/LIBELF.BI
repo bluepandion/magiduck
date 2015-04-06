@@ -160,6 +160,7 @@ TYPE playerType
  mode AS INTEGER
  menuMode AS INTEGER
  menuContext AS INTEGER
+ menuContextPrev AS INTEGER
  menuItem AS INTEGER
  menuPrev AS INTEGER
  menuHLcolor AS INTEGER

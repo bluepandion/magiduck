@@ -17,6 +17,7 @@ DECLARE SUB quit ()
 DECLARE SUB debugOut (text$)
 DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
+DECLARE SUB menuClear ()
 DECLARE FUNCTION tileRead% (x%, y%)
 
 DEFINT A-Z
@@ -777,9 +778,7 @@ END SUB
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
 	
-	FOR n = 1 to 16
-		menuItem(n) = 0
-	NEXT n
+	menuClear
 	
 	OPEN "menu.cmm" FOR BINARY AS #1
 		GET #1, menuNo% * 6 + 1, loadOfs
@@ -837,32 +836,14 @@ SUB menuLoad (menuNo%)
 	CLOSE #1
 END SUB
 
-
-'		for item = 1 to itemCount
-'				GET #1, loadOfs, loadStr
-'				itemIDX = ASC(loadStr)
-'				
-'				n = getSpawnSlot
-'				IF itemIDX > 0 THEN 
-'					actor(n).exist = 1					
-'				END IF
-'				
-'				loadOfs = loadOfs + 1
-'				GET #1, loadOfs, menuItem(itemIDX)
-'				loadOfs = loadOfs + 8
-'				GET #1, loadOfs, loadStr
-'				itemLen = ASC(loadStr)
-'				loadOfs = loadOfs + 1
-'				FOR n = 1 to itemLen
-'					GET #1, loadOfs, loadStr
-'					MID$(w40char.text, n, 1) = loadStr
-'					loadOfs = loadOfs + 1
-'					nn = n
-'				next n
-'				nn = nn + 1
-'				MID$(w40char.text, nn, 1) = "|"
-'				x = ASC(menuItem(itemIDX).x) + 1
-'				y = ASC(menuItem(itemIDX).y) + 1
-'		aPrint gfx.videoWrap, menuItem(itemIDX).colours, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
-'		NEXT item
+SUB menuClear
+	FOR n = 1 to 16
+		nn = menuItem(n)
+		actor(nn).exist = 0
+		actor(nn).frame = 0
+		actor(nn).lNext = 0
+		actor(nn).lPrev = 0
+		menuItem(n) = 0
+	NEXT n
+END SUB
 		
