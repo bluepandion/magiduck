@@ -51,11 +51,12 @@
 098, "Star 8", 65, 00, 00, 08
 099, "StDOOR", 66, 00, 00, 09
 "/actors"
+"pakfile", "levels", "/pakfile"
 "maps"
-"..\convert\hubworld.tmx", "tileset2", "spenemy0", "level0"
-"..\convert\prototyp.tmx", "tileset0", "spenemy0", "level1"
-"..\convert\test.tmx", "tileset0", "spenemy0", "level2"
-"..\convert\hicoin.tmx", "tileset0", "spenemy0", "level3"
-"..\convert\level2.tmx", "tileset1", "spenemy0", "level4"
+"..\convert\hubworld.tmx", "tileset2", "spenemy0", 0
+"..\convert\prototyp.tmx", "tileset0", "spenemy0", 1
+"..\convert\test.tmx", "tileset0", "spenemy0", 2
+"..\convert\hicoin.tmx", "tileset0", "spenemy0", 3
+"..\convert\level2.tmx", "tileset1", "spenemy0", 4
 "/maps"
 "/convert"

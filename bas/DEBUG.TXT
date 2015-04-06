@@ -1,5 +1,8 @@
-18:11:58
+10:58:56
 loading level
+ level
+ spawners
+ 23
 level load ok
 actor setup ok
 spawn 0
@@ -13,4 +16,5 @@ Menu Load  0
  2
  3
  4
+ 5
 player: 1

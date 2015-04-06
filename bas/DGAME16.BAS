@@ -361,41 +361,62 @@ CASE 258
 		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
 		aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		player.hudLock = 999
-		player.menuMode = 2
+		'player.menuMode = 2
 		spriteList(0, 0).y = 255
 		spriteList(0, 1).y = 255
-	CASE 2
+		aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+		gfx.page = gfx.page XOR 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
-		player.menuMode = 3
-	CASE 3		'Item highlight and wait for input
-		IF actor(2).count THEN
-			x = ASC(menuItem(player.menuPrev).x)
-			y = ASC(menuItem(player.menuPrev).y)
-			w = ASC(menuItem(player.menuPrev).w)
-			h = ASC(menuItem(player.menuPrev).h)
-			aMenuHiLite x, y, w, h, menuItem(player.menuPrev).colours, gfx.pageOfs(gfx.page)	
+		player.menuMode = 2
+		player.menuHLcolor = &HCECF
+		soundEvent = SndPause
+	CASE 2		'Item highlight and wait for input
+		IF actor(2).count > 0 THEN
+			IF actor(2).count > 3 THEN
+				x = ASC(menuItem(player.menuPrev).x)
+				y = ASC(menuItem(player.menuPrev).y)
+				w = ASC(menuItem(player.menuPrev).w)
+				h = ASC(menuItem(player.menuPrev).h)
+				aMenuHiLite x, y, w, h, menuItem(player.menuPrev).colours, gfx.pageOfs(gfx.page)
+				player.menuHLcolor = &H6E6E
+			END IF
+			IF actor(2).count < 5 THEN
+				IF kbArray(80) = 0 AND kbArray(72) = 0 THEN actor(2).count = 1
+			END IF
 			actor(2).count = actor(2).count - 1
+			player.menuHLcolor = &HCECF
 		ELSE
 			player.menuPrev = player.menuItem
-			IF kbArray(80) THEN 
-				player.menuItem = ASC(menuItem(player.menuItem).iNext)
-				soundEvent = sndMenuNext
-				actor(2).count = 2
-			END IF
-			IF kbArray(72) THEN 
-				player.menuItem = ASC(menuItem(player.menuItem).iPrev)
-				soundEvent = sndMenuPrev
-				actor(2).count = 2
-			END IF
-			IF kbArray(28) THEN soundEvent=0: player.menuMode = 5
+			'IF kbArray(player.keyRelease) = 0 THEN
+			'	player.keyRelease = 0
+				IF kbArray(80) THEN 
+					IF player.menuItem <> ASC(menuItem(player.menuItem).iNext) THEN
+						player.menuItem = ASC(menuItem(player.menuItem).iNext)
+						soundEvent = sndMenuNext
+						actor(2).count = 5
+						player.menuHLcolor = &H4747
+						'player.KeyRelease = 80
+					END IF
+				END IF
+				IF kbArray(72) THEN 
+					IF player.menuItem <> ASC(menuItem(player.menuItem).iPrev) THEN
+						player.menuItem = ASC(menuItem(player.menuItem).iPrev)
+						soundEvent = sndMenuPrev
+						actor(2).count = 5
+						player.menuHLcolor = &H4747
+						'player.KeyRelease = 72
+					END IF
+				END IF
+				IF kbArray(28) THEN player.menuMode = 5
+			'END IF
 		END IF
 		x = ASC(menuItem(player.menuItem).x)
 		y = ASC(menuItem(player.menuItem).y)
 		w = ASC(menuItem(player.menuItem).w)
 		h = ASC(menuItem(player.menuItem).h)
-		aMenuHiLite x, y, w, h, &HCECF, gfx.pageOfs(gfx.page)
+		aMenuHiLite x, y, w, h, player.menuHLcolor, gfx.pageOfs(gfx.page)
 	CASE 5			'Process selected menu item
-		player.menuMode = 3
+		player.menuMode = 2
 		SELECT CASE player.menuContext
 		CASE 1	'Pause menu
 			SELECT CASE player.menuItem
@@ -407,8 +428,7 @@ CASE 258
 				player.level = -1
 			END SELECT
 		END SELECT
-	'CASE 4 to 5	'Item change pause	
-	CASE 999 to 1000
+	CASE 999 to 1000		' Exit menu: clear screen
 		tileCopyList(0, gfx.page).x = 0
 		tileCopyList(0, gfx.page).y = 0
 		tileCopyList(0, gfx.page).w = 40
@@ -424,6 +444,8 @@ CASE 258
 			actor(1).lNext = actor(2).jump
 			actor(2).control = 255
 			player.menuMode = 0
+			player.hudLock = 0
+			hudUpdate 255
 		END IF		
 	END SELECT
 	
@@ -439,67 +461,66 @@ CASE 256
 
 'Normal player
 CASE 255
-   minY = -30
+	minY = -30
 
-   c = tileRead(actor(2).x, actor(2).y)
+	c = tileRead(actor(2).x, actor(2).y)
 
-   IF c > 29 THEN
-      speedMod = 8
-      friction = 5
+	IF c > 29 THEN
+		speedMod = 8
+		friction = 5
+		actor(2).y = (actor(2).y AND &HFFF8)
+		screenTargetYlock = actor(2).y - 46
 
-      actor(2).y = (actor(2).y AND &HFFF8)
-      screenTargetYlock = actor(2).y - 46
+		IF kbArray(29) = 0 THEN player.jumpRelease = -1
 
-      IF kbArray(29) = 0 THEN player.jumpRelease = -1
-
-      collisionFloor = 1
-      player.Bouncing = 0
-      SELECT CASE c
-      CASE 52
-         spawnObject actor(2).x AND &HFFFC, actor(2).y AND &HFFF8, 99, 2, -5
-         player.vecY = -38
-         actor(2).y = actor(2).y - 2
-         player.Bouncing = 30
-         collisionFloor = 0
-         maxY = 38
-         player.jumpRelease = 0
-         soundEvent = 98
-      END SELECT
-      IF player.vecY > 0 THEN soundEvent = 16: player.vecY = 0
-      screenTargetY = screenTargetYlock
-   ELSE
-      'player.jumpRelease = 0
-	  collisionFloor = 0
-      maxY = 30
-      speedMod = 10
-      friction = 5
-      IF player.ShootDelay < 6 THEN switchAnim n, 10
-      IF kbArray(29) THEN
-         player.vecY = player.vecY + 2
-         maxY = 10
-      ELSE
-         IF player.Bouncing > 0 THEN
+		collisionFloor = 2
+		player.Bouncing = 0
+		SELECT CASE c
+		CASE 52
+			spawnObject actor(2).x AND &HFFFC, actor(2).y AND &HFFF8, 99, 2, -5
+			player.vecY = -38
+			actor(2).y = actor(2).y - 2
+			player.Bouncing = 30
+			collisionFloor = 0
+			maxY = 38
+			player.jumpRelease = 0
+			soundEvent = 98
+		END SELECT
+		IF player.vecY > 0 THEN soundEvent = 16: player.vecY = 0
+		screenTargetY = screenTargetYlock
+	ELSE
+		collisionFloor = collisionFloor + (collisionFloor > 0)
+		maxY = 30
+		speedMod = 10
+		friction = 5
+		IF player.ShootDelay < 6 THEN switchAnim n, 10
+		IF kbArray(29) THEN
+			player.vecY = player.vecY + 2
+			maxY = 10
+		ELSE
+			player.jumpRelease = -1
+			IF player.Bouncing > 0 THEN
             maxY = 38
             player.Bouncing = player.Bouncing - 1
             player.vecY = player.vecY + 2 - gfx.page
-         ELSE
+		ELSE
             player.vecY = player.vecY + 15
-         END IF
-   END IF
+		END IF
+	END IF
 
-   a = actor(2).y - screenTargetYlock
-   IF a > 50 THEN  'a>0
-      screenTargetYlock = -1
-   END IF
+	'a = actor(2).y - screenTargetYlock
+	IF actor(2).y - screenTargetYlock > 50 THEN  'a>0
+		screenTargetYlock = -1
+	END IF
 
 	IF c = 27 OR c = 26 THEN
-	  IF kbArray(29) = 0 THEN player.jumpRelease = -1
-		 collisionFloor = 2
-		 maxY = 5
-		 IF c = 27 THEN minY = -15
-		 friction = 1
-		 speedMod = 4
-	  END IF
+		IF kbArray(29) = 0 THEN player.jumpRelease = -1
+			collisionFloor = 1
+			maxY = 5
+			IF c = 27 THEN minY = -15
+			friction = 1
+			speedMod = 4
+		END IF
 	END IF
 
     IF actor(2).exist > 1 THEN
@@ -509,8 +530,14 @@ CASE 255
 		player.vecY = 0
     END IF
    
-    IF collisionFloor = 1 THEN
+    IF collisionFloor THEN
 		IF player.vecX = 0 AND player.ShootDelay < 6 THEN switchAnim n, 5
+		IF kbArray(29) AND player.jumpRelease THEN
+			player.jumpRelease = 0
+			player.vecY = -35
+			actor(n).Y = actor(n).Y - 2
+			soundEvent = 0
+		END IF
 	END IF
 
    c = tileRead(actor(n).x, actor(n).y - 8)
@@ -541,17 +568,10 @@ CASE 255
       player.vecX = player.vecX + friction
    END IF
 
-   IF kbArray(29) AND player.jumpRelease AND collisionFloor THEN
-      player.jumpRelease = 0
-      player.vecY = -35
-      'actor(n).Y = actor(n).Y - 2
-      soundEvent = 0
-   END IF
-
    IF kbArray(75) THEN
       player.vecX = player.vecX - speedMod
       actor(n).flags = 1
-      IF collisionFloor = 1 THEN
+      IF collisionFloor THEN
          switchAnim n, 40
          IF fraction(2, fractionC) THEN
             'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
@@ -563,7 +583,7 @@ CASE 255
    IF kbArray(77) THEN
       player.vecX = player.vecX + speedMod
       actor(n).flags = 0
-      IF collisionFloor = 1 THEN
+      IF collisionFloor THEN
          switchAnim n, 40
          IF fraction(2, fractionC) THEN
             'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
@@ -1129,7 +1149,7 @@ IF actor(n).exist > 0 THEN
 		IF actor(n).life = 0 THEN
 			actor(n).count = actor(n).vecX
 			actor(n).vecX = 0
-			spawnObject actor(n).x + 1, actor(n).y - 5, 104, -15, 0
+			spawnObject actor(n).x - 1, actor(n).y - 5, 104, -15, 0
 			spawnObject actor(n).x + 1, actor(n).y - 5, 104, 15, 0
         END IF
 
@@ -1303,7 +1323,7 @@ IF actor(n).exist > 0 THEN
 			IF check THEN
 				level.spawner(actor(n).spawner).object = 62
 				FOR nn = 3 TO 60
-					IF ABS(actor(nn).y - actor(2).y) > 320 THEN
+					IF ABS(actor(nn).y - actor(2).y) > 240 THEN
 						IF actor(nn).control > 0 AND actor(nn).control < 63 THEN
 							'spawnerEnabler(actor(nn).spawner) = spawnerEnabler(actor(nn).spawner) AND &HFFF
 							level.spawner(actor(nn).spawner).object = level.spawner(actor(nn).spawner).object AND &HFFF
@@ -1361,42 +1381,7 @@ IF actor(n).exist > 0 THEN
         CASE 99
          IF actor(n).jump = 1 THEN
          END IF
-
 	END SELECT
-		IF actor(n).life > -1 THEN
-			IF actor(n).life = 0 THEN
-				'debugOut "destroy " + STR$(n)
-				IF actor(n).control > 0 AND actor(n).control < 63 THEN
-				'spawnerEnabler(actor(n).spawner) = 0
-				level.spawner(actor(n).spawner).object = 0
-				'spawnerEnabler(actor(n).spawner) = spawnerEnabler(actor(n).spawner) AND &HFFF
-				END IF
-				IF actor(n).control > 0 AND actor(n).control < 11 THEN
-					soundEvent = SndEnemyDrop
-					actor(n).exist = 1
-					actor(n).flags = 0
-					actor(n).control = 41
-					actor(n).flash = 4
-					actor(n).vecX = 0
-					actor(n).vecY = -20
-					actor(n).y = actor(n).y - 4
-					actor(n).collider = 0
-					actor(n).life = 36
-					actor(n).frame = 98
-					c = tileRead(actor(n).x, actor(n).y)
-					IF c > 29 THEN
-						actor(n).count = actor(n).y + 8
-					ELSE
-						actor(n).count = actor(n).y
-					END IF
-				ELSE
-					destroyObject n    ' getObject
-					'listIDX = actor(n).lNext
-					'getObject = getObject - 1
-				END IF
-			END IF
-				actor(n).life = actor(n).life - 1
-		END IF    
 	END IF 'Page check
 '----------------------------------------------------------------------------
 
@@ -1458,6 +1443,40 @@ IF actor(n).exist > 0 THEN
       END IF
   END IF 'visibility check
 '----------------------------------------------------------------------------
+  IF gfx.page THEN
+	IF actor(n).life > -1 THEN
+			IF actor(n).life = 0 THEN
+				'debugOut "destroy " + STR$(n)
+				IF actor(n).control > 0 AND actor(n).control < 63 THEN
+				'spawnerEnabler(actor(n).spawner) = 0
+				level.spawner(actor(n).spawner).object = 0
+				'spawnerEnabler(actor(n).spawner) = spawnerEnabler(actor(n).spawner) AND &HFFF
+				END IF
+				IF actor(n).control > 0 AND actor(n).control < 11 THEN
+					soundEvent = SndEnemyDrop
+					actor(n).exist = 1
+					actor(n).flags = 0
+					actor(n).control = 41
+					actor(n).flash = 4
+					actor(n).vecX = 0
+					actor(n).vecY = -20
+					actor(n).y = actor(n).y - 4
+					actor(n).collider = 0
+					actor(n).life = 36
+					actor(n).frame = 98
+					c = tileRead(actor(n).x, actor(n).y)
+					IF c > 29 THEN
+						actor(n).count = actor(n).y + 8
+					ELSE
+						actor(n).count = actor(n).y
+					END IF
+				ELSE
+					destroyObject n    ' getObject
+				END IF
+			END IF
+				actor(n).life = actor(n).life - 1
+		END IF
+	END IF
   END IF 'exist check
 LOOP WHILE actor(listIDX).lNext > 1
 
@@ -1982,7 +2001,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -999
 		actor(n).frame = 146
 		actor(n).visX = 24
-		actor(n).visY = 50 
+		actor(n).visY = 55
 	CASE 16  		'SPAWNER
 		actorListNew n
 		actor(n).control = 16    
@@ -2007,14 +2026,14 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).frame = 148
 			actor(n).anim = 148
 			actor(n).visX = 45
-			actor(n).visY = 45
+			actor(n).visY = 50
 			n = getSpawnslot
 		NEXT p
 		actorListNew n
 		actor(n).collider = 1
-		actor(n).x = x + 1
+		actor(n).x = x
 		actor(n).y = y
-		actor(n).count = x + 1
+		actor(n).count = x
 		actor(n).dir = y
 		actor(n).control = c
 		actor(n).exist = 1
@@ -2024,7 +2043,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 146
 		actor(n).anim = 146
 		actor(n).visX = 50
-		actor(n).visY = 50 
+		actor(n).visY = 56
 	CASE 41	   'PICKUP GEM/KEY/ETC...
 		actorListNew n
 		actor(n).control = 41
@@ -2128,8 +2147,7 @@ FUNCTION speedDiff% (x0, x1)
 	speedDiff% = 10 * m
 END FUNCTION
 
-SUB makeParent (child, parent)
-	
+SUB makeParent (child, parent)	
 	actor(child).exist = parent
 	actor(child).parentDX = actor(parent).X
 	actor(child).parentDY = actor(parent).Y

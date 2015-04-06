@@ -14,7 +14,7 @@ aRenderActors PROC
 	
 	mov ds, actorList
 	mov si, actorList + 2	
-	mov es, [bp + 8]			;Sprite render list
+	mov es, [bp + 8]			;Actor render list
 	mov di, [bp + 6]	
 	push ds
 	push si
@@ -50,8 +50,9 @@ getActor:
 	mov actorFlash, ax
 	lodsw						; Load anim frame
 	
-	mov bx, ax					; Anim frame * SIZEOF animdata (10)
+								; Anim frame * SIZEOF animdata (10)
 	shl bx, 1
+	mov bx, ax
 	shl bx, 1
 	shl bx, 1
 	add bx, ax
@@ -166,7 +167,7 @@ exit:
 	pop di
 	pop es
 	retf
-aSpriteQueue ENDP
+aQueueSprites ENDP
 ;-------------------------------------------------------------------------------
 	; animation data:
 	;

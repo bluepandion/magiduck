@@ -429,17 +429,53 @@ SUB loadLevel (fileName AS STRING)
 
 	'debugOut "Level load " + fileName
 	
-	OPEN fileName + ".lvl" FOR BINARY AS #1
-	 FOR n = 1 TO 1600
-	  GET #1, n, loadStr
-	  MID$(tileBuffer, 9760 + n, 1) = loadStr
-	 NEXT n
+	'OPEN fileName + ".lvl" FOR BINARY AS #1
+	' FOR n = 1 TO 1600
+	'  GET #1, n, loadStr
+	'  MID$(tileBuffer, 9760 + n, 1) = loadStr
+	' NEXT n
 	
-	 readOfs = 1601
-	 'debugOut "actor data"
-	 GET #1, readOfs, level
+	' readOfs = 1601
+	' 'debugOut "actor data"
+	' GET #1, readOfs, level
+	'CLOSE #1
+	OPEN "levels.clp" FOR BINARY as # 1
+		GET #1, player.level * 2 + 1, fileOfs
+		
+		GET #1, fileOfs, level.playerX
+		GET #1, fileOfs + 2, level.playerY
+		fileOfs = fileOfs + 4
+		GET #1, fileOfs, level.tileSet
+		GET #1, fileOfs + 8, level.spriteSet
+		fileOfs = fileOfs + 16
+		GET #1, fileOfs, level.coins
+		GET #1, fileOfs + 2, level.keys
+		fileOfs = fileOfs + 4
+		debugOut " level"
+		n = 1
+		DO
+			GET #1, fileOfs, loadStr
+			loadInt = ASC(loadStr)
+			GET #1, fileOfs + 1, loadStr
+			fileOfs = fileOfs + 2
+			FOR nn = 9760 + n TO 9760 + n + loadInt
+				MID$(tileBuffer, nn, 1) = loadStr
+			NEXT nn
+			n = n + loadInt
+		LOOP WHILE n < 1600
+		debugOut " spawners"
+		GET #1, fileOfs, loadStr
+		fileOfs = fileOfs + 1
+		loadInt = ASC(loadStr)
+		debugOut str$(loadInt)
+		FOR n = 1 TO loadInt
+			GET #1, fileOfs, loadStr
+			fileOfs = fileOfs + 1
+			GET #1, fileOfs, level.spawner(ASC(loadStr))
+			fileOfs = fileOfs + 8
+		NEXT n
 	CLOSE #1
-
+	
 	IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
 	
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
@@ -570,17 +606,17 @@ END IF
   IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 
- 'FOR n = 1 TO 30
- ' IF actor(n).exist THEN
-'	COLOR 7
-'  ELSE
-'	COLOR 8
-'  END IF
-'  PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
-' NEXT n
-for n = 0 to 20
-	print asc(menuItem(n).x); asc(menuItem(n).y), asc(menuItem(n).iPrev); asc(menuItem(n).iNext),
-next n
+FOR n = 1 TO 60
+ IF actor(n).exist THEN
+	COLOR 7
+  ELSE
+	COLOR 8
+  END IF
+  PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
+ NEXT n
+'for n = 0 to 20
+	'print asc(menuItem(n).x); asc(menuItem(n).y), asc(menuItem(n).iPrev); asc(menuItem(n).iNext),
+'next n
 END
 
 END SUB

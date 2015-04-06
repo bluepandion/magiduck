@@ -161,10 +161,9 @@ TYPE playerType
  menuContext AS INTEGER
  menuItem AS INTEGER
  menuPrev AS INTEGER
+ menuHLcolor AS INTEGER
  targetX AS INTEGER
  targetY AS INTEGER
- keyPrev AS INTEGER
- keyRelease AS INTEGER
  jumpRelease AS INTEGER
  bouncing AS INTEGER
  vecX AS INTEGER
