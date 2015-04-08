@@ -21,6 +21,8 @@ OPEN "menu.cmm" FOR BINARY AS #2
       INPUT #1, menuNo
       menuNo = menuNo - 1
       INPUT #1, startItem
+      INPUT #1, fineTuneX
+      INPUT #1, fineTuneY
       INPUT #1, clearX
       INPUT #1, clearY
       INPUT #1, clearW
@@ -29,10 +31,10 @@ OPEN "menu.cmm" FOR BINARY AS #2
       INPUT #1, clearAttr
          PUT #2, ofsOFFSETS + menuNo * 6, ofsDATA
          PUT #2, ofsOFFSETS + menuNo * 6 + 4, startItem
-         byte = CHR$(clearX)
+         byte = CHR$(clearX + fineTuneX)
          PUT #2, ofsDATA, byte
             ofsDATA = ofsDATA + 1
-         byte = CHR$(clearY)
+         byte = CHR$(clearY + fineTuneY)
          PUT #2, ofsDATA, byte
             ofsDATA = ofsDATA + 1
          byte = CHR$(clearW)
@@ -59,9 +61,9 @@ OPEN "menu.cmm" FOR BINARY AS #2
                itemText$ = itemText$ + "|"
                itemLen = LEN(itemText$)
                INPUT #1, itemX
-               'itemX = itemX
+               itemX = itemX + fineTuneX
                INPUT #1, itemY
-               'itemY = itemY
+               itemY = itemY + fineTuneY
                INPUT #1, itemW
                INPUT #1, itemH
                itemW = itemLen - 1

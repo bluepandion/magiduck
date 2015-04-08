@@ -172,6 +172,7 @@ TYPE playerType
  vecY AS INTEGER
  walkCounter AS INTEGER
  scoreCounter AS LONG
+ scoreDelta AS LONG
  scoreCounterTarget AS LONG
  scoreCounterInc AS INTEGER
  scoreCounterMode AS INTEGER

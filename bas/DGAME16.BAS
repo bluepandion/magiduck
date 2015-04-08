@@ -201,7 +201,7 @@ CASE 262
 		actor(2).jump = actor(2).jump + 1
 	   CASE 0 TO 1
           myPrint 2, 22, "TIME BONUS            X 30", &H1D1D
-          myPrint 2, 26, "LIFE BONUS            X 2000", &H1D1D
+          myPrint 2, 26, "LIFE BONUS            X 1000", &H1D1D
           myPrint 2, 30, "KEYS                  /"+str$(level.keys), &H1D1D
 		  myPrint 2, 34, "CHESTS                /"+str$(level.keys), &H1D1D
 		  myPrint 2, 38, "COINS                 /"+str$(level.coins), &H1D1D
@@ -224,6 +224,7 @@ CASE 262
           player.scoreCounterTarget = player.time
           player.scoreCounterMode = 0
           player.scoreCounterMul = 300
+		  player.scoreDelta = player.time * 30
 
        CASE 4 TO 6
           w40char.text = "        |"
@@ -244,7 +245,7 @@ CASE 262
           IF actor(2).jump = 7 THEN
               soundEvent = 0
               w40char.text = "         |"
-              a$ = STR$(0& + player.scoreCounter * player.scoreCounterMul / player.scoreCounterInc)
+              a$ = STR$(player.scoreDelta)
               MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
           END IF
           aPrint gfx.videoWrap, &H1E1F, w40char.seg, w40char.ofs, 30, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
@@ -258,6 +259,7 @@ CASE 262
                player.scoreCounterInc = 1
                player.scoreCounterTarget = player.hp
                player.scoreCounterMul = 1000
+			   player.scoreDelta = player.hp * 1000
                actor(2).jump = 4
 			   hudUpdate 4
           CASE 2
@@ -268,9 +270,9 @@ CASE 262
 
         CASE 99 TO 100
             actor(2).jump = actor(2).jump + 1
-			IF player.score > player.levelScore(player.level - 1) THEN
-				IF player.levelscore(player.level - 1) > 0 THEN myPrint 8, 43, "YOU IMPROVED YOUR SCORE", &H1E1E
-				player.levelScore(player.level - 1) = player.score
+			IF player.score > player.levelScore(player.level) THEN
+				IF player.levelscore(player.level) > 0 THEN myPrint 8, 43, "YOU IMPROVED YOUR SCORE", &H1E1E
+				player.levelScore(player.level) = player.score
 			END IF
             myPrint 8, 46, "PRESS SPACE TO CONTINUE", &H1717
         
@@ -478,9 +480,20 @@ CASE 258
 					player.level = 1
 					player.menuContext = -1
 					player.menuMode = 999
+				CASE 3
+					player.menuContextPrev = player.menuContext
+					player.menuContext = 11
+					player.menuMode = 999
 				CASE 5	'quit to dos
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
+					player.menuMode = 999
+				END SELECT
+		CASE 11	'Help
+			SELECT CASE player.menuItem
+				CASE 1	'back
+					player.menuContext = player.menuContextPrev
+					player.menuContextPrev = 0
 					player.menuMode = 999
 				END SELECT
 		END SELECT
@@ -1685,16 +1698,6 @@ SUB initGame
 	walkNote(7) = 27
 	initTestGame
 	'initMainMenu
-END SUB
-
-SUB initMainMenu
-	hudTextLoad &H0, 1
-	loadTiles "logotile"
-	player.level = 8
-	randomOffset = 0
-	DO
-		main
-	LOOP
 END SUB
 
 SUB initTestGame
