@@ -6,9 +6,18 @@ DIM tileBank AS STRING * 2000
 tilebankseg = VARSEG(tileBank)
 tilebankofs = VARPTR(tileBank)
 
-inputfile$ = "..\convert\tileset2.tga"
+IF COMMAND$ = "" OR LEN(COMMAND$) > 8 THEN
+ PRINT "TileConv TGA to CTG converter."
+ PRINT "Invalid file name."
+ PRINT "Use  tileconv [TGA filename without extension]"
+ END
+END IF
 
-outPutFile$ = "tileset2"
+inputFile$ = "..\convert\" + COMMAND$ + ".tga"
+
+'inputFile$ = "..\convert\tileset2.tga"
+
+outPutFile$ = COMMAND$
 
 rawpixel$ = ""
 
@@ -19,10 +28,10 @@ SCREEN 0
 
 COLOR 15
 LOCATE 24, 1:
-PRINT "Loading "; inputfile$
+PRINT "Loading "; inputFile$
 
 
-OPEN inputfile$ FOR BINARY AS #1
+OPEN inputFile$ FOR BINARY AS #1
 
 PRINT LOF(1); " Bytes"
 
@@ -61,7 +70,7 @@ FOR f = a TO LOF(1) - 26
 NEXT f
 CLOSE #1
 
-DO: LOOP WHILE INKEY$ = ""
+'DO: LOOP WHILE INKEY$ = ""
 
 LOCATE 21, 1: PRINT "Converting to 2 pixels per byte ";
 
@@ -113,8 +122,9 @@ BSAVE outPutFile$ + ".ctg", VARPTR(tileBank), 2000
 ' PUT #1, 1, tilebank
 'CLOSE #1
 
-PRINT "Done."
-
+CLS
+COLOR 7, 0
+PRINT "Done: "; COMMAND$ + ".ctg"
 END
 
 n = 0
@@ -125,6 +135,10 @@ FOR a = 1 TO LEN(compPixel$)
  'n = n + 1
  'IF n > 40 THEN n = 0: PRINT ""
 NEXT a
+
+CLS
+
+END
 
 DO: LOOP WHILE INKEY$ = ""
 

@@ -135,17 +135,22 @@ isCollider:
 	xchg bl, bh					;List type * 4 * 32 (SIZEOF * indexes)
 	shr bx, 1
 	add di, bx
-	
+	xor ah, ah
 	mov al, bCollWrite
-	stosb
+	cmp al, 80
+jl positive
+	dec ah
+positive:
+	stosw
 	mov al, bCollWrite + 1
-	stosb
+	stosw
 	mov al, bCollWrite + 2
 	add al, bCollWrite
-	stosb
+	stosw
 	mov al, bCollWrite + 3
 	add al, bCollWrite + 1
-	stosb
+	stosw
+	
 	pop bx
 	pop di
 	pop es
@@ -172,7 +177,16 @@ aQueueSprites ENDP
 	; animation data:
 	;
 	; [ jmp ][ idx+] [ idx-] [  x+ ] [  x- ] [  y  ]  					= 6 Bytes / 1536 + 512
-	; [ jmp ]:[  w  ]:[  h  ]:[  y  ]:[ ofs+]-[     ]:[  x+ ]:[ ofs-]-[     ]:[  x- ] = 10 Bytes / 2560 bytes
+	
+	; [ jmp ]
+	; [  w  ]
+	; [  h  ]
+	; [  y  ]
+	; [ ofs+]-[     ]
+	; [  x+ ]
+	; [ ofs-]-[     ]
+	; [  x- ] 
+	
 	;
 	animationData 	db 	2560 dup(0)	
 	

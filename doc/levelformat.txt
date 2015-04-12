@@ -7,14 +7,12 @@
 			
 			0017-xxxx	Tile map encoded in RLE as follows:
 						[ byte: Rep  ] [ byte: Tile ]
-						255, 255 = end of tile map.
 			
 			xxxx-xxxx	Number of spawners as [ byte ]
-						Spawner data as follows:
+			xxxx-xxxx	Spawner data as follows:
 						[ byte: index ]
 						[ byte: x	  ]
 						[ byte: y	  ]
 						[ byte: actor ]
 						[ byte: flags ]
 			END OF ENTRY			
-

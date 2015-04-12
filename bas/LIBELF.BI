@@ -12,15 +12,18 @@ DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
 DECLARE SUB aPrint (BYVAL wrapOfs%, BYVAL attributes%, BYVAL TextSeg%, BYVAL TextOfs%, BYVAL Column%, BYVAL Row%, BYVAL writeSeg%, BYVAL writeOfs%)
 DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)
-DECLARE SUB aTileRead (BYVAL resultSeg%, BYVAL resultOfs%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
+DECLARE FUNCTION aTileRead% (BYVAL x%, BYVAL y%)
 DECLARE SUB aTileWrite (BYVAL writeIndex%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
+
 DECLARE SUB aSoundFX (BYVAl fx%, BYVAL offset%)
 DECLARE SUB aSoundNote (BYVAL note%)
 DECLARE SUB aSoundStop ()
 DECLARE SUB aSoundPlay ()
+
 DECLARE SUB aSetup (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aCopyPage (BYVAL sourceOfs%, BYVAL destOfs%)
 DECLARE SUB aMenuHiLite (BYVAL x%, BYVAL y%, BYVAL w%, BYVAL h%, BYVAL attribs%, BYVAL pageOfs%)
+
 DECLARE SUB aTimerStart ()
 DECLARE SUB aTimerEnd ()
 DECLARE SUB aTimerWait ()
@@ -84,144 +87,144 @@ COMMON SHARED hudBufferSeg AS INTEGER
 COMMON SHARED hudBufferOfs AS INTEGER
 
 TYPE objectType
- X AS INTEGER
- Y AS INTEGER
- frame AS INTEGER
- flags AS INTEGER
- 
- vecX AS INTEGER
- vecY AS INTEGER
- collider AS INTEGER
- parentDX AS INTEGER
- parentDY AS INTEGER
+	X AS INTEGER
+	Y AS INTEGER
+	frame AS INTEGER
+	flags AS INTEGER
+	collider AS INTEGER
+	flash AS INTEGER
 
- anim AS INTEGER
- life AS INTEGER
- control AS INTEGER
- jump AS INTEGER
- count AS INTEGER
- flash AS INTEGER
- exist AS INTEGER
- spawner AS INTEGER
- dir AS INTEGER
- visX AS INTEGER
- visY AS INTEGER
+	vecX AS INTEGER
+	vecY AS INTEGER
+	parentDX AS INTEGER
+	parentDY AS INTEGER
 
- lNext AS INTEGER
- lPrev AS INTEGER
+	exist AS INTEGER
+	control AS INTEGER
+	life AS INTEGER
+	anim AS INTEGER
+	jump AS INTEGER
+	count AS INTEGER
+	dir AS INTEGER
+	spawner AS INTEGER
+	visX AS INTEGER
+	visY AS INTEGER
+
+	lNext AS INTEGER
+	lPrev AS INTEGER
 END TYPE
 
 TYPE spawnerType
- X AS INTEGER
- Y AS INTEGER
- object AS INTEGER
- flags AS INTEGER
+	X AS INTEGER
+	Y AS INTEGER
+	object AS INTEGER
+	flags AS INTEGER
 END TYPE
 
 TYPE levelType
- spawner(0 TO 80) as spawnerType
- playerX AS INTEGER
- playerY AS INTEGER
- tileSet AS STRING * 8
- spriteSet AS STRING * 8
- keys AS INTEGER
- coins AS INTEGER
+	spawner(0 TO 80) as spawnerType
+	playerX AS INTEGER
+	playerY AS INTEGER
+	tileSet AS STRING * 8
+	spriteSet AS STRING * 8
+	keys AS INTEGER
+	coins AS INTEGER
 END TYPE
 
 TYPE animDataType
- index(0 TO 1) AS INTEGER
- X(0 TO 1) AS INTEGER
- Y AS INTEGER
- jump AS INTEGER
+	index(0 TO 1) AS INTEGER
+	X(0 TO 1) AS INTEGER
+	Y AS INTEGER
+	jump AS INTEGER
 END TYPE
 
 TYPE collisionType
- index AS INTEGER
- x0 AS INTEGER
- y0 AS INTEGER
- x1 AS INTEGER
- y1 AS INTEGER
+	index AS INTEGER
+	x0 AS INTEGER
+	y0 AS INTEGER
+	x1 AS INTEGER
+	y1 AS INTEGER
 END TYPE
 
 TYPE playerType
- score AS LONG
- secrets AS INTEGER
- lives AS INTEGER
- hp AS INTEGER
- time AS INTEGER
- hasKey AS INTEGER
- shootDelay AS INTEGER
- flying AS INTEGER
- level AS INTEGER
- levelPrev AS INTEGER
- wave AS INTEGER
- wavePrev AS INTEGER
- hudLock AS INTEGER
- mode AS INTEGER
- menuMode AS INTEGER
- menuContext AS INTEGER
- menuContextPrev AS INTEGER
- menuItem AS INTEGER
- menuPrev AS INTEGER
- menuHLcolor AS INTEGER
- targetX AS INTEGER
- targetY AS INTEGER
- jumpRelease AS INTEGER
- bouncing AS INTEGER
- vecX AS INTEGER
- vecY AS INTEGER
- walkCounter AS INTEGER
- scoreCounter AS LONG
- scoreDelta AS LONG
- scoreCounterTarget AS LONG
- scoreCounterInc AS INTEGER
- scoreCounterMode AS INTEGER
- scoreCounterSound AS INTEGER
- scoreCounterMul AS INTEGER
- tileSet AS STRING * 8
- spriteSet AS STRING * 8
- episode AS STRING * 8
- levelScore(1 to 9) AS LONG
- gotKeys AS INTEGER
- gotCoins AS INTEGER
- gotChests AS INTEGER
+	score AS LONG
+	secrets AS INTEGER
+	lives AS INTEGER
+	hp AS INTEGER
+	time AS INTEGER
+	hasKey AS INTEGER
+	shootDelay AS INTEGER
+	flying AS INTEGER
+	level AS INTEGER
+	levelPrev AS INTEGER
+	wave AS INTEGER
+	wavePrev AS INTEGER
+	hudLock AS INTEGER
+	mode AS INTEGER
+	menuMode AS INTEGER
+	menuContext AS INTEGER
+	menuContextPrev AS INTEGER
+	menuItem AS INTEGER
+	menuPrev AS INTEGER
+	menuHLcolor AS INTEGER
+	targetX AS INTEGER
+	targetY AS INTEGER
+	jumpRelease AS INTEGER
+	bouncing AS INTEGER
+	vecX AS INTEGER
+	vecY AS INTEGER
+	walkCounter AS INTEGER
+	scoreCounter AS LONG
+	scoreDelta AS LONG
+	scoreCounterTarget AS LONG
+	scoreCounterInc AS INTEGER
+	scoreCounterMode AS INTEGER
+	scoreCounterSound AS INTEGER
+	scoreCounterMul AS INTEGER
+	tileSet AS STRING * 8
+	spriteSet AS STRING * 8
+	episode AS STRING * 8
+	levelScore(1 to 9) AS LONG
+	gotKeys AS INTEGER
+	gotCoins AS INTEGER
+	gotChests AS INTEGER
 END TYPE
 
 TYPE spriteListType
- offset AS INTEGER
- X AS INTEGER
- Y AS INTEGER
- w AS INTEGER
- h AS INTEGER
+	offset AS INTEGER
+	X AS INTEGER
+	Y AS INTEGER
+	w AS INTEGER
+	h AS INTEGER
 END TYPE
 
 TYPE gfxType
- width AS INTEGER
- height AS INTEGER
- segment AS INTEGER
- adapter AS INTEGER
- oldMode AS INTEGER
- glyphHeight AS INTEGER
- rows AS INTEGER
- videoWrap AS INTEGER
- pageWrap AS INTEGER
- tileOfs AS INTEGER
- tileArea AS INTEGER
- windowOfs(0 TO 1) AS INTEGER
- windowX(0 TO 1) AS INTEGER
- windowY(0 TO 1) AS INTEGER
- screenX(0 TO 1) AS INTEGER
- screenY(0 TO 1) AS INTEGER
- screenoldx(0 TO 1) AS INTEGER
- screenoldy(0 TO 1) AS INTEGER
- pageOfs(0 TO 1) AS INTEGER
- page AS INTEGER
- listLen(0 TO 1) AS INTEGER
+	width AS INTEGER
+	height AS INTEGER
+	segment AS INTEGER
+	adapter AS INTEGER
+	oldMode AS INTEGER
+	glyphHeight AS INTEGER
+	rows AS INTEGER
+	videoWrap AS INTEGER
+	pageWrap AS INTEGER
+	tileOfs AS INTEGER
+	tileArea AS INTEGER
+	windowOfs(0 TO 1) AS INTEGER
+	windowX(0 TO 1) AS INTEGER
+	windowY(0 TO 1) AS INTEGER
+	screenX(0 TO 1) AS INTEGER
+	screenY(0 TO 1) AS INTEGER
+	screenoldx(0 TO 1) AS INTEGER
+	screenoldy(0 TO 1) AS INTEGER
+	pageOfs(0 TO 1) AS INTEGER
+	page AS INTEGER
+	listLen(0 TO 1) AS INTEGER
 END TYPE
 
 TYPE angleType
- X(0 TO 63) AS INTEGER
- Y(0 TO 63) AS INTEGER
+	X(0 TO 63) AS INTEGER
+	Y(0 TO 63) AS INTEGER
 END TYPE
 
 COMMON SHARED gfx AS gfxType

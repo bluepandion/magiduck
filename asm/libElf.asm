@@ -2126,49 +2126,46 @@ aTileRead PROC
 ;
 ; Read tile from tilemap
 ;
-; Returns a tile index from the tilemap from position (x,y).
+; Returns AX = tile index from the tilemap at position (x,y).
 ;
 ;============================================================================
-	push es
-	push di
 	push ds
 	push si
 	push bp
 	mov bp,sp
-	add bp, 8
+	add bp, 4
 	
 	mov ds, gfxTileBank
 	mov si, gfxTileBank + 2
 	
-	mov es, tileRead
-	mov di, tileRead + 2
-	
 	mov bx, [bp + 8]				;BX = X / 4
 	shr bx, 1
 	shr bx, 1
+cmp bx, 80
+jb xInBounds
+	xor bx, bx
+xInBounds:
 	add si, bx
-
-	mov ax, [bp + 6]				;AX = Y * 80 (from pixel coords to tile index)
-	xchg al, ah						
-	shr ax, 1
-	shr ax, 1						;y * 64
-	mov bx, ax
-	shr bx, 1
-	shr bx, 1
+									
+	mov ax, [bp + 6]				;Current y is (tile y * 8)
+	and al, 0F8h
+cmp ax, 640
+jb yInBounds
+	xor ax, ax
+yInBounds:
+	mov bx, ax						
+	shr bx, 1						;BX = y * 4
+	shl ax, 1						;AX = y * 16
 	add si, bx
 	add si, ax
 		
 	lodsb							;AL = tile index at (x,y)
 	xor ah, ah						;AH = 0
-	stosw							;Store result at ES:DI
-
-	pop bp
+									;QuickBasic reads AX as the
+	pop bp							; result integer.
 	pop si
 	pop ds
-	pop di
-	pop es
 	retf 4
-
 ;================================================================================	
 aTileRead ENDP
 aTileWrite PROC
