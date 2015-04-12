@@ -51,7 +51,7 @@ DIM SHARED KBoldSeg AS INTEGER              'KB state save.
 DIM SHARED KBoldOfs AS INTEGER
 DIM SHARED Keyflags AS INTEGER
 
-DIM SHARED spriteBank AS STRING * 6402
+DIM SHARED spriteBank AS STRING * 7680
 
 DIM SHARED tilemapReadX AS INTEGER              '0-7 scroll offset
 DIM SHARED tilemapReadY AS INTEGER              '0-3 scroll offset
@@ -61,8 +61,6 @@ DIM SHARED tileBuffer AS STRING * 11362         '7760 + 1600 + 2000
 
 DIM SHARED tilePosXlookUp(-16 TO 95) AS INTEGER
 DIM SHARED tilePosYlookUp(-16 TO 655) AS INTEGER
-
-DIM SHARED errorMessage$
 
 DIM SHARED camSpeedX(-23 TO 23)
 DIM SHARED camSpeedY(-19 TO 19)
@@ -97,7 +95,7 @@ SUB elfInit
 	pLong& = VARPTR(spriteBank)
 	a$ = MKL$(pLong&)
 	spriteBankOfs = CVI(a$)                        'Sprite Bank main
-	pLong& = pLong& + 3840
+	pLong& = pLong& + 4480
 	a$ = MKL$(pLong&)
 	spriteBankAuxOfs = CVI(a$)                     'Sprite Bank aux portion
 
@@ -122,12 +120,6 @@ SUB elfInit
 	pLong& = pLong& + 40                          'Offset tilebuffer by 40
 	a$ = MKL$(pLong&)                              'for some safety
 	tileBufferOfs = CVI(a$)
-	'------------------------------------------------------
-	FOR n = 0 TO 127
-	 spriteOffset(n) = spriteBankOfs
-	 spriteWidth(n) = 1
-	 spriteHeight(n) = 1
-	NEXT n
 	'------------------------------------------------------
 	gfx.windowOfs(0) = 0
 	gfx.windowOfs(1) = 0
@@ -199,7 +191,6 @@ SUB elfInit
 	 MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
 	
 	'hudTextLoad 0, 1
-	loadSprites "spducks", 0
 	'-----------------------------------------------------------------------
 	' Setup keyboard
 	'-----------------------------------------------------------------------
@@ -214,7 +205,7 @@ END SUB
 
 FUNCTION getSpawnSlot
 
- FOR n = 3 TO 60
+ FOR n = 4 TO 60
   IF actor(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
  NEXT n
  getSpawnSlot = 60
@@ -486,57 +477,37 @@ SUB loadLevel
 END SUB
 
 SUB loadSounds (file$)
- OPEN file$ + ".snd" FOR BINARY AS #1
-  GET #1, 1, soundTrack
- CLOSE #1
+	OPEN file$ + ".snd" FOR BINARY AS #1
+		GET #1, 1, soundTrack
+	CLOSE #1
 END SUB
 
 SUB loadSprites (file$, offset)
-
- IF offset = 0 THEN
-	offset = spriteBankOfs
-  ELSE
-	offset = spriteBankAuxOfs
-	player.spriteSet = file$
- END IF
-
- DEF SEG = spriteBankSeg
-
- BLOAD file$ + ".csg", offset
-
- DEF SEG
-
- OPEN file$ + ".csd" FOR BINARY AS #1
-  fileOfs = 1
-  a$ = MKL$(offset)
-  baseOfs& = CVL(a$)
-
-  DO
-	GET #1, fileOfs, n
-	 IF n <> -1 THEN
-	  GET #1, fileOfs + 2, loadInt
-		pLong& = baseOfs& + loadInt
-		a$ = MKL$(pLong&)
-		spriteOffset(n) = CVI(a$)
-		'PRINT CVL(a$)
-		'PRINT spriteOffset(n)
-		'DO: LOOP WHILE INKEY$ = ""
-	  GET #1, fileOfs + 4, spriteWidth(n)
-	  GET #1, fileOfs + 6, spriteHeight(n)
-	  fileOfs = fileOfs + 8
-	 END IF
-  LOOP UNTIL n = -1
-  fileOfs = fileOfs + 2
-
-  DO
-	GET #1, fileOfs, n
-	IF n <> -1 THEN
-	 GET #1, fileOfs + 2, animation(n)
-	 fileOfs = fileOfs + 14
+	IF offset = 0 THEN
+		offset = spriteBankOfs
+	ELSE
+		offset = spriteBankAuxOfs
+		player.spriteSet = file$
 	END IF
-  LOOP UNTIL n = -1
- CLOSE #1
 
+	DEF SEG = spriteBankSeg
+	BLOAD file$ + ".csg", offset
+	DEF SEG
+	debugOut "load Anims:"
+	OPEN file$ + ".csd" FOR BINARY AS #1
+		fileOfs = 1
+		DO
+			GET #1, fileOfs, n
+			fileOfs = fileOfs + 2
+			debugOut str$(n)
+			IF n > -1 THEN
+				GET #1, fileOfs, animation(n)
+				animation(n).offset(0) = animation(n).offset(0) + spriteBankOfs
+				animation(n).offset(1) = animation(n).offset(1) + spriteBankOfs
+				fileOfs = fileOfs + 14
+			END IF
+		LOOP UNTIL n = -1
+	CLOSE #1
 END SUB
 
 SUB loadText (screenOfs, textOfs)
@@ -615,6 +586,18 @@ FOR n = 1 TO 60
 	COLOR 8
   END IF
  NEXT n
+
+ for n = 1 to 60
+  print n;
+  print animation(n).offset(0);
+  print animation(n).offset(1);
+  print animation(n).x;
+  print animation(n).y;
+  print animation(n).w;
+  print animation(n).h;
+  print animation(n).jump
+  'do:loop while inkey$=""
+ next n
 'for n = 0 to 20
 	'print asc(menuItem(n).x); asc(menuItem(n).y), asc(menuItem(n).iPrev); asc(menuItem(n).iNext),
 'next n
@@ -789,26 +772,26 @@ SUB menuLoad (menuNo%)
 	menuClear
 	
 	OPEN "menu.cmm" FOR BINARY AS #1
-		GET #1, menuNo% * 6 + 1, loadOfs
+		GET #1, menuNo% * 6 + 1, fileOfs
 		GET #1, menuNo% * 6 + 3, loadInt
 		GET #1, menuNo% * 6 + 5, player.menuItem
 		itemCount = loadInt
-		GET #1, loadOfs, loadStr
+		GET #1, fileOfs, loadStr
 		tileCopyList(0, gfx.page).x = ASC(loadStr)
-		GET #1, loadOfs + 1, loadStr
+		GET #1, fileOfs + 1, loadStr
 		tileCopyList(0, gfx.page).y = ASC(loadStr)
-		GET #1, loadOfs + 2, loadStr
+		GET #1, fileOfs + 2, loadStr
 		tileCopyList(0, gfx.page).w = ASC(loadStr)
-		GET #1, loadOfs + 3, loadStr
+		GET #1, fileOfs + 3, loadStr
 		tileCopyList(0, gfx.page).h = ASC(loadStr)
-		GET #1, loadOfs + 4, loadInt
-		loadOfs = loadOfs + 6		
+		GET #1, fileOfs + 4, loadInt
+		fileOfs = fileOfs + 6		
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 		
 		for item = 1 to itemCount
-				GET #1, loadOfs, loadInt
-				loadOfs = loadOfs + 2
+				GET #1, fileOfs, loadInt
+				fileOfs = fileOfs + 2
 				itemIDX = loadInt
 				
 				n = getSpawnSlot
@@ -820,24 +803,24 @@ SUB menuLoad (menuNo%)
 					'debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
 				END IF
 				
-				GET #1, loadOfs, actor(n).lPrev
-				GET #1, loadOfs + 2, actor(n).lNext
-				GET #1, loadOfs + 4, actor(n).x
-				GET #1, loadOfs + 6, actor(n).y
-				GET #1, loadOfs + 8, actor(n).vecX
-				GET #1, loadOfs + 10, actor(n).vecY
-				GET #1, loadOfs + 12, actor(n).frame
-				loadOfs = loadOfs + 14
+				GET #1, fileOfs, actor(n).lPrev
+				GET #1, fileOfs + 2, actor(n).lNext
+				GET #1, fileOfs + 4, actor(n).x
+				GET #1, fileOfs + 6, actor(n).y
+				GET #1, fileOfs + 8, actor(n).vecX
+				GET #1, fileOfs + 10, actor(n).vecY
+				GET #1, fileOfs + 12, actor(n).frame
+				fileOfs = fileOfs + 14
 
 				'debugOut str$(actor(n).x)+str$(actor(n).y)+str$(actor(n).vecX)+str$(actor(n).vecY)+str$(actor(n).frame)
 				
-				GET #1, loadOfs, loadStr
+				GET #1, fileOfs, loadStr
 				itemLen = ASC(loadStr)
-				loadOfs = loadOfs + 1
+				fileOfs = fileOfs + 1
 				loadVarStr = SPACE$(itemLen)
-				GET #1, loadOfs, loadVarStr
+				GET #1, fileOfs, loadVarStr
 				w40char.text = loadVarStr
-				loadOfs = loadOfs + itemLen
+				fileOfs = fileOfs + itemLen
 		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page) * 2
 		NEXT item
 		

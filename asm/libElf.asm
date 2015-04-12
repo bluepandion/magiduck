@@ -900,8 +900,8 @@ aSpriteList PROC
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
-; Draws two pixels at once, compositing them to canvas with a mask byte. byte[Pixel | Pixel] byte[Mask | Mask]
-;
+; Draws two pixels at once, compositing them to canvas with a mask byte.
+; byte[Pixel | Pixel] byte[Mask | Mask]
 ; Uses a sprite list to draw many sprites before far return.
 ; Clips sprites at screen edges.
 ;

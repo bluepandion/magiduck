@@ -176,7 +176,8 @@ END SUB
 	STATIC scoreDelta AS LONG
 	STATIC parent
 	STATIC advanceAnims
-
+	STATIC dtAnims
+	
 	entityCounter = 0
 	scoreDelta = player.score
 	spriteListIndex = 0
@@ -187,7 +188,15 @@ END SUB
 	colCount(1) = -1
 	colCount(2) = -1
 	colCount(3) = -1
-
+	
+	dtAnims = dtAnims + 1
+	IF dtAnims > 2 THEN
+		dtAnims = 0
+		advanceAnims = -1
+	ELSE
+		advanceAnims = 0
+	END IF
+	
 	n = 2
 '------------------------------------------------------------------------------
  REM  _____         _______ __   __ _______  ______
@@ -328,7 +337,7 @@ CASE 261
 
    screenTargetX = actor(2).x - 19
    screenTargetY = actor(2).y - 36
-   handleCamera            
+   handleCamera
 '------------------------------------------------------------------------------
 'Level Clear - sync video pages
 CASE 260
@@ -579,18 +588,19 @@ CASE 255
 		maxY = 30
 		speedMod = 10
 		friction = 5
-		IF player.ShootDelay < 6 THEN switchAnim n, 10
+		IF player.ShootDelay < 6 THEN switchAnim n, 5
 		IF kbArray(29) THEN
 			player.vecY = player.vecY + 2
 			maxY = 10
 		ELSE
 			player.jumpRelease = -1
 			IF player.Bouncing > 0 THEN
-            maxY = 38
-            player.Bouncing = player.Bouncing - 1
-            player.vecY = player.vecY + 2 - gfx.page
-		ELSE
-            player.vecY = player.vecY + 15
+				maxY = 38
+				player.Bouncing = player.Bouncing - 1
+				player.vecY = player.vecY + 2 - gfx.page
+			ELSE
+				player.vecY = player.vecY + 15
+			END IF
 		END IF
 	END IF
 
@@ -598,15 +608,15 @@ CASE 255
 		screenTargetYlock = -1
 	END IF
 
-	IF c = 27 OR c = 26 THEN
-		IF kbArray(29) = 0 THEN player.jumpRelease = -1
-			collisionFloor = 1
-			maxY = 5
-			IF c = 27 THEN minY = -15
-			friction = 1
-			speedMod = 4
-		END IF
-	END IF
+'	'IF c = 27 OR c = 26 THEN
+'		IF kbArray(29) = 0 THEN player.jumpRelease = -1
+'			collisionFloor = 1
+'			maxY = 5
+'			IF c = 27 THEN minY = -15
+'			friction = 1
+'			speedMod = 4
+'		END IF
+'	END IF
 
     IF actor(2).exist > 1 THEN
 		IF kbArray(29) = 0 THEN player.jumpRelease = -1
@@ -617,7 +627,10 @@ CASE 255
     END IF
    
     IF collisionFloor THEN
-		IF player.vecX = 0 AND player.ShootDelay < 6 THEN switchAnim n, 5
+		IF player.vecX = 0 AND player.ShootDelay < 6 THEN 
+			actor(2).frame = 1
+			actor(2).anim = 1
+		END IF
 		IF kbArray(29) AND player.jumpRelease THEN
 			player.jumpRelease = 0
 			player.vecY = -35
@@ -626,9 +639,9 @@ CASE 255
 		END IF
 	END IF
 
-   c = tileRead(actor(n).x, actor(n).y - 6)
+   c = tileRead(actor(n).x, actor(n).y - 7)
    IF c > 29 THEN
-      actor(n).y = (actor(n).y AND &HFFF8) + 6
+      actor(n).y = (actor(n).y AND &HFFF8) + 7
       player.vecY = 0
    END IF
 
@@ -637,7 +650,7 @@ CASE 255
 	  addScore 998
       soundEvent = 92
       x = (actor(2).x) AND &HFFFC
-      y = (actor(2).y - 8) AND &HFFF8
+      y = (actor(2).y - 7) AND &HFFF8
       tileWrite x, y, 0
       aUpdateTile x, y
       spawnObject x, y, 99, 0, 0
@@ -658,7 +671,7 @@ CASE 255
       player.vecX = player.vecX - speedMod
       actor(n).flags = 1
       IF collisionFloor THEN
-         switchAnim n, 40
+         switchAnim n, 2
          'IF fraction(2, fractionC) THEN
          '   'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
          '   player.walkCounter = (player.walkCounter + 1) AND 7
@@ -670,7 +683,7 @@ CASE 255
       player.vecX = player.vecX + speedMod
       actor(n).flags = 0
       IF collisionFloor THEN
-         switchAnim n, 40
+         switchAnim n, 2
          'IF fraction(2, fractionC) THEN
          '   'sounds.queue(sounds.readPos) = walkNote(player.walkCounter)
          '   player.walkCounter = (player.walkCounter + 1) AND 7
@@ -688,7 +701,7 @@ CASE 255
       player.ShootDelay = 10
       spawnObject actor(2).x, actor(2).y - 6, 100, actor(n).flags, 0
       soundEvent = 55
-      switchAnim n, 30
+      switchAnim n, 8
    END IF
 
    IF player.hp = 0 THEN
@@ -696,6 +709,7 @@ CASE 255
       actor(2).control = 256
       actor(2).count = 0
 	  actor(2).frame = 0
+	  actor(3).frame = 0
       actor(2).vecX = 0
       actor(2).vecY = 0
       FOR b = 0 TO 63 STEP 8
@@ -735,6 +749,8 @@ CASE 255
    IF screenTargetYlock = -1 THEN
       screenTargetY = actor(2).y - 28
    END IF
+   actor(3).flags = actor(2).flags
+   actor(3).flash = actor(2).flash
 END SELECT
 
 playerX = actor(2).x
@@ -854,17 +870,17 @@ IF actor(n).exist > 0 THEN
 		CASE 0 
 			soundEvent = SndEggyJumpHi
 			actor(n).vecY = -30
-			actor(n).frame = 62
+			actor(n).frame = 16
 			actor(n).count = actor(n).count + 1
 		CASE 5
 			soundEvent = SndEggyJumpLo
 			actor(n).vecY = -20
-			actor(n).frame = 62
+			actor(n).frame = 16
 			actor(n).count = actor(n).count + 1
 		CASE 10
 			soundEvent = SndEggyJumpLo
 			actor(n).vecY = -20
-			actor(n).frame = 62
+			actor(n).frame = 16
 			actor(n).count = actor(n).count + 1
 		CASE 15
 			actor(n).count = -1
@@ -872,7 +888,7 @@ IF actor(n).exist > 0 THEN
 		IF actor(n).vecY > 0 THEN
 			c = tileRead(actor(n).x, actor(n).y)
 			IF c > 29 THEN
-				actor(n).frame = 60
+				actor(n).frame = 17
 				actor(n).y = actor(n).y AND &HFFF8
 				actor(n).vecY = 0
 				actor(n).count = actor(n).count + 1
@@ -915,7 +931,7 @@ IF actor(n).exist > 0 THEN
 				SELECT CASE C
 				CASE 57 TO 59
 					soundEvent = 44
-					a = 130
+					'a = 130
 					spawnObject actor(n).x, actor(n).y, 99, 0, 0
 					actor(n).vecY = 2
 					actor(n).flash = 16
@@ -923,13 +939,13 @@ IF actor(n).exist > 0 THEN
 					IF c = 58 THEN t = 28
 				CASE 55
 					soundEvent = 122
-					a = 160
+					'a = 160
 					t = 54
 					actor(n).vecY = 0
 					IF player.hp > 1 THEN
-						o = 88
+						o = 23
 					ELSE
-						o = 158
+						o = 25
 					END IF
 					spawnObject actor(n).x + 2, actor(n).y, 41, o, 0
 				CASE 56
@@ -948,7 +964,7 @@ IF actor(n).exist > 0 THEN
 				actor(n).flags = 0
 				actor(n).control = 0
 				actor(n).life = 2
-				actor(n).frame = a
+				actor(n).frame = 39
 				actor(n).collider = 0
 			ELSE
 				soundEvent = 44
@@ -957,7 +973,7 @@ IF actor(n).exist > 0 THEN
 				actor(n).vecX = 0
 				actor(n).collider = 0
 				actor(n).life = 2
-				switchAnim n, 110
+				actor(n).frame = 34
 				actor(n).vecY = -5
 				soundEvent = 44
 			END IF
@@ -1064,12 +1080,12 @@ IF actor(n).exist > 0 THEN
             END IF
 		END IF
 
-		IF actor(n).life < 24 AND actor(n).anim <> 90 THEN actor(n).flash = 36
+		IF actor(n).life < 24 AND actor(n).frame <> 21 THEN actor(n).flash = 36
 
 		IF playerDeltaX < 5 AND ABS(actor(2).y - actor(n).y) < 8 THEN
             level.spawner(actor(n).spawner).object = 0
             soundEvent = 110
-            IF actor(n).anim = 90 THEN
+            IF actor(n).frame = 21 THEN
 				player.score = player.score + 500
 				player.hasKey = player.hasKey + 1
 				player.gotKeys = player.gotKeys + 1
@@ -1087,8 +1103,8 @@ IF actor(n).exist > 0 THEN
 				actor(n).flash = 0
 				actor(n).life = 5
 				actor(n).control = 0
-				switchAnim n, 93
-				if actor(n).anim = 98 THEN soundEvent = 110
+				actor(n).frame = 30
+				if actor(n).frame = 25 THEN soundEvent = 110
 			END IF
 		END IF
 
@@ -1101,15 +1117,15 @@ IF actor(n).exist > 0 THEN
 			player.score = player.score + 1000
 			player.gotChests = player.gotChests + 1
 			player.hasKey = player.hasKey - 1
-			spawnObject actor(n).x - 5, actor(n).y - 12, 41, 98, 0
-			spawnObject actor(n).x - 3, actor(n).y - 14, 41, 98, 0
-			spawnObject actor(n).x, actor(n).y - 16, 41, 88, 0
-			spawnObject actor(n).x + 3, actor(n).y - 15, 41, 98, 0
-			spawnObject actor(n).x + 5, actor(n).y - 14, 41, 98, 0
+			spawnObject actor(n).x - 5, actor(n).y - 12, 41, 22, 0
+			spawnObject actor(n).x - 3, actor(n).y - 14, 41, 22, 0
+			spawnObject actor(n).x, actor(n).y - 16, 41, 23, 0
+			spawnObject actor(n).x + 3, actor(n).y - 15, 41, 22, 0
+			spawnObject actor(n).x + 5, actor(n).y - 14, 41, 22, 0
 			actor(n).control = 0
 			actor(n).life = 3
-			actor(n).frame = 162
-			actor(n).vecY = -5
+			actor(n).frame = 0
+			'actor(n).vecY = -5
 			soundEvent = SndGetChest
 			level.spawner(actor(n).spawner).object = 0
 			hudUpdate 16
@@ -1131,6 +1147,7 @@ IF actor(n).exist > 0 THEN
 			actor(n).count = 16
 			actor(n).collider = 2
 			actor(n).visY = 50
+			actor(n).frame = 75
 			'actor(n).dir = actor(n).vecX
 			'actor(n).vecX = 0
         END IF
@@ -1140,9 +1157,9 @@ IF actor(n).exist > 0 THEN
 		ELSE
 			speed = 10
 			actor(n).count = actor(n).count - 1
-			actor(n).frame = 239
+			actor(n).frame = 1
 			IF actor(n).count = 0 THEN
-				actor(n).frame = 232
+				actor(n).frame = 72
 				actor(n).collider = 1
 				actor(n).visY = 35
 				'actor(n).vecX = actor(n).dir
@@ -1236,7 +1253,7 @@ IF actor(n).exist > 0 THEN
          CASE 0
             IF playerDeltaX < 16 AND playerDeltaY < 32 AND actor(2).y > actor(n).y THEN
              actor(n).count = 1
-             actor(n).frame = 202
+             actor(n).frame = 86
              actor(n).jump = actor(2).x
             END IF
 
@@ -1352,7 +1369,7 @@ IF actor(n).exist > 0 THEN
 		 x = (dtMain1 + actor(n).y) AND 31
 		 IF x > 10 THEN
           IF x = 11 THEN
-           actor(n).frame = 152: soundEvent = 66
+           actor(n).frame = 48: soundEvent = 66
           END IF
           IF x = 15 THEN
            spawnObject actor(n).x + actor(n).dir, actor(n).y - 2, 111, actor(n).flags, -10
@@ -1360,7 +1377,7 @@ IF actor(n).exist > 0 THEN
            spawnObject actor(n).x + actor(n).dir, actor(n).y - 2, 111, actor(n).flags, 10
           END IF
          ELSE
-           actor(n).frame = 150
+           actor(n).frame = 47
          END IF
 
        'SPIKE BALL BOUNCE
@@ -1437,7 +1454,7 @@ IF actor(n).exist > 0 THEN
         CASE 64
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 162
+			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 53
 			playerDeltaY = actor(2).y - actor(n).y
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
 				IF actor(n).count = 0 AND player.levelScore(actor(n).jump) = 0 THEN
@@ -1467,73 +1484,53 @@ IF actor(n).exist > 0 THEN
 	END IF
 '----------------------------------------------------------------------------
 
-      parts = animation(actor(n).frame).jump AND actor(n).frame > 0
-      
-      flipIndex = actor(n).flags AND 1
+	flash = -(NOT actor(n).flash AND 1)
+	actor(n).flash = actor(n).flash + (actor(n).flash > 0)
+	frame = actor(n).frame
+	IF advanceAnims THEN actor(n).frame = actor(n).frame + animation(frame).jump
+	
+	'IF animation(frame).offset(0) = 0 THEN
+	' errorMessage$ = "Actor"+str$(n)+"/"+str$(actor(n).control)+" empty frame @ "+str$(frame)
+	' quit
+	'END IF
+	
+	x = actor(n).x - screenX + animation(frame).x + 20
+	y = actor(n).y - screenY + animation(frame).y + 20
 
-      flash = NOT actor(n).flash AND 1
-      actor(n).flash = actor(n).flash + (actor(n).flash > 0)
+	IF actor(n).collider THEN           
+		IF frame AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
+			IF flash THEN
+				spriteList(spriteListIndex, gfx.page).offset = animation(frame).offset(actor(n).flags)
+				spriteList(spriteListIndex, gfx.page).x = x
+				spriteList(spriteListIndex, gfx.page).y = y
+				spriteList(spriteListIndex, gfx.page).w = animation(frame).w
+				spriteList(spriteListIndex, gfx.page).h = animation(frame).h
+				spriteListIndex = spriteListIndex + 1
+			END IF
+			ctype = actor(n).collider 
+			colCount(ctype) = colCount(ctype) + 1
+			colList(ctype, colCount(ctype)).index = n
+			colList(ctype, colCount(ctype)).x0 = x
+			colList(ctype, colCount(ctype)).y0 = y
+			colList(ctype, colCount(ctype)).x1 = x + animation(frame).w - 1
+			colList(ctype, colCount(ctype)).y1 = y + animation(frame).h - 1
+		END IF   
+	ELSE
+		IF frame AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
+			IF flash THEN
+			spriteList(spriteListIndex, gfx.page).offset = animation(frame).offset(actor(n).flags)
+			spriteList(spriteListIndex, gfx.page).x = x
+			spriteList(spriteListIndex, gfx.page).y = y
+			spriteList(spriteListIndex, gfx.page).w = animation(frame).w
+			spriteList(spriteListIndex, gfx.page).h = animation(frame).h
+			spriteListIndex = spriteListIndex + 1
+			END IF
+		END IF
+	END IF
 
-      xx = actor(n).x - screenX + 20
-      yy = actor(n).y - screenY + 20
-
-      IF actor(n).collider THEN
-       FOR animPart = actor(n).frame TO actor(n).frame + parts - 1
-         spriteIndex = animation(animPart).index(flipIndex)
-         x = xx + animation(animPart).x(flipIndex)
-         y = yy + animation(animPart).y
-         'sx = x' - screenX
-         'sy = y' - screenY
-
-         IF spriteIndex AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
-          IF flash THEN
-           spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
-           spriteList(spriteListIndex, gfx.page).x = x' + 20
-           spriteList(spriteListIndex, gfx.page).y = y' + 20
-           spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
-           spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
-           spriteListIndex = (spriteListIndex + 1) AND 31
-          END IF
-          ctype = actor(n).collider AND (animation(animPart).jump > 0)
-            IF ctype THEN
-             colCount(ctype) = colCount(ctype) + 1
-             colList(ctype, colCount(ctype)).index = n
-             colList(ctype, colCount(ctype)).x0 = x
-             colList(ctype, colCount(ctype)).y0 = y
-             colList(ctype, colCount(ctype)).x1 = x + spriteWidth(spriteIndex) - 1
-             colList(ctype, colCount(ctype)).y1 = y + spriteHeight(spriteIndex) - 1
-            END IF
-         END IF
-       NEXT animPart
-      ELSE
-       IF flash THEN
-         FOR animPart = actor(n).frame TO actor(n).frame + parts - 1
-          spriteIndex = animation(animPart).index(flipIndex)
-          x = xx + animation(animPart).x(flipIndex)
-          y = yy + animation(animPart).y
-      
-          IF spriteIndex AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
-           spriteList(spriteListIndex, gfx.page).offset = spriteOffset(spriteIndex)
-           spriteList(spriteListIndex, gfx.page).x = x '+ 20
-           spriteList(spriteListIndex, gfx.page).y = y '+ 20
-           spriteList(spriteListIndex, gfx.page).w = spriteWidth(spriteIndex)
-           spriteList(spriteListIndex, gfx.page).h = spriteHeight(spriteIndex)
-           spriteListIndex = (spriteListIndex + 1) AND 31
-          END IF
-        NEXT animPart
-       END IF
-      END IF
   END IF 'visibility check
 '----------------------------------------------------------------------------
 	IF gfx.page THEN
-		'
-		'Play animation
-		'
-		actor(n).frame = actor(n).frame + animation(actor(n).frame).jump 
-		IF animation(actor(n).frame).jump < 0 THEN
-			actor(n).frame = actor(n).frame + animation(actor(n).frame).jump
-		END IF
-
 		IF actor(n).life > -1 THEN
 			IF actor(n).life = 0 THEN
 				IF actor(n).control > 0 AND actor(n).control < 63 THEN
@@ -1550,7 +1547,7 @@ IF actor(n).exist > 0 THEN
 					actor(n).y = actor(n).y - 4
 					actor(n).collider = 0
 					actor(n).life = 36
-					actor(n).frame = 98
+					actor(n).frame = 22
 					c = tileRead(actor(n).x, actor(n).y)
 					IF c > 29 THEN
 						actor(n).count = actor(n).y + 8
@@ -1630,10 +1627,10 @@ SUB handleCollision
 					'actor(n).flash = 20
 					IF actor(n2).life > -1 THEN
 						actor(n).x = actor(n2).x
-						actor(n).frame = 162
+						actor(n).frame = 53
 						soundEvent = 44
 					ELSE
-						actor(n).frame = 110
+						actor(n).frame = 34
 						soundEvent = 44
 					END IF
 				END IF
@@ -1700,6 +1697,7 @@ SUB initGame
 		PRINT #1, TIME$
 	CLOSE #1
 	elfInit
+	
 	loadSounds "sound"
 	walkNote(0) = 30
 	walkNote(1) = 32
@@ -1709,6 +1707,10 @@ SUB initGame
 	walkNote(5) = 32
 	walkNote(6) = 28
 	walkNote(7) = 27
+	
+	loadSprites "sprites0", 0
+	player.spriteSet = "sprites0"
+	
 	initTestGame
 	'initMainMenu
 END SUB
@@ -1744,7 +1746,7 @@ END SUB
 	actor(1).x = 0
 	actor(1).y = 0
 	actor(1).lNext = 2
-	actor(1).lPrev = 2
+	actor(1).lPrev = 3
 	actor(1).exist = 0
 
 	colCount(1) = -1
@@ -1763,7 +1765,7 @@ END SUB
 	player.gotChests = 0	
 	actor(2).flash = 0
 	actor(2).lPrev = 1
-	actor(2).lNext = 1
+	actor(2).lNext = 3
 	actor(2).exist = 1
 	actor(2).control = 255
 	actor(2).life = -3
@@ -1777,13 +1779,30 @@ END SUB
 	player.vecY = 0
 	player.vecX = 0
 	player.Bouncing = 0
-	actor(2).frame = 10
-	actor(2).anim = 10
+	actor(2).frame = 1
+	actor(2).anim = 1
 	actor(2).visX = 999
 	actor(2).visY = 999
 	actor(2).count = 0
 	playerOldX = -999
 	playerOldY = -999
+	
+	actor(3).control = 0
+	actor(3).frame = 11
+	actor(3).flags = 0
+	actor(3).x = actor(2).x
+	actor(3).y = actor(2).y
+	actor(3).vecX = 0
+	actor(3).vecY = 0
+	actor(3).parentDX = actor(2).x
+	actor(3).parentDY = actor(2).y
+	actor(3).exist = 2
+	actor(3).lPrev = 2
+	actor(3).lNext = 1
+	actor(3).life = -999
+	actor(3).collider = 0
+	actor(3).visX = 40
+	actor(3).visY = 30
 	
 	handleSpawn 0
 	
@@ -1799,7 +1818,7 @@ END SUB
 		'hudTextLoad &H6E0, 0
 		player.hudLock = 999
 		actor(2).control = 258
-		actor(2).frame = 0
+		actor(2).frame = 1
 		player.menuContext = 10
 		screenResetPos actor(2).x - 20, actor(2).y - 52
 		for n = 1 to 16
@@ -1888,7 +1907,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actorListNew n
 		actor(n).control = 0
 		actor(n).life = 15
-		actor(n).frame = 110
+		actor(n).frame = 34
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = spawner
 		actor(n).visY = 40
@@ -1899,8 +1918,8 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = 12
 		actor(n).spawner = 0
 		actor(n).collider = 0
-		actor(n).frame = 110
-		actor(n).anim = 110
+		actor(n).frame = 34
+		actor(n).anim = 1
 	CASE 99   'Clear Tile
 		actorListNew n
 		actor(n).control = 0
@@ -1908,25 +1927,25 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		SELECT CASE spawnerFlags
 		CASE 0
 			actor(n).life = 3
-			actor(n).frame = 144
+			actor(n).frame = 38
 		CASE 1
 			actor(n).life = 2
-			actor(n).frame = 160
+			actor(n).frame = 38
 			actor(n).vecX = spawner
 		CASE 2
 			actor(n).life = 2
-			actor(n).frame = 160
+			actor(n).frame = 38
 			actor(n).vecY = spawner
 		CASE 3
 			actor(n).life = 40
-			actor(n).frame = 160
+			actor(n).frame = 39
 			actor(n).vecX = spawner
 			actor(n).visX = 70
 			actor(n).visY = 70
 			actor(n).control = 99
 		CASE 4
 			actor(n).life = 40
-			actor(n).frame = 160
+			actor(n).frame = 39
 			actor(n).vecY = spawner
 			actor(n).visX = 999
 			actor(n).visY = 999
@@ -1937,15 +1956,15 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actorListNew n
 		actor(n).control = 98   
 		actor(n).life = spawnerFlags
-		actor(n).frame = 160
-		actor(n).anim = 160
+		actor(n).frame = 38
+		actor(n).anim = 38
 		actor(n).visX = 999
 		actor(n).visY = 999
 		actor(n).spawner = 0
 	CASE 93		'Twinkle particle
 		actorListNew n   
 		actor(n).control = 0
-		actor(n).frame = 93
+		actor(n).frame = 30
 		actor(n).life = 6
 		actor(n).vecY = 3
 		actor(n).spawner = 0
@@ -1954,11 +1973,10 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 100
 		actor(n).life = 8
 		actor(n).spawner = 0
-		actor(n).flags = spawnerFlags
+		actor(n).flags = 0
 		actor(n).collider = 2
 		actor(n).vecX = 30 + (spawnerFlags <> 0) * 60
-		actor(n).frame = 100
-		actor(n).anim = 100  
+		actor(n).frame = 13
 	CASE 102	'Enemy Bullet
 		actorListNew n
 		actor(n).control = 102
@@ -1966,8 +1984,8 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = 0
 		actor(n).vecX = 10 + (spawnerFlags <> 0) * 20
 		actor(n).vecY = 5
-		actor(n).frame = 102
-		actor(n).anim = 102
+		actor(n).frame = 40
+		actor(n).anim = 40
 		actor(n).visX = 40
 		actor(n).visY = 40   
 	CASE 104	'DRIP
@@ -1976,7 +1994,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = 18
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = -30
-		actor(n).frame = 214
+		actor(n).frame = 82
 		actor(n).anim = 214
 		actor(n).visY = 40
 		actor(n).spawner = 0		
@@ -1987,7 +2005,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = 0
 		actor(n).vecX = 7 + (spawnerFlags <> 0) * 14
 		actor(n).vecY = spawner
-		actor(n).frame = 156
+		actor(n).frame = 50
 		actor(n).visX = 40
 		actor(n).visY = 40   
 	CASE 112	'FIRE BOMB
@@ -1997,7 +2015,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = 0
 		actor(n).vecX = 0
 		actor(n).vecY = 5
-		actor(n).frame = 156
+		actor(n).frame = 50
 		actor(n).visX = 40
 		actor(n).visY = 50   
 	CASE 1	'Eggy
@@ -2006,7 +2024,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 1   
 		actor(n).life = -2
 		actor(n).collider = 1
-		actor(n).frame = 60
+		actor(n).frame = 15
 		actor(n).anim = 60
 		actor(n).count = 0
 		actor(n).visX = 25
@@ -2016,7 +2034,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 2   
 		actor(n).life = -50
 		actor(n).collider = 1
-		actor(n).frame = 232
+		actor(n).frame = 72
 		actor(n).count = 0
 		actor(n).visY = 35
 		actor(n).visX = 60
@@ -2025,7 +2043,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 3   
 		actor(n).life = -2
 		actor(n).collider = 1
-		actor(n).frame = 227
+		actor(n).frame = 89
 		actor(n).count = 0
 		actor(n).visY = 55
 		actor(n).visX = 55
@@ -2035,7 +2053,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -1
 		actor(n).collider = 1
 		actor(n).vecX = 2
-		actor(n).frame = 208
+		actor(n).frame = 78
 		actor(n).anim = 208
 		actor(n).visY = 35   
 	CASE 5	'BABAT
@@ -2045,7 +2063,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -2
 		actor(n).dir = y
 		actor(n).collider = 1
-		actor(n).frame = 200
+		actor(n).frame = 85
 		actor(n).visX = 30
 		actor(n).visY = 50
 		actor(n).count = 0   
@@ -2055,7 +2073,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		actor(n).life = -999
 		actor(n).collider = 1
-		actor(n).frame = 220
+		actor(n).frame = 70
 		actor(n).visX = 999
 		actor(n).visY = 30
 		actor(n).count = y 
@@ -2064,7 +2082,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 8
 		actor(n).life = -999
 		actor(n).collider = 1
-		actor(n).frame = 223
+		actor(n).frame = 76
 		actor(n).visX = 80
 		actor(n).visY = 60
 		actor(n).count = 0
@@ -2079,7 +2097,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	   actor(n).control = 11   
 	   actor(n).spawner = spawner
 	   actor(n).life = -999
-	   actor(n).frame = 150
+	   actor(n).frame = 47
 	   actor(n).anim = 150
 	   actor(n).visY = 25
 	   actor(n).visX = 21
@@ -2094,7 +2112,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).collider = 1
 		actor(n).control = 15    
 		actor(n).life = -999
-		actor(n).frame = 146
+		actor(n).frame = 45
 		actor(n).visX = 24
 		actor(n).visY = 55
 	CASE 16  		'SPAWNER
@@ -2118,7 +2136,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).spawner = spawner
 			actor(n).life = -999
 			actor(n).jump = 2 + p
-			actor(n).frame = 148
+			actor(n).frame = 46
 			actor(n).anim = 148
 			actor(n).visX = 45
 			actor(n).visY = 50
@@ -2135,7 +2153,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		actor(n).life = -999
 		actor(n).jump = 5
-		actor(n).frame = 146
+		actor(n).frame = 45
 		actor(n).anim = 146
 		actor(n).visX = 50
 		actor(n).visY = 56
@@ -2147,7 +2165,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).count = y
 		actor(n).vecY = -20
 		actor(n).frame = spawnerFlags
-		actor(n).anim = spawnerFlags
+		'actor(n).anim =  spawnerFlags
 		actor(n).visY = 34
 	CASE 44   'KEY
 		actorListNew n
@@ -2155,16 +2173,14 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		actor(n).life = -999
 		actor(n).vecY = 0
-		actor(n).frame = 90
-		actor(n).anim = 90   
+		actor(n).frame = 21		
 	CASE 45   'CHEST
 		actorListNew n
 		actor(n).control = 45
 		actor(n).spawner = spawner
 		actor(n).life = -999
 		actor(n).vecY = 0
-		actor(n).frame = 86
-		actor(n).anim = 86
+		actor(n).frame = 20	
     CASE 50 TO 51  	'H and V platform
 		actorListNew n
 		actor(n).count = object
@@ -2172,7 +2188,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 50
 		actor(n).spawner = spawner
 		actor(n).life = -999
-		actor(n).frame = 168
+		actor(n).frame = 18
 		actor(n).visX = 999
 		actor(n).visY = 96
 		actor(n).vecY = 0
@@ -2197,7 +2213,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		actor(n).jump = spawnerFlags
 		IF player.levelScore(spawnerFlags) THEN
-			actor(n).frame = 162
+			actor(n).frame = 53
 		ELSE
 			actor(n).frame = 0
 		END IF
@@ -2215,7 +2231,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(2).vecX = 0
 		actor(2).vecY = 0
 		actor(2).anim = 10
-		actor(2).frame = 10
+		actor(2).frame = 1
 		actor(2).flags = 0
 		screenResetPos x - 20, actor(2).y
 		player.targetX = x

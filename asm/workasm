@@ -1,6 +1,5 @@
 ;-------------------------------------------------------------------------------
-aRenderActors PROC
-	push es
+aQueueSprites PROC
 	push di
 	push ds
 	push si
@@ -170,10 +169,12 @@ exit:
 	pop si
 	pop ds
 	pop di
-	pop es
 	retf
 aQueueSprites ENDP
 ;-------------------------------------------------------------------------------
+
+
+
 	; animation data:
 	;
 	; [ jmp ][ idx+] [ idx-] [  x+ ] [  x- ] [  y  ]  					= 6 Bytes / 1536 + 512
@@ -196,3 +197,14 @@ aQueueSprites ENDP
 	; Entries: 32 + 32 + 4 = 408 bytes
 	;
 	drawList		db	408 dup(0)
+
+DIM SHARED spriteBank(5001) AS INTEGER
+
+'6400	0000 - 6399		Sprite bank
+'2560	6400 - 8959		Animation data
+'192	8960 - 9151		Sprite list 1
+'192	9152 - 9343		Sprite list 2
+'24		9344 - 9367		TileCopy list 1
+'24		9368 - 9361		TileCopy list 2
+'320	9362 -			Collider list 1		'idx 4681
+'320	9362 - 10001	Collider list 2		'idx 4841

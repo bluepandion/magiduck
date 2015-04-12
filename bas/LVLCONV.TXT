@@ -53,11 +53,11 @@
 "/actors"
 "pakfile", "levels", "/pakfile"
 "maps"
-"..\convert\logo.tmx", "logotile, "spenemy0", 0
-"..\convert\hubworld.tmx", "tileset2", "spenemy0", 1
-"..\convert\prototyp.tmx", "tileset0", "spenemy0", 2
-"..\convert\chntower.tmx", "tileset0", "spenemy0", 3
-"..\convert\hicoin.tmx", "tileset0", "spenemy0", 4
-"..\convert\level2.tmx", "tileset1", "spenemy0", 5
+"..\convert\logo.tmx", "logotile, "sprites0", 0
+"..\convert\hubworld.tmx", "tileset2", "sprites0", 1
+"..\convert\prototyp.tmx", "tileset0", "sprites0", 2
+"..\convert\chntower.tmx", "tileset0", "sprites0", 3
+"..\convert\hicoin.tmx", "tileset0", "sprites0", 4
+"..\convert\level2.tmx", "tileset1", "sprites0", 5
 "/maps"
 "/convert"

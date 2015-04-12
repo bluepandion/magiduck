@@ -35,11 +35,11 @@ DECLARE SUB aTimerReset ()
 
 '$STATIC
 
-COMMON SHARED loadStr AS STRING * 1            'General purpose file read
-COMMON SHARED loadVarStr AS STRING
-COMMON SHARED loadInt AS INTEGER               ' variables
+COMMON SHARED loadStr AS STRING * 1             'General purpose file read
+COMMON SHARED loadVarStr AS STRING				'/write variables
+COMMON SHARED loadInt AS INTEGER               
 COMMON SHARED loadLong AS LONG
-COMMON SHARED loadOfs AS INTEGER
+COMMON SHARED fileOfs AS INTEGER
 
 COMMON SHARED hudBuffer AS STRING * 164
 
@@ -64,14 +64,6 @@ COMMON SHARED spawnIndex AS INTEGER
 '----------------------------------------------------------------------------
 ' Graphics storage and screen buffer related
 '----------------------------------------------------------------------------
-
-DIM spriteOffset(128)   AS INTEGER      'Sprite bank offsets per sprite
-DIM spriteWidth(128)  AS INTEGER        'and some basic data.
-DIM spriteHeight(128)  AS INTEGER
-
-COMMON SHARED spriteOffset() AS INTEGER
-COMMON SHARED spriteWidth() AS INTEGER
-COMMON SHARED spriteHeight() AS INTEGER
 
 COMMON SHARED spriteBankSeg AS INTEGER
 COMMON SHARED spriteBankOfs AS INTEGER
@@ -132,11 +124,15 @@ TYPE levelType
 END TYPE
 
 TYPE animDataType
-	index(0 TO 1) AS INTEGER
-	X(0 TO 1) AS INTEGER
-	Y AS INTEGER
+	offset(0 to 1)	AS INTEGER
+	w AS INTEGER
+	h AS INTEGER
+	x AS INTEGER
+	y AS INTEGER
 	jump AS INTEGER
 END TYPE
+DIM animation(0 TO 128) AS animDataType
+COMMON SHARED animation() AS animDataType
 
 TYPE collisionType
 	index AS INTEGER
@@ -242,9 +238,6 @@ COMMON SHARED actor()  AS objectType
 
 COMMON SHARED level AS levelType
 
-DIM animation(0 TO 255) AS animDataType
-COMMON SHARED animation() AS animDataType
-
 DIM colCount(1 TO 3) AS INTEGER
 COMMON SHARED colCount() AS INTEGER
 DIM colList(1 TO 3, 30) AS collisionType
@@ -294,3 +287,5 @@ COMMON SHARED w40char AS w40textType
 
 DIM menuItem(1 to 16) AS INTEGER
 COMMON SHARED menuItem() AS INTEGER
+
+COMMON SHARED errorMessage$
