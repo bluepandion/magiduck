@@ -163,6 +163,11 @@ PRINT "Converting defintions/animations to binary...";
 	IF name$ <> "#anims" THEN PRINT "Not a valid animation definition file.": END
 	DO
 		INPUT #1, name$
+		IF name$ = "" THEN
+		 CLS
+		 COLOR 7, 0
+		 PRINT "Unnamed entry found in animation listing. (Prev:"; n; ")."
+		END IF
 		IF name$ <> "#end" THEN
 			INPUT #1, n
 			saveThisAnim(n) = 1
@@ -177,6 +182,7 @@ PRINT "Converting defintions/animations to binary...";
 			animation(n).x = animation(n).x / 2
 			INPUT #1, animation(n).y
 			INPUT #1, animation(n).jump
+			animation(n).jump = n + animation(n).jump
 		END IF
 	LOOP WHILE name$ <> "#end"
  CLOSE #1

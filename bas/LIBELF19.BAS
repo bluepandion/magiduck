@@ -338,15 +338,15 @@ END SUB
 
 SUB initLookUps
 
-OPEN "w40char.def" FOR BINARY AS #1
+OPEN "w40char.clu" FOR BINARY AS #1
  GET #1, , w40char
 CLOSE #1
 
-OPEN "sincos.def" FOR BINARY AS #1
+OPEN "sincos.clu" FOR BINARY AS #1
  GET #1, 1, angle
 CLOSE #1
 
-OPEN "floats.def" FOR INPUT AS #1
+OPEN "floats.txt" FOR INPUT AS #1
 FOR ff = 0 TO 9
  FOR n = 0 TO 9
   INPUT #1, v

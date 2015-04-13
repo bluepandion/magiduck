@@ -91,6 +91,10 @@ CONST SndTileStop = 127
 CONST SndMenuPrev = 87
 CONST SndMenuNext = 82
 CONST SndPause = 76
+CONST ItemGemKey = 21
+CONST ItemGemSmall = 22
+CONST ItemGemBig = 23
+CONST ItemHeart = 25
 
 '===============================================================================
 
@@ -112,11 +116,11 @@ END SUB
 SUB addScore (eventType)
 	s = 0
 	SELECT CASE eventType
-	CASE 98
+	CASE ItemGemSmall
 		s = 100
-	CASE 88
+	CASE ItemGemBig
 		s = player.hp * 50
-	CASE 158
+	CASE ItemHeart
 		s = 0
 		IF player.hp < 4 THEN player.hp = player.hp + 1
 		hudUpdate 2
@@ -341,7 +345,7 @@ CASE 261
 '------------------------------------------------------------------------------
 'Level Clear - sync video pages
 CASE 260
-	switchAnim n, 10
+	switchAnim n, 5
 	screenTargetX = actor(2).x - 19
 	screenTargetY = actor(2).y - 36
 	handleCamera
@@ -764,8 +768,9 @@ listIDX = 1
 DO
 
 n = actor(listIDX).lNext
-IF n = 0 THEN quit
+'IF n = 0 THEN quit
 listIDX = n
+
 '------------------------------------------------------------------------------
  REM  _____  _______ _     _ _______  ______              
  REM |     |    |    |_____| |______ |_____/              
@@ -929,17 +934,10 @@ IF actor(n).exist > 0 THEN
 				actor(n).x = actor(n).x AND &HFFFC
 				actor(n).y = actor(n).y AND &HFFF8
 				SELECT CASE C
-				CASE 57 TO 59
-					soundEvent = 44
-					'a = 130
-					spawnObject actor(n).x, actor(n).y, 99, 0, 0
-					actor(n).vecY = 2
-					actor(n).flash = 16
-					t = 0
-					IF c = 58 THEN t = 28
-				CASE 55
+				'hits bonus blocks
+				CASE 55					
 					soundEvent = 122
-					'a = 160
+					'a = 38
 					t = 54
 					actor(n).vecY = 0
 					IF player.hp > 1 THEN
@@ -948,33 +946,44 @@ IF actor(n).exist > 0 THEN
 						o = 25
 					END IF
 					spawnObject actor(n).x + 2, actor(n).y, 41, o, 0
-				CASE 56
+					actor(n).frame = 39
+				'hits mover block
+				CASE 56					
 					soundEvent = 115
 					IF actor(n).vecX < 0 THEN
 						s = -10
 					ELSE
 						s = 10
 					END IF
-					a = 144
+					'a = 38
 					spawnObject actor(n).x, actor(n).y, 99, 3, s
+					actor(n).frame = 38
+				'hits destructibles
+				CASE 57 TO 59			
+					soundEvent = 44
+					'a = 0
+					'spawnObject actor(n).x, actor(n).y, 99, 2, 5
+					actor(n).vecY = 0
+					actor(n).frame = 38
+					t = 0
+					IF c = 58 THEN t = 28
 				END SELECT
 				tileWrite actor(n).x, actor(n).y, t
 				aUpdateTile actor(n).x, actor(n).y
 				actor(n).vecX = 0
 				actor(n).flags = 0
 				actor(n).control = 0
-				actor(n).life = 2
-				actor(n).frame = 39
+				actor(n).life = 6
 				actor(n).collider = 0
 			ELSE
 				soundEvent = 44
 				actor(n).flags = 0
 				actor(n).control = 0
-				actor(n).vecX = 0
 				actor(n).collider = 0
-				actor(n).life = 2
+				actor(n).life = 4
 				actor(n).frame = 34
 				actor(n).vecY = -5
+				actor(n).vecX = 0
 				soundEvent = 44
 			END IF
 		END IF
@@ -1014,7 +1023,7 @@ IF actor(n).exist > 0 THEN
 		IF actor(n).life < 15 THEN
 			c = tileRead(actor(n).x, actor(n).y)
 			IF c > 29 THEN
-				actor(n).life = 6
+				actor(n).life = 12
 				actor(n).count = 10
 				actor(n).control = 0
 				actor(n).vecY = -5
@@ -1051,7 +1060,7 @@ IF actor(n).exist > 0 THEN
              actor(n).y = actor(n).y AND &HFFF8
              tileWrite actor(n).x, actor(n).y, 56
              aUpdateTile actor(n).x, actor(n).y
-             actor(n).life = 2
+             actor(n).life = 4
              actor(n).control = 0
              actor(n).vecX = 0
              actor(n).vecY = 0
@@ -1133,7 +1142,7 @@ IF actor(n).exist > 0 THEN
        
        'HELMET
        CASE 2
-        c = tileRead(actor(n).x, actor(n).y)
+        c = tileRead(actor(n).x, actor(n).y + 1)
         IF c > 30 THEN
 			actor(n).y = actor(n).y AND &HFFF8
 			actor(n).vecY = 0
@@ -1147,7 +1156,6 @@ IF actor(n).exist > 0 THEN
 			actor(n).count = 16
 			actor(n).collider = 2
 			actor(n).visY = 50
-			actor(n).frame = 75
 			'actor(n).dir = actor(n).vecX
 			'actor(n).vecX = 0
         END IF
@@ -1157,7 +1165,7 @@ IF actor(n).exist > 0 THEN
 		ELSE
 			speed = 10
 			actor(n).count = actor(n).count - 1
-			actor(n).frame = 1
+			actor(n).frame = 75
 			IF actor(n).count = 0 THEN
 				actor(n).frame = 72
 				actor(n).collider = 1
@@ -1235,7 +1243,7 @@ IF actor(n).exist > 0 THEN
 			actor(n).jump = 0
 			actor(n).vecX = actor(n).count
         END IF
-		IF actor(n).life = 0 THEN
+		IF actor(n).life > -1 AND actor(n).life < 2 THEN
 			actor(n).count = actor(n).vecX
 			actor(n).vecX = 0
 			spawnObject actor(n).x - 1, actor(n).y - 5, 104, -15, 0
@@ -1475,30 +1483,25 @@ IF actor(n).exist > 0 THEN
 					actor(n).count = 0
 				END IF
 			END IF
-
-        'TILE FX
-        'CASE 99
-         'IF actor(n).jump = 1 THEN
-         'END IF
-	END SELECT
-	END IF
+		END SELECT		
 '----------------------------------------------------------------------------
-
-	flash = -(NOT actor(n).flash AND 1)
+	END IF	'Page check
+'----------------------------------------------------------------------------
+	flash = NOT actor(n).flash AND 1
 	actor(n).flash = actor(n).flash + (actor(n).flash > 0)
 	frame = actor(n).frame
-	IF advanceAnims THEN actor(n).frame = actor(n).frame + animation(frame).jump
+	IF advanceAnims THEN actor(n).frame = animation(frame).jump
 	
 	'IF animation(frame).offset(0) = 0 THEN
 	' errorMessage$ = "Actor"+str$(n)+"/"+str$(actor(n).control)+" empty frame @ "+str$(frame)
 	' quit
 	'END IF
 	
-	x = actor(n).x - screenX + animation(frame).x + 20
-	y = actor(n).y - screenY + animation(frame).y + 20
+	x = actor(n).x - screenX + animation(frame).x
+	y = actor(n).y - screenY + animation(frame).y 
 
 	IF actor(n).collider THEN           
-		IF frame AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
+		IF frame AND x > -10 AND x < 40 AND y > -10 AND y < 50 THEN
 			IF flash THEN
 				spriteList(spriteListIndex, gfx.page).offset = animation(frame).offset(actor(n).flags)
 				spriteList(spriteListIndex, gfx.page).x = x
@@ -1516,21 +1519,20 @@ IF actor(n).exist > 0 THEN
 			colList(ctype, colCount(ctype)).y1 = y + animation(frame).h - 1
 		END IF   
 	ELSE
-		IF frame AND x > 12 AND x < 60 AND y > 5 AND y < 70 THEN
-			IF flash THEN
+		IF frame AND flash > 0 AND x > -10 AND x < 40 AND y > -10 AND y < 50 THEN
 			spriteList(spriteListIndex, gfx.page).offset = animation(frame).offset(actor(n).flags)
 			spriteList(spriteListIndex, gfx.page).x = x
 			spriteList(spriteListIndex, gfx.page).y = y
 			spriteList(spriteListIndex, gfx.page).w = animation(frame).w
 			spriteList(spriteListIndex, gfx.page).h = animation(frame).h
 			spriteListIndex = spriteListIndex + 1
-			END IF
 		END IF
 	END IF
-
-  END IF 'visibility check
+  END IF 'Actor-in-range check
 '----------------------------------------------------------------------------
-	IF gfx.page THEN
+		'Reduce HP, if in counter-mode (HP > 0)
+		'Destroy if HP = 0
+		'
 		IF actor(n).life > -1 THEN
 			IF actor(n).life = 0 THEN
 				IF actor(n).control > 0 AND actor(n).control < 63 THEN
@@ -1546,7 +1548,7 @@ IF actor(n).exist > 0 THEN
 					actor(n).vecY = -20
 					actor(n).y = actor(n).y - 4
 					actor(n).collider = 0
-					actor(n).life = 36
+					actor(n).life = 120
 					actor(n).frame = 22
 					c = tileRead(actor(n).x, actor(n).y)
 					IF c > 29 THEN
@@ -1559,10 +1561,9 @@ IF actor(n).exist > 0 THEN
 				END IF
 			END IF
 			actor(n).life = actor(n).life - 1
-		END IF
-	END IF 
- END IF 'exist check
-LOOP WHILE actor(listIDX).lNext > 1
+		END IF	
+	END IF 'Actor-exists check
+LOOP WHILE actor(n).lNext > 1
 
  IF gfx.page THEN dtMain1 = (dtMain1 + 1) AND 63
 
@@ -1588,11 +1589,11 @@ SUB handleCollision
 	
 	'Affect player
 	IF actor(2).control = 255 AND actor(2).flash = 0 THEN
-		px = actor(2).x - gfx.screenX(gfx.page) + 20
-		py = actor(2).y - gfx.screenY(gfx.page) + 14
+		px = actor(2).x - gfx.screenX(gfx.page)
+		py = actor(2).y - gfx.screenY(gfx.page)
 		FOR a = 0 TO colCount(1)
 			n = colList(1, a).index
-			IF px > colList(1, a).x0 - 2 AND px < colList(1, a).x1 + 2 AND py > colList(1, a).y0 - 3 AND py < colList(1, a).y1 + 3 THEN
+			IF px > colList(1, a).x0 - 2 AND px < colList(1, a).x1 + 2 AND py > colList(1, a).y0 + 2 AND py < colList(1, a).y1 + 8 THEN
 				damagePlayer
 				a = 9999
 			END IF
@@ -1601,8 +1602,8 @@ SUB handleCollision
 	'Affect enemy
 	FOR b = 0 TO colCount(2)
 		n = colList(2, b).index
-		px = actor(n).x - gfx.screenX(gfx.page) + 20
-		py = actor(n).y - gfx.screenY(gfx.page) + 20
+		px = actor(n).x - gfx.screenX(gfx.page)
+		py = actor(n).y - gfx.screenY(gfx.page)
 		FOR a = 0 TO colCount(1)
 			IF px > colList(1, a).x0 - 2 AND px < colList(1, a).x1 + 2 AND py > colList(1, a).y0 - 3 AND py < colList(1, a).y1 + 3 THEN
 				n2 = colList(1, a).index
@@ -1614,12 +1615,12 @@ SUB handleCollision
 					END IF
 				END IF
 				IF actor(n2).life > -999 THEN
-						actor(n2).flash = 10
-						actor(n2).life = actor(n2).life + 1
+					actor(n2).flash = 10
+					actor(n2).life = actor(n2).life + 1
 				END IF
 				IF actor(n).control = 100 THEN
 					actor(n).collider = 0
-					actor(n).life = 4
+					actor(n).life = 8
 					actor(n).vecY = -5
 					actor(n).control = 0
 					actor(n).vecX = 0
@@ -1906,7 +1907,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 257	'Player Die
 		actorListNew n
 		actor(n).control = 0
-		actor(n).life = 15
+		actor(n).life = 30
 		actor(n).frame = 34
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = spawner
@@ -1915,7 +1916,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 200	'Explode
 		actorListNew n
 		actor(n).control = 0
-		actor(n).life = 12
+		actor(n).life = 24
 		actor(n).spawner = 0
 		actor(n).collider = 0
 		actor(n).frame = 34
@@ -1925,26 +1926,28 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 0
 		actor(n).spawner = 0
 		SELECT CASE spawnerFlags
-		CASE 0
-			actor(n).life = 3
+		CASE 0							'Twinkle
+			actor(n).life = 6
+			actor(n).flash = 0
 			actor(n).frame = 38
-		CASE 1
-			actor(n).life = 2
-			actor(n).frame = 38
+		CASE 1							'Debris left/right
+			actor(n).life = 8
+			actor(n).flash = 8
+			actor(n).frame = 57
 			actor(n).vecX = spawner
-		CASE 2
-			actor(n).life = 2
-			actor(n).frame = 38
+		CASE 2							'Bounce
+			actor(n).life = 8
+			actor(n).frame = 39
 			actor(n).vecY = spawner
-		CASE 3
-			actor(n).life = 40
+		CASE 3							'Mover
+			actor(n).life = 80
 			actor(n).frame = 39
 			actor(n).vecX = spawner
 			actor(n).visX = 70
 			actor(n).visY = 70
 			actor(n).control = 99
-		CASE 4
-			actor(n).life = 40
+		CASE 4							'Bounce
+			actor(n).life = 80
 			actor(n).frame = 39
 			actor(n).vecY = spawner
 			actor(n).visX = 999
@@ -1952,26 +1955,18 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).control = 99
 		END SELECT
 		actor(n).jump = spawnerFlags
-	CASE 98	'Tile FX
-		actorListNew n
-		actor(n).control = 98   
-		actor(n).life = spawnerFlags
-		actor(n).frame = 38
-		actor(n).anim = 38
-		actor(n).visX = 999
-		actor(n).visY = 999
-		actor(n).spawner = 0
+	
 	CASE 93		'Twinkle particle
 		actorListNew n   
 		actor(n).control = 0
 		actor(n).frame = 30
-		actor(n).life = 6
+		actor(n).life = 12
 		actor(n).vecY = 3
 		actor(n).spawner = 0
 	CASE 100	'Player Bullet
 		actorListNew n
 		actor(n).control = 100
-		actor(n).life = 8
+		actor(n).life = 14
 		actor(n).spawner = 0
 		actor(n).flags = 0
 		actor(n).collider = 2
@@ -1980,7 +1975,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 102	'Enemy Bullet
 		actorListNew n
 		actor(n).control = 102
-		actor(n).life = 24
+		actor(n).life = 48
 		actor(n).spawner = 0
 		actor(n).vecX = 10 + (spawnerFlags <> 0) * 20
 		actor(n).vecY = 5
@@ -1991,7 +1986,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 104	'DRIP
 		actorListNew n
 		actor(n).control = 104
-		actor(n).life = 18
+		actor(n).life = 36
 		actor(n).vecX = spawnerFlags
 		actor(n).vecY = -30
 		actor(n).frame = 82
@@ -2001,7 +1996,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 111	'FIRE PARTICLE
 		actorListNew n
 		actor(n).control = 102
-		actor(n).life = 15
+		actor(n).life = 30
 		actor(n).spawner = 0
 		actor(n).vecX = 7 + (spawnerFlags <> 0) * 14
 		actor(n).vecY = spawner
@@ -2011,7 +2006,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 112	'FIRE BOMB
 		actorListNew n
 		actor(n).control = 112
-		actor(n).life = 18
+		actor(n).life = 36
 		actor(n).spawner = 0
 		actor(n).vecX = 0
 		actor(n).vecY = 5
@@ -2140,6 +2135,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).anim = 148
 			actor(n).visX = 45
 			actor(n).visY = 50
+			actor(n).flags = 0
 			n = getSpawnslot
 		NEXT p
 		actorListNew n
@@ -2149,6 +2145,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).count = x
 		actor(n).dir = y
 		actor(n).control = c
+		actor(n).flags = 0
 		actor(n).exist = 1
 		actor(n).spawner = spawner
 		actor(n).life = -999
@@ -2161,7 +2158,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actorListNew n
 		actor(n).control = 41
 		actor(n).spawner = 0
-		actor(n).life = 60
+		actor(n).life = 120
 		actor(n).count = y
 		actor(n).vecY = -20
 		actor(n).frame = spawnerFlags

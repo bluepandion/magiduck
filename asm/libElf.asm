@@ -963,7 +963,7 @@ newSprite:
 				cmp ax, 255				;Has list ended?
 				JNZ continuelist		;
 				exit:					;----------------------------------------------------
-				pop ax					;		Pop AX															;Pop 1 / Exit
+				pop ax					;		
 				pop bp
 				pop si
 				pop ds
@@ -971,22 +971,23 @@ newSprite:
 				pop es
 				retf 14					;		EXIT
 										;----------------------------------------------------
-
 continuelist:
-				xchg al, ah				;Swap AL with AH
-				or bx, ax				;BH = Sprite Y		BL = Sprite X
+				mov bh, al
+				;xchg al, ah				
+				;or bx, ax				;BH = Sprite Y		BL = Sprite X
 
 				lodsw					;Sprite W
 				mov cx, ax
 				lodsw					;Sprite H
-				xchg al, ah				;Swap AL with AH
-				or cx, ax				;CH = Sprite H		CL = Sprite W
+				mov ch, al
+				;xchg al, ah				;Swap AL with AH
+				;or cx, ax				;CH = Sprite H		CL = Sprite W
 
 				and cl, cl				;IF Width = 0 THEN goto newSprite
 				jz newSprite
 
-				add cl, 50				;Width + 50 to avoid clipping overflows with negative values.
-				add ch, 50				;Height + 50, ditto.
+				;add cl, 50				;Width + 50 to avoid clipping overflows with negative values.
+				;add ch, 50				;Height + 50, ditto.
 
 ;----------------------------------------------------------------
 				pop di					;Pop Sprite offset from stack (this was pushed as AX)					;Pop 1
@@ -996,102 +997,78 @@ continuelist:
 ;============================================================================
 ; WIDTH CLIP TEST
 ;============================================================================
-
 testXclip_left:							;CLIPTEST
-				cmp bl, 20				;Sprite X < 0 Clip Test			X has been offset by 20 to avoid overflows with negative values.
+				cmp bl, 0				;Sprite X < 0 Clip Test			X has been offset by 20 to avoid overflows with negative values.
 				JL xClip_left			;
 				JMP testXclip_right		;
 xClip_left:								;Clip = (20 - x)
-				mov dl, 20				;
-				sub dl, bl				;
-				mov dh, 0				;
-				add si, dx				;Sprite Offset + Clip
-				add si, dx				;Sprite Offset + Clip
-				sub cl, dl				;Sprite Width  - Clip
-				mov bl, 20				;Sprite X = 0
+				mov dh, 255
+				mov dl, bl
+				sub si, dx				;Sprite Offset + Clip
+				sub si, dx				;Sprite Offset + Clip
+				add cl, bl				;Sprite Width  - Clip
+				xor bl, bl				;X = 0, after clip
 				JMP testWidthLess
-
 testXclip_right:						;CLIPTEST
-				mov dh, bl				;Sprite (X + Width) > 39 Clip Test
-				add dh, cl				;
-				cmp dh, 109				;Compare to 59 + 50, since Width has been offset by 50 + 20
-				JA xClip_right			;
-				JMP testWidthLess		;
+				xor dx, dx
+				mov dl, bl				;Sprite (X + Width) > 40 Clip Test
+				add dl, cl				;
+				cmp dl, 41
+				JL testWidthLess
 xClip_right:							;
-				sub dh, 110				;Clip = Clip - (40 + 20 + 50)
-				sub cl, dh				;Width - Clip
-
-
-testWidthLess:							;IF Width > 0, skip this sprite.
-				cmp cl, 50
-				JA testWidthOver
+				sub dl, 40				;Clip = (X + Width) - 40
+				sub cl, dl				;Width - Clip
+testWidthLess:							;IF Width < 0, skip this sprite.
+				cmp cl, 0
+				JG testWidthOver
 				JMP skipSprite
 testWidthOver:
-cmp cl, 70
+cmp cl, 16
 JL widthOK
 JMP skipSprite
-
 widthOK:
-				sub cl, 50				;Width back to normal value
-				sub bl, 20				;X back to normal value
-
 ;============================================================================
 ; HEIGHT CLIP TEST
 ;============================================================================
-
 testYclip_up:							;CLIPTEST
-				cmp bh, 20				;Sprite Y < 0 Clip Test			Y has been offset by 20 to avoid overflows with negative values.
+				cmp bh, 0				;Sprite Y < 0 Clip Test			Y has been offset by 20 to avoid overflows with negative values.
 				JL yClip_up				;
 				JMP testYclip_down		;
-yClip_up:								;Clip = (20 - y)
-				mov dl, 20				;
-				sub dl, bh				;
-				mov dh, 0				;
-				sub ch, dl				;Sprite Height - Clip
+yClip_up:								
+				add ch, bh				;Sprite Height - Clip
 
-				shl dx, 1				;Clip = Clip * 80
-				shl dx, 1
-				shl dx, 1
-				shl dx, 1
-				
+				mov dx, 0FF00h
+				sub dh, bh
+				shr dx, 1
+				shr dx, 1
 				mov ax, dx
-				shl dx, 1
-				shl dx, 1
-				
+				shr dx, 1
+				shr dx, 1
 				add dx, ax
 
 				add si, dx				;Sprite Offset + Clip
-				mov bh, 20				;Sprite Y = 0
+				xor bh, bh				;Sprite Y = 0
 				JMP testHeightLess
-
 testYclip_down:							;CLIPTEST
-				mov dh, bh				;Sprite (Y + Height) > 50 Clip Test
+				mov dh, bh				;Sprite (Y + Height) > 51 Clip Test
 				add dh, ch				;
-				cmp dh, 119				;Compare to 69 + 50, since Height has been offset by 50 + 20
-				JA yClip_down			;
-				JMP testHeightLess		;
+				cmp dh, 51				;
+				JL testHeightLess
 yClip_down:								;
-				sub dh, 120				;Clip = Clip - (50 + 20 + 50)
+				sub dh, 50				;Clip = (Y + Height) - 50
 				sub ch, dh				;Height - Clip
-
-
 testHeightLess:							;IF Height < 0, skip this sprite.
-				cmp ch, 50
-				JA testHeightOver
+				cmp ch, 0
+				JG testHeightOver
 				JMP skipSprite
 testHeightOver:
-cmp ch, 100
+cmp ch, 24
 JL heightOK
 JMP skipSprite
-
 heightOK:
-				sub ch, 50				;Height back to normal value
-				sub bh, 20				;X back to normal value
-
 ;============================================================================
 ; STORE CLIPPED VALUES BACK TO SPRITE LIST
 ;============================================================================
-
 				mov es, [bp + 08]		;ES = sprite List segment.
 				pop di					;Pop Sprite list offset.
 				push di					;Push Sprite list offset back to stack.
@@ -1133,16 +1110,15 @@ heightOK:
 				add di, bx				;add Y * 80 from write offset
 				inc di					; + 1, to hit the attribute.
 
-				and di, [bp + 18]		;Wrap DI with video wrap offset.
-
 				;Store row change value to BX
 
-				mov bx, 0
+				xor bx, bx
 				mov bl, 40				;BL = 40
 				sub bl, cl				;BL = 40 - Width 
 				shl bx, 1				;BL * 2
 
 				mov dx, [bp + 18]		;DX = Video wrap offset
+				and di, dx				;Wrap DI with video wrap offset.
 
 spritedraw:
 
