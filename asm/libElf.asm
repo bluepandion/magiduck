@@ -23,7 +23,6 @@ aPageFlip PROC
 	;10 hud string offset
 	;12 hud string segment
 	;14 video wrap offset
-
 	;============================================================================
 		push es
 		push di
@@ -952,7 +951,6 @@ aSpriteList PROC
 newSprite:
 				mov ds, [bp + 08]		;DS = sprite List read segment
 				pop si					;Pop SI, sprite list offset from stack
-
 				lodsw					;AX = DS:[SI], [SI] + 2			AX = Sprite offset
 				push ax					;Store AX to stack														;Push 1
 
@@ -972,28 +970,17 @@ newSprite:
 				retf 14					;		EXIT
 										;----------------------------------------------------
 continuelist:
-				mov bh, al
-				;xchg al, ah				
-				;or bx, ax				;BH = Sprite Y		BL = Sprite X
-
+				mov bh, al				;BH = Sprite Y		BL = Sprite X
 				lodsw					;Sprite W
 				mov cx, ax
 				lodsw					;Sprite H
-				mov ch, al
-				;xchg al, ah				;Swap AL with AH
-				;or cx, ax				;CH = Sprite H		CL = Sprite W
-
+				mov ch, al				;CH = Sprite H		CL = Sprite W
 				and cl, cl				;IF Width = 0 THEN goto newSprite
 				jz newSprite
-
-				;add cl, 50				;Width + 50 to avoid clipping overflows with negative values.
-				;add ch, 50				;Height + 50, ditto.
-
 ;----------------------------------------------------------------
 				pop di					;Pop Sprite offset from stack (this was pushed as AX)					;Pop 1
 				push si					;Push Sprite list offset to stack										
 				mov si, di				;Start to read from Sprite Bank
-
 ;============================================================================
 ; WIDTH CLIP TEST
 ;============================================================================
@@ -1031,13 +1018,13 @@ widthOK:
 ; HEIGHT CLIP TEST
 ;============================================================================
 testYclip_up:							;CLIPTEST
-				cmp bh, 0				;Sprite Y < 0 Clip Test			Y has been offset by 20 to avoid overflows with negative values.
+				cmp bh, 0				;Sprite Y < 0 Clip Test
 				JL yClip_up				;
 				JMP testYclip_down		;
 yClip_up:								
 				add ch, bh				;Sprite Height - Clip
-
-				mov dx, 0FF00h
+				inc ch
+				mov dx, 0FF00h			;Sprite offset + (Clip * 80)
 				sub dh, bh
 				shr dx, 1
 				shr dx, 1
@@ -1074,7 +1061,6 @@ heightOK:
 				push di					;Push Sprite list offset back to stack.
 
 				sub di, 8				;Go back a few Words to write our clipped values back.
-
 				xor ax, ax				;AX = 0
 
 				mov al, bl				;AL = X
@@ -1085,13 +1071,11 @@ heightOK:
 				stosw					;ES:DI = AX, DI + 2
 				mov al, ch				;AL = H
 				stosw					;ES:DI = AX, DI + 2
-
 ;============================================================================
 ;============================================================================
 ; write_offset_prep:
 ;============================================================================
 ;============================================================================
-
 				mov di, [bp + 14]		;DI = screen buffer write offset
 					
 				xor ax, ax
@@ -1105,13 +1089,11 @@ heightOK:
 				mov ax, bx				;AX = Y * 64
 				shr bx, 1				;BX / 4
 				shr bx, 1				;BX = Y * 16
-				add bx, ax				;BX = Y * 80
-						
+				add bx, ax				;BX = Y * 80						
 				add di, bx				;add Y * 80 from write offset
 				inc di					; + 1, to hit the attribute.
 
 				;Store row change value to BX
-
 				xor bx, bx
 				mov bl, 40				;BL = 40
 				sub bl, cl				;BL = 40 - Width 
@@ -1121,11 +1103,9 @@ heightOK:
 				and di, dx				;Wrap DI with video wrap offset.
 
 spritedraw:
-
 ;============================================================================
 ; DRAW SPRITE
 ;============================================================================
-
 				mov ds, [bp + 12]		;DS = Sprite Bank Segment
 				mov es, [bp + 16]		;ES = screen buffer write segment
 
@@ -1135,9 +1115,7 @@ spritedraw:
 				pop dx
 				JA loopYwrap
 				JMP loopYsafe
-
 ;============================================================================
-
 loopYwrap:								;Sprite requires Wrap check.
 
 				push cx					;Push CL=width, CH=height to stack
@@ -1241,7 +1219,6 @@ backtolist:
 JMP newsprite
 
 ;--------------------------------------------------------------------------
-
 loopYsafe:							
 				mov dx, bx
 				mov bx, cx
@@ -2590,11 +2567,12 @@ timerISR:
 		dw 1140 , 1075 , 1015 , 959 , 898 , 854 , 806 , 760 , 718 , 677 , 639 , 604
 		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301, 256, 256
 		
-		vFadeOut		db	00, 00, 09, 08, 01, 01, 08, 09, 01, 08, 07, 14, 06, 09, 07, 14
+		vFadeOutLo		db	00, 00, 08, 08, 01, 01, 08, 09, 01, 08, 07, 14, 06, 09, 07, 14
+		vFadeOutHi		db	00, 00, 128, 128, 16, 16, 128, 144, 16, 128, 112, 224, 96, 144, 112, 224
 		
 		tileRead		dw	0000h, 0000h
 		gfxSpriteBank	dw	0000h, 0000h
-		gfxTileBank		dw	0000h, 0000h
+		gfxTileBank		dw	0000h, 0000h, 0000h, 0000h
 		gfxAnims		dw	0000h, 0000h
 		gfxActorList	dw	0000h, 0000h
 		gfxSpriteList	dw	0000h, 0000h
@@ -2606,7 +2584,7 @@ timerISR:
 		
 		vSegment		dw	0b800h
 		vOldMode		db	0
-		vAadapter		db	0
+		vAdapter		db	0
 		vWrap			dw	0000h
 									
 		dummyData2		dw	0000h, 0000h, 0000h, 0000h

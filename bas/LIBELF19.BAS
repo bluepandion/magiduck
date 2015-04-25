@@ -537,6 +537,10 @@ SUB loadTiles (file$)
  BLOAD file$ + ".ctg", tileBankOfs
 
  player.tileSet = file$
+ 
+ player.levelColor = PEEK(tileBankOfs)
+ player.levelColor = player.levelColor + player.levelColor * 256
+ player.levelColor = player.levelColor AND &HF0F0
 
  DEF SEG
 
@@ -622,6 +626,7 @@ diffY = y - gfx.screenY(gfx.page)
 
  FOR n = 2 TO 60
   actor(n).y = actor(n).y + diffY
+  actor(n).parentDY = actor(n).parentDY + diffY
  NEXT n
 
  FOR n = 0 TO 1
