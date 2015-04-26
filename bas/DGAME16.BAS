@@ -213,7 +213,7 @@ SELECT CASE actor(2).control
 CASE 263
 	handleCamera
 	actor(2).count = actor(2).count + 1
-	if actor(2).count > 2 THEN actor(2).control = 258
+	IF actor(2).count > 2 THEN actor(2).control = 258
 '------------------------------------------------------------------------------
 'Level Clear - Score Count
 CASE 262
@@ -226,9 +226,9 @@ CASE 262
           c = &H0D0D OR player.levelColor
 		  myPrint 2, 22, "TIME BONUS            X 30", c
           myPrint 2, 26, "LIFE BONUS            X 1000", c
-          myPrint 2, 30, "KEYS                  /"+str$(level.keys), c
-		  myPrint 2, 34, "CHESTS                /"+str$(level.keys), c
-		  myPrint 2, 38, "COINS                 /"+str$(level.coins), c
+          myPrint 2, 30, "KEYS                  /" + str$(level.keys), c
+		  myPrint 2, 34, "CHESTS                /" + str$(level.keys), c
+		  myPrint 2, 38, "COINS                 /" + str$(level.coins), c
 		  c = &H0E0F OR player.levelColor
 		  myPrint 20, 30, str$(player.gotKeys), c
 		  myPrint 20, 34, str$(player.gotChests), c
@@ -335,10 +335,10 @@ CASE 261
    IF actor(2).y > 22 THEN actor(2).y = actor(2).y - 2
 
    IF actor(2).x = 40 AND actor(2).y <= 22 THEN
-      'FOR delObj = 4 TO 60
-      '    actor(delObj).exist = 0
-      '    actor(delObj).control = 0
-      'NEXT delObj
+      FOR delObj = 4 TO 60
+          actor(delObj).exist = 0
+          actor(delObj).control = 0
+      NEXT delObj
       actor(3).lNext = 1
 	  actor(1).lPrev = 3
 	  actor(2).count = 0
@@ -365,7 +365,7 @@ CASE 260
 	ELSE
 		actor(2).count = 0
 	END IF
-	IF actor(2).count > 1 THEN
+	IF actor(2).count > 2 THEN
 		screenFakePos 80
 		DEF SEG = tileBufferSeg
 	FOR n = 0 TO 199
@@ -393,7 +393,7 @@ CASE 258
 		menuLoad player.menuContext - 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
-		aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		aPrint &HFFFF, &H0E0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		player.hudLock = 999
 		'player.menuMode = 2
 		spriteList(0, 0).y = 255
@@ -786,7 +786,7 @@ DO
 	 REM  _____  _______ _     _ _______  ______              
 	 REM |     |    |    |_____| |______ |_____/              
 	 REM |_____|    |    |     | |______ |    \_              
-														  
+	
 	 REM  _____  ______  _____ _______ _______ _______ _______
 	 REM |     | |_____]   |   |______ |          |    |______
 	 REM |_____| |_____] __|   |______ |_____     |    ______|
@@ -847,7 +847,7 @@ DO
 
 		IF actor(2).exist <> n THEN
 			playerDeltaY = actor(n).y - playerY
-			IF playerDeltaX < 5 AND playerDeltaY < 1 AND playerDeltaY > -4 AND player.vecY > -1 THEN
+			IF playerDeltaX < 6 AND playerDeltaY < 1 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 				actor(n).jump = 1
 				soundEvent = 115
 				actor(2).y = actor(n).y
@@ -855,28 +855,33 @@ DO
 			END IF
 		ELSE
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF playerDeltaX > 4 OR playerDeltaY > 2 OR player.vecY < -5 THEN 
+			IF playerDeltaX > 5 OR playerDeltaY > 2 OR player.vecY < -5 THEN 
 				unParent 2
 				actor(n).jump = 0
 			END IF				
         END IF
 		
 		' Platform type specific events
-		c = tileRead(actor(n).x, actor(n).y - 4)
+		c = tileRead(actor(n).x, actor(n).y)
 		SELECT CASE actor(n).count
 		' Horizontal
 		CASE 50
-			IF c THEN actor(n).vecX = -actor(n).vecX
+			IF actor(n).dir THEN
+				actor(n).dir = actor(n).dir - 1
+			ELSE
+				IF c THEN actor(n).vecX = -actor(n).vecX
+				actor(n).dir = 16
+			END IF
 		' Vertical
 		CASE 51
 			IF actor(n).jump THEN
 				actor(n).vecY = -10
+				IF c = 1 THEN actor(n).vecY = 0
 			ELSE
 				actor(n).vecY = 0
 				IF actor(n).y < level.spawner(actor(n).spawner).y - 2 THEN actor(n).vecY = 20
 				IF actor(n).y > level.spawner(actor(n).spawner).y + 2 THEN actor(n).vecY = -20
 			END IF
-			IF c THEN actor(n).vecY = 0
 		END SELECT
 		
 	'Eggy
@@ -1004,7 +1009,7 @@ DO
 	CASE 102
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
-		IF playerDeltaX < 3 AND playerDeltaY < 5 THEN
+		IF playerDeltaX < 3 AND playerDeltaY < 10 THEN
 			damagePlayer
 			actor(n).life = 0
 		END IF
@@ -1151,16 +1156,17 @@ DO
 			hudUpdate 16
 		END IF
        
-       'HELMET
-       CASE 2
-        c = tileRead(actor(n).x, actor(n).y + 1)
-        IF c > 29 THEN
+	'HELMET
+	CASE 2
+		c = tileRead(actor(n).x, actor(n).y + 1) > 29
+        IF c THEN
 			actor(n).y = actor(n).y AND &HFFF8
 			actor(n).vecY = 0
         ELSE
 			'actor(n).vecX = 0
 			actor(n).vecY = 20
         END IF
+
 		IF actor(n).life > -50 THEN
 			actor(n).y = actor(n).y - 6
 			actor(n).life = -50
@@ -1175,7 +1181,7 @@ DO
 			speed = 4
 		ELSE
 			speed = 10
-			actor(n).count = actor(n).count - 1
+			IF c THEN actor(n).count = actor(n).count - 1
 			actor(n).frame = 75
 			IF actor(n).count = 0 THEN
 				actor(n).frame = 72
@@ -1185,7 +1191,6 @@ DO
 			END IF
 		END IF
 		
-		'IF c > 30 THEN
 		IF actor(n).flags THEN
 			xp = -2
 			flags = 0
@@ -1195,18 +1200,18 @@ DO
 			speed = speed
 			flags = 1
 		END IF
-		
 		actor(n).vecX = speed
+
 		c = tileRead(actor(n).x + xp, actor(n).y - 2)
 		c2 = tileRead(actor(n).x + xp, actor(n).y + 2)
 		IF actor(n).count THEN c2 = 999
 		IF c > 29 OR c2 < 30 THEN
-			IF  actor(n).count THEN soundEvent = SndHelmetBump
+			IF actor(n).count THEN soundEvent = SndHelmetBump
 			actor(n).flags = flags
 			actor(n).vecX = -speed
 			actor(n).x = actor(n).x AND &HFFFC + 2
 		END IF
-	
+		
 	'Dragon
 	CASE 3
 		actor(n).count = actor(n).count + 1
@@ -1270,7 +1275,7 @@ DO
          
          SELECT CASE actor(n).count
          CASE 0
-            IF playerDeltaX < 16 AND playerDeltaY < 32 AND actor(2).y > actor(n).y THEN
+            IF playerDeltaX < 16 AND playerDeltaY < 32 AND actor(2).y > actor(n).y OR actor(n).life > -2 THEN
              actor(n).count = 1
              actor(n).frame = 86
              actor(n).jump = actor(2).x
@@ -1391,16 +1396,16 @@ DO
            actor(n).frame = 48: soundEvent = 66
           END IF
           IF x = 15 THEN
-           spawnObject actor(n).x + actor(n).dir, actor(n).y - 2, 111, actor(n).flags, -10
-           spawnObject actor(n).x + actor(n).dir, actor(n).y - 2, 111, actor(n).flags, 0
-           spawnObject actor(n).x + actor(n).dir, actor(n).y - 2, 111, actor(n).flags, 10
+           spawnObject actor(n).x + actor(n).dir, actor(n).y, 111, actor(n).flags, -10
+           spawnObject actor(n).x + actor(n).dir, actor(n).y, 111, actor(n).flags, 0
+           spawnObject actor(n).x + actor(n).dir, actor(n).y, 111, actor(n).flags, 10
           END IF
          ELSE
            actor(n).frame = 47
          END IF
 
-       'SPIKE BALL BOUNCE
-       CASE 15
+    'SPIKE BALL BOUNCE
+    CASE 15
         c = tileRead(actor(n).x, actor(n).y + 6)
         IF c > 29 THEN
           actor(n).y = actor(n).y AND &HFFF8 - 6
@@ -1451,7 +1456,7 @@ DO
 
 	'EXIT
 	CASE 63
-		actor(n).frame = 53
+		actor(n).frame = 60
 		
 		IF (dtMain1 AND 3) = 2 THEN
 			x = actor(n).x - 4 + INT(RND * 10)
@@ -1464,12 +1469,11 @@ DO
 		
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
-		IF playerDeltaX < 6 AND playerDeltaY < 6 THEN
+		IF playerDeltaX < 6 AND playerDeltaY < 10 THEN
 			actor(2).control = 260
 			actor(2).count = 0
 			actor(n).control = 0
 			actor(n).exist = 0
-			
 			FOR b = 0 TO 63 STEP 8
 				xs = angle.x(b) \ 2
 				ys = angle.y(b) \ 2
@@ -1481,7 +1485,7 @@ DO
         CASE 64
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 53
+			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 60
 			playerDeltaY = actor(2).y - actor(n).y
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
 				IF actor(n).count = 0 AND player.levelScore(actor(n).jump) = 0 THEN
@@ -2079,7 +2083,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).dir = y
 		actor(n).collider = 1
 		actor(n).frame = 85
-		actor(n).visX = 30
+		actor(n).visX = 40
 		actor(n).visY = 50
 		actor(n).count = 0   
 	CASE 6	'SKULL
@@ -2203,11 +2207,12 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).count = object
 		actor(n).jump = 0
 		actor(n).control = 50
+		actor(n).dir = 0
 		actor(n).spawner = spawner
 		actor(n).life = -999
 		actor(n).frame = 18
 		actor(n).visX = 999
-		actor(n).visY = 96
+		actor(n).visY = 160
 		actor(n).vecY = 0
 		actor(n).vecX = 0
 		IF object = 50 THEN actor(n).vecX = 5

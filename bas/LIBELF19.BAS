@@ -209,6 +209,7 @@ FUNCTION getSpawnSlot
   IF actor(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
  NEXT n
  getSpawnSlot = 60
+ debugOut "WARNING: All spawn slots occupied!"
 END FUNCTION
 
 SUB handleCamera
@@ -582,15 +583,15 @@ END IF
   IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
  NEXT n
 
-FOR n = 1 TO 60
- IF actor(n).exist THEN
-	COLOR 7
-	PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
-  ELSE
-	COLOR 8
-  END IF
- NEXT n
-
+	FOR n = 1 TO 60
+		IF actor(n).exist THEN
+			COLOR 7
+			PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
+		ELSE
+			COLOR 8
+	END IF
+	NEXT n
+ END
  for n = 1 to 60
   print n;
   print animation(n).offset(0);
@@ -600,11 +601,7 @@ FOR n = 1 TO 60
   print animation(n).w;
   print animation(n).h;
   print animation(n).jump
-  'do:loop while inkey$=""
  next n
-'for n = 0 to 20
-	'print asc(menuItem(n).x); asc(menuItem(n).y), asc(menuItem(n).iPrev); asc(menuItem(n).iNext),
-'next n
 END
 
 END SUB
