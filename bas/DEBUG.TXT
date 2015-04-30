@@ -1,4 +1,4 @@
-22:48:36
+20:47:21
 load Anims:
  0
  1
@@ -73,3 +73,57 @@ load Anims:
  90
  91
 -1
+Loading menu  2.
+ Page ofs:  7732, 3540
+ Menu load OK.
+Loading menu  2.
+ Page ofs:  7601, 3409
+ Menu load OK.
+Loading menu  2.
+ Page ofs:  7121, 2929
+ Menu load OK.
+Loading menu  2.
+ Page ofs:  1093, 5093
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  853, 4853
+ Menu load OK.
+Loading menu  3.
+ Page ofs:  853, 4853
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  853, 4853
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  853, 4853
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  853, 4853
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  853, 4853
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  3.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  0.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  4.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  9.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  10.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  9.
+ Page ofs:  7141, 2949
+ Menu load OK.
+Loading menu  3.
+ Page ofs:  7141, 2949
+ Menu load OK.

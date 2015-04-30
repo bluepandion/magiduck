@@ -131,7 +131,7 @@ TYPE animDataType
 	y AS INTEGER
 	jump AS INTEGER
 END TYPE
-DIM animation(0 TO 128) AS animDataType
+DIM animation(0 TO 119) AS animDataType
 COMMON SHARED animation() AS animDataType
 
 TYPE collisionType

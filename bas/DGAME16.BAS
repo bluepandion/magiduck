@@ -217,7 +217,7 @@ CASE 263
 '------------------------------------------------------------------------------
 'Level Clear - Score Count
 CASE 262
-      pageOfs = gfx.pageOfs(gfx.page) * 2
+      pageOfs = gfx.pageOfs(gfx.page)
 
       SELECT CASE actor(2).jump
        CASE -2 to -1
@@ -719,7 +719,10 @@ CASE 255
    END IF
 
    IF player.hp = 0 THEN
-      actor(2).collider = 0
+      actor(2).exist = 1
+	  actor(2).parentDX = 0
+	  actor(2).parentDY = 0
+	  actor(2).collider = 0
       actor(2).control = 256
       actor(2).count = 0
 	  actor(2).frame = 0

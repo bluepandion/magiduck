@@ -1724,7 +1724,13 @@ aPrint PROC
 	
 	mov es, [bp + 08]				;ES = Write seg
 	mov di, [bp + 06]				;DI = Write ofs
-
+	
+	mov ax, es
+	cmp ax, 0b800h					;IF screen segment, multiply write ofs by two
+	jne notVideoSeg
+	shl di, 1
+notVideoSeg:
+	
 	mov ax, [bp + 10]				;AX = Row	Add row and column to write offset
 	xchg ah, al						;AX * 256
 	shr ax, 1						;AX = Row * 128

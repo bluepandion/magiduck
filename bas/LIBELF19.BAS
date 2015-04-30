@@ -550,7 +550,7 @@ END SUB
 SUB myPrint (x, y, text$, attributes)
 
  w40char.text = text$ + "|"
- aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page) * 2
+ aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page)
 
 END SUB
 
@@ -771,6 +771,9 @@ END SUB
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
 	
+	debugOut "Loading menu " + str$(menuNo%) + "."
+	debugOut " Page ofs: " + str$(gfx.pageOfs(0)) + "," + str$(gfx.pageOfs(1))
+	
 	menuClear
 	
 	OPEN "menu.cmm" FOR BINARY AS #1
@@ -823,8 +826,10 @@ SUB menuLoad (menuNo%)
 				GET #1, fileOfs, loadVarStr
 				w40char.text = loadVarStr
 				fileOfs = fileOfs + itemLen
-		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page) * 2
+		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 		NEXT item
+	
+	debugOut " Menu load OK."
 		
 	CLOSE #1
 END SUB
