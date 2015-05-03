@@ -379,8 +379,13 @@ CASE 260
 '------------------------------------------------------------------------------			   
 'Menu
 CASE 258
+	'
+	' PLAYER: MENU
+	'
+	debugOut "Menu mode active."
 	SELECT CASE player.menuMode
 	CASE 0		'Display menu load message
+		debugOut " menu: Set actor list"
 		'w40char.text = " LOADING PAGE ...                      |"
 		player.hudLock = 999
 		'aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
@@ -388,22 +393,31 @@ CASE 258
 		actor(2).jump = actor(1).lNext
 		actor(1).lNext = 1
 	'CASE 1		'Load and display menu
+		debugOut " menu: soundstop"
 		aSoundStop
+		debugOut " menu: scroll"
 		handleScroll
+		debugOut " menu: loadmenu"
 		menuLoad player.menuContext - 1
+		debugOut " menu: copypage"
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
+		debugOut " menu: infotext"
 		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
 		aPrint &HFFFF, &H0E0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		player.hudLock = 999
 		'player.menuMode = 2
-		spriteList(0, 0).y = 255
-		spriteList(0, 1).y = 255
+		FOR c = 0 to 31
+			spriteList(c, 0).y = 255
+			spriteList(c, 1).y = 255
+		NEXT c
+		debugOut " menu: pf"
 		aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 		gfx.page = gfx.page XOR 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		player.menuMode = 2
 		player.menuHLcolor = &HCECF
 		soundEvent = SndPause
+		debugOut "Menu display complete."
 	CASE 2		'Item highlight and wait for input
 		IF actor(2).count > 0 THEN
 			IF actor(2).count > 3 THEN
@@ -555,17 +569,20 @@ CASE 258
 		END IF
 		IF player.menuContext < 0 THEN
 			actor(2).control = 259
+			player.menuMode = 0
 			EXIT SUB
 		END IF
 	END SELECT
 	
 'Wait after death
 CASE 256
-	actor(2).count = actor(2).count + 1
-	IF actor(2).count > 32 THEN
+	'actor(2).count = actor(2).count + 1	
+	IF kbArray(57) THEN 
 		actor(2).count = 0
 		player.menuContext = 3
+		player.menuMode = 0
 		actor(2).control = 258
+		debugOut "Switch to menu mode after player death."
 	END IF
 '------------------------------------------------------------------------------
 'Normal player
@@ -784,7 +801,13 @@ DO
 	n = actor(listIDX).lNext
 	'IF n = 0 THEN quit
 	listIDX = n
-
+	
+	'debug
+	IF actor(2).control = 258 THEN
+		debugOut str$(n)
+	END IF
+	
+	
 	'------------------------------------------------------------------------------
 	 REM  _____  _______ _     _ _______  ______              
 	 REM |     |    |    |_____| |______ |_____/              
@@ -1590,7 +1613,7 @@ DO
 		END IF	
 	END IF 'Actor-exists check
 LOOP WHILE actor(n).lNext > 1
-
+ 
  IF gfx.page THEN dtMain1 = (dtMain1 + 1) AND 63
 
  spriteList(spriteListIndex, gfx.page).y = 255
@@ -1868,9 +1891,8 @@ END SUB
 		handleBehaviors
 		CALL aSoundPlay
 		handleScroll
-		aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
-
-		IF actor(2).control = 259 THEN aSoundStop:EXIT SUB
+		aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)		
+		IF actor(2).control = 259 THEN aSoundStop: EXIT SUB				
 		IF actor(2).control = 255 THEN
 			IF kbArray(1) THEN
 				actor(2).control = 258
@@ -1885,9 +1907,9 @@ END SUB
 				hudUpdate &H8
 			END IF
 			END IF
-      aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+	  aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
       gfx.page = gfx.page XOR 1
-      aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+	  aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 	LOOP
 END SUB
 

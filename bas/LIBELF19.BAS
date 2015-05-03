@@ -500,12 +500,12 @@ SUB loadSprites (file$, offset)
 		DO
 			GET #1, fileOfs, n
 			fileOfs = fileOfs + 2
-			debugOut str$(n)
 			IF n > -1 THEN
 				GET #1, fileOfs, animation(n)
 				animation(n).offset(0) = animation(n).offset(0) + spriteBankOfs
 				animation(n).offset(1) = animation(n).offset(1) + spriteBankOfs
 				fileOfs = fileOfs + 14
+				debugOut str$(n) + str$(animation(n).w) + str$(animation(n).h) + str$(animation(n).offset(0)) + str$(animation(n).offset(1))
 			END IF
 		LOOP UNTIL n = -1
 	CLOSE #1
@@ -802,7 +802,7 @@ SUB menuLoad (menuNo%)
 				n = getSpawnSlot
 				IF itemIDX > 0 THEN 
 					actor(n).exist = 1
-					actor(n).control = 0
+					actor(n).control = -16000
 					actor(n).frame = 0
 					menuItem(itemIDX) = n
 					'debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
@@ -829,7 +829,12 @@ SUB menuLoad (menuNo%)
 		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 		NEXT item
 	
-	debugOut " Menu load OK."
+	debugOut " Menu load OK. Actors:"
+	FOR n = 1 to 60
+		IF actor(n).exist OR n = 1 THEN
+			debugOut str$(n) + str$(actor(n).lPrev) + str$(actor(n).lNext) + str$(actor(n).control)
+		END IF
+	NEXT n
 		
 	CLOSE #1
 END SUB

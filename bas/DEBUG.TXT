@@ -1,14 +1,145 @@
-20:47:21
+13:41:35
 load Anims:
- 0
+ 0 1 2 11364 11404
+ 1 5 6 11844 11884
+ 2 5 6 11854 11894
+ 3 5 6 11864 11904
+ 4 5 6 11844 11884
+ 5 5 6 11874 11914
+ 6 5 7 12324 12364
+ 7 5 6 12334 12374
+ 8 5 6 12344 12384
+ 11 7 6 11364 11404
+ 12 7 6 11378 11418
+ 13 4 5 11396 11436
+ 14 3 6 11438 11478
+ 15 5 9 12814 12854
+ 16 5 10 12884 12924
+ 17 5 7 12904 12944
+ 18 8 5 15376 15416
+ 20 6 9 14072 14112
+ 21 6 7 13512 13552
+ 22 4 8 13728 13768
+ 23 5 8 13736 13776
+ 24 4 8 13720 13760
+ 25 4 6 15002 15042
+ 30 3 5 13536 13576
+ 31 3 5 13542 13582
+ 32 2 3 13628 13668
+ 33 3 5 13542 13582
+ 34 4 8 14994 15034
+ 35 4 8 14354 14394
+ 36 3 6 13874 13914
+ 38 4 8 14016 14056
+ 39 4 8 14024 14064
+ 40 2 4 13074 13114
+ 41 2 4 13078 13118
+ 45 6 12 13684 13724
+ 46 2 4 13394 13434
+ 47 4 3 12356 12396
+ 48 4 3 12356 12396
+ 49 4 3 12356 12396
+ 50 4 8 14362 14402
+ 51 4 8 14370 14410
+ 52 4 8 14378 14418
+ 53 6 12 14644 14684
+ 54 6 12 14644 14684
+ 55 5 9 14656 14696
+ 56 4 8 14666 14706
+ 57 7 9 14870 14910
+ 58 7 9 14870 14910
+ 59 7 9 15190 15230
+ 60 6 12 14644 14684
+ 70 5 8 15844 15884
+ 71 5 9 15854 15894
+ 72 5 11 16484 16524
+ 73 5 11 16574 16614
+ 74 5 11 17364 17404
+ 75 5 9 16484 16524
+ 76 5 10 18244 18284
+ 77 5 8 18414 18454
+ 78 6 12 15864 15904
+ 79 6 9 17626 17666
+ 80 6 10 16826 16866
+ 81 6 12 15864 15904
+ 82 2 4 16840 16880
+ 83 2 5 17160 17200
+ 84 3 7 18504 18544
+ 85 4 9 18382 18422
+ 86 8 7 15908 15948
+ 87 8 7 18510 18550
+ 88 8 6 18606 18646
+ 89 7 11 16470 16510
+ 90 7 11 17350 17390
+ 91 7 11 18230 18270
+Menu mode active.
+ menu: Set actor list
+ menu: soundstop
+ menu: scroll
+ menu: loadmenu
+Loading menu  9.
+ Page ofs:  0, 4000
+ Menu load OK. Actors:
+ 1 3 1 0
+ 2 1 3 258
+ 3 2 1 0
+ 4 1 2-16000
+ 5 1 3-16000
+ 6 2 4-16000
+ 7 3 5-16000
+ 8 4 5-16000
+ menu: copypage
+ menu: infotext
+ menu: pf
+Menu display complete.
  1
- 2
- 3
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+Switch to menu mode after player death.
  4
  5
  6
  7
  8
+ 9
+ 10
  11
  12
  13
@@ -17,113 +148,321 @@ load Anims:
  16
  17
  18
+ 19
+ 2
+ 3
+Menu mode active.
+ menu: Set actor list
+ menu: soundstop
+ menu: scroll
+ menu: loadmenu
+Loading menu  2.
+ Page ofs:  6656, 2424
+ Menu load OK. Actors:
+ 1 3 1 0
+ 2 19 3 258
+ 3 2 1 0
+ 4 1 5 62
+ 5 4 6 4
+ 6 5 7 4
+ 7 6 8 8
+ 8 7 9 8
+ 9 8 10 3
+ 10 9 11 50
+ 11 10 12 17
+ 12 11 13 17
+ 13 12 14 17
+ 14 13 15 50
+ 15 14 16 18
+ 16 15 17 18
+ 17 16 18 18
+ 18 17 19 15
+ 19 18 2 0
+ 20 1 2-16000
+ 21 1 2-16000
+ menu: copypage
+ menu: infotext
+ menu: pf
+Menu display complete.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+Switch to menu mode after player death.
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 2
+ 3
+Menu mode active.
+ menu: Set actor list
+ menu: soundstop
+ menu: scroll
+ menu: loadmenu
+Loading menu  2.
+ Page ofs:  5698, 1466
+ Menu load OK. Actors:
+ 1 3 1 0
+ 2 19 3 258
+ 3 2 1 0
+ 4 1 5 62
+ 5 4 6 4
+ 6 5 7 4
+ 7 6 8 8
+ 8 7 9 8
+ 9 8 10 3
+ 10 9 11 50
+ 11 10 12 17
+ 12 11 13 17
+ 13 12 14 17
+ 14 13 15 50
+ 15 14 16 18
+ 16 15 17 18
+ 17 16 18 18
+ 18 17 19 15
+ 19 18 2 112
+ 20 1 2-16000
+ 21 1 2-16000
+ menu: copypage
+ menu: infotext
+ menu: pf
+Menu display complete.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+Switch to menu mode after player death.
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
  20
  21
  22
  23
  24
  25
- 30
- 31
- 32
- 33
- 34
- 35
- 36
- 38
- 39
- 40
- 41
- 45
- 46
- 47
- 48
- 49
- 50
- 51
- 52
- 53
- 54
- 55
- 56
- 57
- 58
- 59
- 60
- 70
- 71
- 72
- 73
- 74
- 75
- 76
- 77
- 78
- 79
- 80
- 81
- 82
- 83
- 84
- 85
- 86
- 87
- 88
- 89
- 90
- 91
--1
+ 26
+ 27
+ 2
+ 3
+Menu mode active.
+ menu: Set actor list
+ menu: soundstop
+ menu: scroll
+ menu: loadmenu
 Loading menu  2.
- Page ofs:  7732, 3540
- Menu load OK.
-Loading menu  2.
- Page ofs:  7601, 3409
- Menu load OK.
-Loading menu  2.
- Page ofs:  7121, 2929
- Menu load OK.
-Loading menu  2.
- Page ofs:  1093, 5093
- Menu load OK.
-Loading menu  0.
- Page ofs:  853, 4853
- Menu load OK.
-Loading menu  3.
- Page ofs:  853, 4853
- Menu load OK.
-Loading menu  0.
- Page ofs:  853, 4853
- Menu load OK.
-Loading menu  0.
- Page ofs:  853, 4853
- Menu load OK.
-Loading menu  0.
- Page ofs:  853, 4853
- Menu load OK.
-Loading menu  0.
- Page ofs:  853, 4853
- Menu load OK.
-Loading menu  0.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  3.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  0.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  4.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  9.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  10.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  9.
- Page ofs:  7141, 2949
- Menu load OK.
-Loading menu  3.
- Page ofs:  7141, 2949
- Menu load OK.
+ Page ofs:  4737, 505
+ Menu load OK. Actors:
+ 1 3 1 0
+ 2 27 3 258
+ 3 2 1 0
+ 4 1 5 62
+ 5 4 6 4
+ 6 5 7 4
+ 7 6 8 8
+ 8 7 9 8
+ 9 8 10 3
+ 10 9 11 50
+ 11 10 12 17
+ 12 11 13 17
+ 13 12 14 17
+ 14 13 15 50
+ 15 14 16 18
+ 16 15 17 18
+ 17 16 18 18
+ 18 17 19 15
+ 19 18 20 0
+ 20 19 21 0
+ 21 20 22 0
+ 22 21 23 0
+ 23 22 24 0
+ 24 23 25 0
+ 25 24 26 0
+ 26 25 27 0
+ 27 26 2 0
+ 28 1 2-16000
+ 29 1 2-16000
+ menu: copypage
+ menu: infotext
+ menu: pf
+Menu display complete.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
+ 1
+Menu mode active.
