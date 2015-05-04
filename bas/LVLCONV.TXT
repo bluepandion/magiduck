@@ -21,8 +21,10 @@
 061, " KEY  ", 44, 04, 07, 00
 062, "CHEST ", 45, 04, 08, 00
 063, "SUPER ", 46, 00, 00, 00
-071, "H PLAT", 50, 08, 04, 00
+071, "H PLAT", 50, 08, 00, 00
 072, "V PLAT", 51, 08, 04, 00
+073, "PATH >", 52, 04, 04, 00
+074, "PATH <", 53, 04, 04, 00
 011, " EXIT ", 63, 04, 08, 00
 012, "CHECK0", 62, 04, 04, 00
 013, "CHECK1", 62, 04, 04, 01
@@ -60,5 +62,6 @@
 "..\convert\hicoin.tmx", "tileset0", "sprites0", 4
 "..\convert\level2.tmx", "tileset1", "sprites0", 5
 "..\convert\mazetowr.tmx", "tileset0", "sprites0", 6
+"..\convert\elevator.tmx", "tileset3", "sprites0", 7
 "/maps"
 "/convert"

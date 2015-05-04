@@ -379,45 +379,29 @@ CASE 260
 '------------------------------------------------------------------------------			   
 'Menu
 CASE 258
-	'
-	' PLAYER: MENU
-	'
-	debugOut "Menu mode active."
 	SELECT CASE player.menuMode
 	CASE 0		'Display menu load message
-		debugOut " menu: Set actor list"
 		'w40char.text = " LOADING PAGE ...                      |"
 		player.hudLock = 999
 		'aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		'player.menuMode = 1
 		actor(2).jump = actor(1).lNext
 		actor(1).lNext = 1
-	'CASE 1		'Load and display menu
-		debugOut " menu: soundstop"
 		aSoundStop
-		debugOut " menu: scroll"
 		handleScroll
-		debugOut " menu: loadmenu"
 		menuLoad player.menuContext - 1
-		debugOut " menu: copypage"
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
-		debugOut " menu: infotext"
 		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
 		aPrint &HFFFF, &H0E0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		player.hudLock = 999
-		'player.menuMode = 2
-		FOR c = 0 to 31
-			spriteList(c, 0).y = 255
-			spriteList(c, 1).y = 255
-		NEXT c
-		debugOut " menu: pf"
+		spriteList(0, 0).y = 255
+		spriteList(0, 1).y = 255
 		aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 		gfx.page = gfx.page XOR 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		player.menuMode = 2
 		player.menuHLcolor = &HCECF
 		soundEvent = SndPause
-		debugOut "Menu display complete."
 	CASE 2		'Item highlight and wait for input
 		IF actor(2).count > 0 THEN
 			IF actor(2).count > 3 THEN
@@ -436,29 +420,24 @@ CASE 258
 			player.menuHLcolor = &HCECF
 		ELSE
 			player.menuPrev = player.menuItem
-			'IF kbArray(player.keyRelease) = 0 THEN
-			'	player.keyRelease = 0
-				nn = menuItem(player.menuItem)
-				IF kbArray(80) THEN 
-					IF player.menuItem <> actor(nn).lNext THEN
-						player.menuItem = actor(nn).lNext
-						soundEvent = sndMenuNext
-						actor(2).count = 5
-						player.menuHLcolor = &H4747
-						'player.KeyRelease = 80
-					END IF
+			nn = menuItem(player.menuItem)
+			IF kbArray(80) OR kbArray(75) THEN 
+				IF player.menuItem <> actor(nn).lNext THEN
+					player.menuItem = actor(nn).lNext
+					soundEvent = sndMenuNext
+					actor(2).count = 5
+					player.menuHLcolor = &H4747
 				END IF
-				IF kbArray(72) THEN 
-					IF player.menuItem <> actor(nn).lPrev THEN
-						player.menuItem = actor(nn).lPrev
-						soundEvent = sndMenuPrev
-						actor(2).count = 5
-						player.menuHLcolor = &H4747
-						'player.KeyRelease = 72
-					END IF
+			END IF
+			IF kbArray(72) OR kbArray(78) THEN 
+				IF player.menuItem <> actor(nn).lPrev THEN
+					player.menuItem = actor(nn).lPrev
+					soundEvent = sndMenuPrev
+					actor(2).count = 5
+					player.menuHLcolor = &H4747
 				END IF
-				IF kbArray(28) THEN player.menuMode = 5
-			'END IF
+			END IF
+			IF kbArray(28) THEN player.menuMode = 5
 		END IF
 		nn = menuItem(player.menuItem)
 		x = actor(nn).x
@@ -649,7 +628,7 @@ CASE 255
 '		END IF
 '	END IF
 
-    IF actor(2).exist > 1 THEN
+    IF player.parent > 0 THEN
 		IF kbArray(29) = 0 THEN player.jumpRelease = -1
 		screenTargetYlock = -1
 		collisionFloor = 1
@@ -761,28 +740,33 @@ CASE 255
       player.jumpRelease = -1
    END IF
 
-   IF player.vecX > 10 THEN player.vecX = 10
-   IF player.vecX < -10 THEN player.vecX = -10
-   IF player.vecY > maxY THEN player.vecY = maxY
-   IF player.vecY < minY THEN player.vecY = minY
+	IF player.vecX > 10 THEN player.vecX = 10
+	IF player.vecX < -10 THEN player.vecX = -10
+	IF player.vecY > maxY THEN player.vecY = maxY
+	IF player.vecY < minY THEN player.vecY = minY
 
-   actor(n).x = actor(n).x + fraction(player.vecX, fractionC)
-   actor(n).y = actor(n).y + fraction(player.vecY, fractionC)
-
-   c = tileRead(actor(n).x + 2, actor(n).y - 4)
-   IF c > 29 THEN
+	actor(n).x = actor(n).x + fraction(player.vecX, fractionC)
+	actor(n).y = actor(n).y + fraction(player.vecY, fractionC)
+	
+	IF player.parent THEN
+		actor(2).x = actor(2).x + fraction(actor(player.parent).vecX, fractionC)
+		actor(2).y = actor(2).y + fraction(actor(player.parent).vecY, fractionC)
+	END IF
+	
+	c = tileRead(actor(n).x + 2, actor(n).y - 4)
+	IF c > 29 THEN
        actor(n).x = (actor(n).x AND &HFFFC) + 2
-   END IF
-   c = tileRead(actor(n).x - 2, actor(n).y - 4)
-   IF c > 29 THEN
+	END IF
+	c = tileRead(actor(n).x - 2, actor(n).y - 4)
+	IF c > 29 THEN
        actor(n).x = (actor(n).x AND &HFFFC) + 2
-   END IF
+	END IF
 
-   screenTargetX = actor(n).x - 20
-   handleCamera
-   IF screenTargetYlock = -1 THEN
-      screenTargetY = actor(2).y - 28
-   END IF
+	screenTargetX = actor(n).x - 20
+	handleCamera
+	IF screenTargetYlock = -1 THEN
+		screenTargetY = actor(2).y - 28
+	END IF
 END SELECT
 
 playerX = actor(2).x
@@ -870,19 +854,23 @@ DO
 	'Platform / elevator
     CASE 50
 		playerDeltaX = ABS(actor(n).x - playerX)		
-
-		IF actor(2).exist <> n THEN
+		playerDeltaY = ABS(actor(n).y - playerY)
+		
+		IF player.parent <> n THEN
 			playerDeltaY = actor(n).y - playerY
 			IF playerDeltaX < 6 AND playerDeltaY < 1 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 				actor(n).jump = 1
 				soundEvent = 115
 				actor(2).y = actor(n).y
+				player.vecY = 0
 				makeParent 2, n
+				player.parent = n
+				actor(2).exist = 1
 			END IF
 		ELSE
-			playerDeltaY = ABS(actor(n).y - playerY)
 			IF playerDeltaX > 5 OR playerDeltaY > 2 OR player.vecY < -5 THEN 
 				unParent 2
+				player.parent = 0
 				actor(n).jump = 0
 			END IF				
         END IF
@@ -896,7 +884,7 @@ DO
 				actor(n).dir = actor(n).dir - 1
 			ELSE
 				IF c THEN actor(n).vecX = -actor(n).vecX
-				actor(n).dir = 16
+				actor(n).dir = 3
 			END IF
 		' Vertical
 		CASE 51
@@ -907,6 +895,49 @@ DO
 				actor(n).vecY = 0
 				IF actor(n).y < level.spawner(actor(n).spawner).y - 2 THEN actor(n).vecY = 20
 				IF actor(n).y > level.spawner(actor(n).spawner).y + 2 THEN actor(n).vecY = -20
+			END IF
+		' Path
+		CASE 52
+			IF actor(n).dir = 0 THEN
+				actor(n).dir = 7
+				SELECT CASE c
+				CASE 1
+					IF actor(n).anim = 1 THEN
+						actor(n).vecX = -actor(n).vecX
+						actor(n).vecY = -actor(n).vecY
+					END IF
+					actor(n).anim = actor(n).anim XOR 1
+				CASE 2
+					actor(n).vecX = 5
+					actor(n).vecY = 0
+				CASE 3
+					actor(n).vecX = -5
+					actor(n).vecY = 0
+				CASE 4
+					actor(n).vecX = 0
+					actor(n).vecY = 10
+				CASE 5
+					actor(n).vecX = 0
+					actor(n).vecY = -10
+				CASE 6
+					actor(n).vecX = -5
+					actor(n).vecY = 10
+				CASE 7
+					actor(n).vecX = 5
+					actor(n).vecY = 10
+				CASE 8
+					actor(n).vecX = -5
+					actor(n).vecY = -10
+				CASE 9
+					actor(n).vecX = 5
+					actor(n).vecY = -10
+				END SELECT
+				IF actor(n).anim AND c > 0 AND c < 10 THEN 
+					actor(n).vecX = -actor(n).vecX
+					actor(n).vecY = -actor(n).vecY
+				END IF
+			ELSE
+				actor(n).dir = actor(n).dir - 1
 			END IF
 		END SELECT
 		
@@ -1541,13 +1572,8 @@ DO
 	frame = actor(n).frame
 	IF advanceAnims THEN actor(n).frame = animation(frame).jump
 	
-	'IF animation(frame).offset(0) = 0 THEN
-	' errorMessage$ = "Actor"+str$(n)+"/"+str$(actor(n).control)+" empty frame @ "+str$(frame)
-	' quit
-	'END IF
-	
-	x = actor(n).x - screenX + animation(frame).x
-	y = actor(n).y - screenY + animation(frame).y 
+	x = actor(n).x + animation(frame).x - screenX
+	y = actor(n).y + animation(frame).y - screenY
 
 	IF actor(n).collider THEN           
 		IF frame AND x > -10 AND x < 40 AND y > -10 AND y < 50 THEN
@@ -2227,7 +2253,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -999
 		actor(n).vecY = 0
 		actor(n).frame = 20	
-    CASE 50 TO 51  	'H and V platform
+    CASE 50 TO 53  	'Platforms
 		actorListNew n
 		actor(n).count = object
 		actor(n).jump = 0
@@ -2237,10 +2263,12 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -999
 		actor(n).frame = 18
 		actor(n).visX = 999
-		actor(n).visY = 160
+		actor(n).visY = 240
 		actor(n).vecY = 0
 		actor(n).vecX = 0
+		actor(n).anim = 0
 		IF object = 50 THEN actor(n).vecX = 5
+		IF object = 53 THEN actor(n).anim = 1
 	CASE 62	   'Checkpoint / Spawner portal
 		actorListNew n
 		actor(n).control = 62

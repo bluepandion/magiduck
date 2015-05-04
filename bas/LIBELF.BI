@@ -185,6 +185,7 @@ TYPE playerType
 	gotCoins AS INTEGER
 	gotChests AS INTEGER
 	levelColor AS INTEGER
+	parent AS INTEGER
 END TYPE
 
 TYPE spriteListType
