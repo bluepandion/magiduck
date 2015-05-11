@@ -19,6 +19,7 @@ DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
 DECLARE SUB menuClear ()
 DECLARE FUNCTION tileRead% (x%, y%)
+DECLARE FUNCTION menuPrelGet% (position%, size%)
 
 DEFINT A-Z
 
@@ -66,6 +67,8 @@ DIM SHARED camSpeedX(-23 TO 23)
 DIM SHARED camSpeedY(-19 TO 19)
 
 DIM SHARED soundTrack AS STRING * 256
+
+DIM SHARED menuPreload AS STRING
 
 SUB aDrawTiles (area, forceOfs)
 	p0% = forceOfs  'gfx.tileOfs
@@ -204,12 +207,11 @@ SUB elfInit
 END SUB
 
 FUNCTION getSpawnSlot
-
- FOR n = 4 TO 60
-  IF actor(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
- NEXT n
- getSpawnSlot = 60
- debugOut "WARNING: All spawn slots occupied!"
+	FOR n = 4 TO 60
+		IF actor(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
+	NEXT n
+	getSpawnSlot = 60
+	debugOut "WARNING: All spawn slots occupied!"
 END FUNCTION
 
 SUB handleCamera
@@ -338,71 +340,76 @@ SUB handleScroll
 END SUB
 
 SUB initLookUps
+	OPEN "w40char.clu" FOR BINARY AS #1
+		GET #1, , w40char
+	CLOSE #1
 
-OPEN "w40char.clu" FOR BINARY AS #1
- GET #1, , w40char
-CLOSE #1
+	OPEN "sincos.clu" FOR BINARY AS #1
+		GET #1, 1, angle
+	CLOSE #1
 
-OPEN "sincos.clu" FOR BINARY AS #1
- GET #1, 1, angle
-CLOSE #1
+	OPEN "floats.txt" FOR INPUT AS #1
+		FOR ff = 0 TO 9
+			FOR n = 0 TO 9
+				INPUT #1, v
+				FOR f = 0 TO 3
+					fraction(f * 10 + ff, n) = f + v
+					fraction(f * -10 - ff, n) = (f + v) * -1
+				NEXT f
+			NEXT n
+		NEXT ff
+	CLOSE #1
 
-OPEN "floats.txt" FOR INPUT AS #1
-FOR ff = 0 TO 9
- FOR n = 0 TO 9
-  INPUT #1, v
-	FOR f = 0 TO 3
-	fraction(f * 10 + ff, n) = f + v
-	fraction(f * -10 - ff, n) = (f + v) * -1
-  NEXT f
- NEXT n
-NEXT ff
-CLOSE #1
+	m# = .2
+	FOR n = 1 TO 20                        '2  = 0.4
+		mulTable(n, 0) = 0
+		FOR a = 1 TO 20                    '4  = 0.8
+			v = INT(m# * a)
+			mulTable(n, a) = v             '8  = 1.6
+			mulTable(n, -a) = -v
+		NEXT a                             '12 = 2.4
+		m# = m# + .2                       '16 = 3.2
+	NEXT n
 
-m# = .2
-FOR n = 1 TO 20                        '2  = 0.4
- mulTable(n, 0) = 0
- FOR a = 1 TO 20                       '4  = 0.8
-  v = INT(m# * a)
-  mulTable(n, a) = v              '8  = 1.6
-  mulTable(n, -a) = -v
- NEXT a                                '12 = 2.4
- m# = m# + .2                          '16 = 3.2
-NEXT n
+	C = 0
+	x = 0
+	FOR n = -16 TO 95
+		tilePosXlookUp(n) = x
+		IF n > -1 AND n < 79 THEN C = C + 1
+		IF C = 4 THEN C = 0: x = x + 1
+	NEXT n
 
-C = 0
-x = 0
-FOR n = -16 TO 95
- tilePosXlookUp(n) = x
- IF n > -1 AND n < 79 THEN C = C + 1
- IF C = 4 THEN C = 0: x = x + 1
-NEXT n
+	C = 0
+	y = 0
+	FOR n = -16 TO 655
+		tilePosYlookUp(n) = y
+		IF n > -1 AND n < 639 THEN C = C + 1
+		IF C = 8 THEN C = 0: y = y + 20
+	NEXT n
 
-C = 0
-y = 0
-FOR n = -16 TO 655
- tilePosYlookUp(n) = y
- IF n > -1 AND n < 639 THEN C = C + 1
- IF C = 8 THEN C = 0: y = y + 20
-NEXT n
+	FOR n = -23 TO 23
+		speed = 0
+		IF ABS(n) > 0 THEN speed = 1
+		IF ABS(n) > 17 THEN speed = 2
+		IF n < 0 THEN speed = -speed
+		camSpeedX(n) = speed
+	NEXT n
 
- FOR n = -23 TO 23
-  speed = 0
-  IF ABS(n) > 0 THEN speed = 1
-  IF ABS(n) > 17 THEN speed = 2
-  IF n < 0 THEN speed = -speed
-  camSpeedX(n) = speed
- NEXT n
+	FOR n = -19 TO 19
+		speed = 0
+		IF ABS(n) > 0 THEN speed = 1
+		IF ABS(n) > 6 THEN speed = 2
+		IF ABS(n) > 12 THEN speed = 3
+		IF n < 0 THEN speed = -speed
+		camSpeedY(n) = speed
+	NEXT n
 
- FOR n = -19 TO 19
-  speed = 0
-  IF ABS(n) > 0 THEN speed = 1
-  IF ABS(n) > 6 THEN speed = 2
-  IF ABS(n) > 12 THEN speed = 3
-  IF n < 0 THEN speed = -speed
-  camSpeedY(n) = speed
- NEXT n
-
+	OPEN "menuprel.cmp" FOR BINARY AS #1
+		n = LOF(1)
+		menuPreload = SPACE$(n)
+		GET #1, 1, menuPreload
+	CLOSE #1
+	debugOut "Preloaded menu, lenght:" + str$(len(preLoad))	
 END SUB
 
 SUB loadKeyboard
@@ -776,7 +783,11 @@ SUB menuLoad (menuNo%)
 	
 	menuClear
 	
-	OPEN "menu.cmm" FOR BINARY AS #1
+	IF menuNo% > 9 THEN
+	'-------------------------------------------------------------------------------------------------------------------------
+		' Process streamed-from-file menu items
+		'
+		OPEN "menu.cmm" FOR BINARY AS #1
 		GET #1, menuNo% * 6 + 1, fileOfs
 		GET #1, menuNo% * 6 + 3, loadInt
 		GET #1, menuNo% * 6 + 5, player.menuItem
@@ -828,7 +839,48 @@ SUB menuLoad (menuNo%)
 				fileOfs = fileOfs + itemLen
 		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 		NEXT item
-	
+		CLOSE #1
+	ELSE
+		'-------------------------------------------------------------------------------------------------------------------------
+		' Process preloaded menu items
+		'
+		debugOut "-Preloaded menu"
+		n = menuNo% * 6 + 1
+		fileOfs = menuPrelGet%(INT(n), 2)
+		itemCount = menuPrelGet%(0, 2)
+		player.menuItem = menuPrelGet%(0, 2)
+		tileCopyList(0, gfx.page).x = menuPrelGet%(fileOfs, 1)
+		tileCopyList(0, gfx.page).y = menuPrelGet%(0, 1)
+		tileCopyList(0, gfx.page).w = menuPrelGet%(0, 1)
+		tileCopyList(0, gfx.page).h = menuPrelGet%(0, 1)
+		loadInt = menuPrelGet(0, 2)
+		tileCopyList(1, gfx.page).y = 255
+		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		
+		for item = 1 to itemCount
+				itemIDX = menuPrelGet(0, 2)
+				n = getSpawnSlot
+				IF itemIDX > 0 THEN 
+					actor(n).exist = 1
+					actor(n).control = -16000
+					actor(n).frame = 0
+					menuItem(itemIDX) = n
+					debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
+				END IF
+				
+				actor(n).lPrev = menuPrelGet%(0, 2)
+				actor(n).lNext = menuPrelGet%(0, 2)
+				actor(n).x = menuPrelGet%(0, 2)
+				actor(n).y = menuPrelGet%(0, 2)
+				actor(n).vecX = menuPrelGet%(0, 2)
+				actor(n).vecY = menuPrelGet%(0, 2)
+				actor(n).frame = menuPrelGet%(0, 2)
+				itemLen = menuPrelGet%(0, 1)
+				n = menuPrelGet%(-1, -1)
+				w40char.text = MID$(menuPreload, n, itemLen)
+		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
+		NEXT item
+	END IF	
 	debugOut " Menu load OK. Actors:"
 	FOR n = 1 to 60
 		IF actor(n).exist OR n = 1 THEN
@@ -836,7 +888,6 @@ SUB menuLoad (menuNo%)
 		END IF
 	NEXT n
 		
-	CLOSE #1
 END SUB
 
 SUB menuClear
@@ -849,4 +900,16 @@ SUB menuClear
 		menuItem(n) = 0
 	NEXT n
 END SUB
-		
+
+FUNCTION menuPrelGet%(position%, size%)
+	STATIC loadPos AS INTEGER
+	
+	IF loadPos > LEN(menuPreload) THEN errorMessage$ = "Prelmenu error": Quit
+	
+	IF size = -1 OR position% = -1 THEN menuPrelGet% = loadPos: EXIT FUNCTION
+	IF position% THEN loadPos = position%
+	debugOut "read " + str$(loadPos)
+	IF size% = 1 THEN menuPrelGet% = ASC(MID$(menuPreload, loadPos, 1))
+	IF size% = 2 THEN menuPrelGet% = CVI(MID$(menuPreload, loadPos, 2))
+	loadPos = loadPos + size%
+END FUNCTION

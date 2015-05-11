@@ -6,14 +6,10 @@ DIM itemCount AS INTEGER
 
 ofsOFFSETS = 1
 ofsData = 385
-ofsPrelData = 21
 
 DIM byte AS STRING * 1
 
-DIM menuPreData AS STRING
-DIM menuPreLoad(1 TO 9) AS INTEGER
-
-DIM saveString AS STRING
+DIM menuData AS STRING * 10000
 
 CLS
 OPEN "menu.cmm" FOR BINARY AS #1
@@ -35,52 +31,30 @@ OPEN "menu.cmm" FOR BINARY AS #2
       INPUT #1, clearH
       INPUT #1, clearchar$
       INPUT #1, clearAttr
-
-      saveString = ""
-
-      'Save streamed or preloaded menu data
-      '----------------------------------------------------------------------
-      IF menuNo > 9 THEN
-         PUT #2, ofsOFFSETS + menuNo * 6, ofsData
-         PUT #2, ofsOFFSETS + menuNo * 6 + 4, startItem
-      ELSE
-         menuPreLoad(menuNo) = ofsPrelData
-         MID$(menuPrelData, menuNo, 1) = CHR$(startItem)
-      END IF
+         'PUT #2, ofsOFFSETS + menuNo * 6, ofsDATA
+         'PUT #2, ofsOFFSETS + menuNo * 6 + 4, startItem
+         MID$(menuData, menuNo * 2 + 1, 1) = CHR$(ofsData)
+         MID$(menuData, menuNo * 2 + 2, 1) = CHR$(startItem)
 
          byte = CHR$(clearX + fineTuneX)
+         MID$(menuData, ofsData, 1) = byte
          'PUT #2, ofsDATA, byte
-         saveString = saveString + byte
-            'ofsDATA = ofsDATA + 1
+            ofsData = ofsData + 1
          byte = CHR$(clearY + fineTuneY)
-         saveString = saveString + byte
-         'PUT #2, ofsDATA, byte
-         '   ofsDATA = ofsDATA + 1
+         PUT #2, ofsData, byte
+            ofsData = ofsData + 1
          byte = CHR$(clearW)
-         saveString = saveString + byte
-         'PUT #2, ofsDATA, byte
-         '   ofsDATA = ofsDATA + 1
+         PUT #2, ofsData, byte
+            ofsData = ofsData + 1
          byte = CHR$(clearH)
-         saveString = saveString + byte
-         'PUT #2, ofsDATA, byte
-         '   ofsDATA = ofsDATA + 1
+         PUT #2, ofsData, byte
+            ofsData = ofsData + 1
          byte = clearchar$
-         saveString = saveString + byte
-         'PUT #2, ofsDATA, byte
-         '   ofsDATA = ofsDATA + 1
+         PUT #2, ofsData, byte
+            ofsData = ofsData + 1
          byte = CHR$(clearAttr)
-         saveString = saveString + byte
-         'PUT #2, ofsDATA, byte
-         '   ofsDATA = ofsDATA + 1
-
-         IF menuNo > 9 THEN
-            PUT #2, ofsData, saveString
-            ofsData = ofsData + LEN(saveString)
-         ELSE
-            menuPreLoad(menuNo) = ofsPrelData
-            MID$(menuPrelData, menuNo, 1) = CHR$(startItem)
-         END IF
-
+         PUT #2, ofsData, byte
+            ofsData = ofsData + 1
          itemCount = 0
          DO
             INPUT #1, itemIDX

@@ -421,7 +421,7 @@ CASE 258
 		ELSE
 			player.menuPrev = player.menuItem
 			nn = menuItem(player.menuItem)
-			IF kbArray(80) OR kbArray(75) THEN 
+			IF kbArray(80) OR kbArray(77) THEN 
 				IF player.menuItem <> actor(nn).lNext THEN
 					player.menuItem = actor(nn).lNext
 					soundEvent = sndMenuNext
@@ -429,7 +429,7 @@ CASE 258
 					player.menuHLcolor = &H4747
 				END IF
 			END IF
-			IF kbArray(72) OR kbArray(78) THEN 
+			IF kbArray(72) OR kbArray(75) THEN 
 				IF player.menuItem <> actor(nn).lPrev THEN
 					player.menuItem = actor(nn).lPrev
 					soundEvent = sndMenuPrev

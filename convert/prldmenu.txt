@@ -31,30 +31,11 @@
 01, 01, 02, " no! ", 11, 20, 15, 4, &H0E, &H0C
 02, 01, 02, "yeah!", 23, 20, 15, 4, &H0E, &H0C
 -1
-0010, 01, 0, 0, 11, 24, 17, 22, " ", &H00
+0006, 01, 0, 0, 11, 24, 17, 22, " ", &H00
 01, 01, 02, "   new  game   ", 12, 25, 19, 4, &H0E, &H0C
 02, 01, 03, "   load game   ", 12, 29, 19, 4, &H0E, &H0C
 03, 02, 04, "     help      ", 12, 33, 19, 4, &H0E, &H0C
 04, 03, 05, "    credits    ", 12, 37, 19, 4, &H0E, &H0C
 05, 04, 05, "  quit to dos  ", 12, 41, 19, 4, &H0E, &H0C
 00, 00, 00, "v 0.1505A", 30, 45, 8, 4, &H17, &H19
--1
-0013, 01, 0, 0, 01, 04, 38, 48, " ", &H00
-01, 01, 01, " BACK ", 30, 46, 6, 4, &H0E, &H0C
-00, 00, 00, " greets to:", 5, 5, 10, 10, &H0E, &H0C
--1
-0011, 01, 0, -5, 1, 7, 38, 46, " ", &H11
-00, 00, 00, "..................", 4, 9, 30, 4, &H19, &H19
-00, 00, 00, "menu layout demo", 5, 8, 30, 4, &H1F, &H1F
-00, 00, 00, "this layout is completely",  1, 14, 30, 4, &H1E, &H17
-00, 00, 00, "created with the new menu system.",  1, 17, 30, 4, &H1E, &H17
-00, 00, 00, "it's capable of rendering an unlimited",  1, 22, 30, 4, &H17, &H17
-00, 00, 00, "amount of static elements and",  1, 25, 30, 4, &H17, &H17
-00, 00, 00, "16 interactive menu elements.",  1, 28, 30, 4, &H1C, &H1C
-00, 00, 00, "it only uses 32 bytes to store menu",  1, 32, 38, 12, &H19, &H19
-00, 00, 00, "items but otherwise uses video memory",  1, 35, 30, 4, &H19, &H19
-00, 00, 00, "and the general entity data for",  1, 38, 30, 4, &H19, &H19
-00, 00, 00, "variables!",  1, 41, 30, 4, &H19, &H19
-02, 02, 01, " lame! ", 18, 48, 30, 4, &H0E, &H0C
-01, 02, 01, " awesome! ", 28, 48, 30, 4, &H0E, &H0C
 -1
