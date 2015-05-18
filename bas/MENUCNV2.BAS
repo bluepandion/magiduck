@@ -90,7 +90,7 @@ CLS
                   
                byte = CHR$(itemLen)
                saveString = saveString + byte
-               saveString = saveString + itemText$
+               saveString = saveString + UCASE$(itemText$)
             END IF
          LOOP WHILE itemIDX > -1
          IF menuNo > 9 THEN

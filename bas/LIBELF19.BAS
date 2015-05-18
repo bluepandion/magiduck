@@ -19,7 +19,7 @@ DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
 DECLARE SUB menuClear ()
 DECLARE FUNCTION tileRead% (x%, y%)
-DECLARE FUNCTION menuPrelGet% (position%, size%)
+DECLARE FUNCTION menuGetData% (position%, size%)
 
 DEFINT A-Z
 
@@ -846,19 +846,20 @@ SUB menuLoad (menuNo%)
 		'
 		debugOut "-Preloaded menu"
 		n = menuNo% * 6 + 1
-		fileOfs = menuPrelGet%(INT(n), 2)
-		itemCount = menuPrelGet%(0, 2)
-		player.menuItem = menuPrelGet%(0, 2)
-		tileCopyList(0, gfx.page).x = menuPrelGet%(fileOfs, 1)
-		tileCopyList(0, gfx.page).y = menuPrelGet%(0, 1)
-		tileCopyList(0, gfx.page).w = menuPrelGet%(0, 1)
-		tileCopyList(0, gfx.page).h = menuPrelGet%(0, 1)
-		loadInt = menuPrelGet(0, 2)
+		fileOfs = menuGetData%(INT(n), 2)
+		itemCount = menuGetData%(0, 2)
+		player.menuItem = menuGetData%(0, 2)
+		tileCopyList(0, gfx.page).x = menuGetData%(fileOfs, 1)
+		tileCopyList(0, gfx.page).y = menuGetData%(0, 1)
+		tileCopyList(0, gfx.page).w = menuGetData%(0, 1)
+		tileCopyList(0, gfx.page).h = menuGetData%(0, 1)
+		loadInt = menuGetData%(0, 2)
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		fileOfs = menuGetData%(-1, -1)
 		
 		for item = 1 to itemCount
-				itemIDX = menuPrelGet(0, 2)
+				itemIDX = menuGetData%(fileOfs, 2)
 				n = getSpawnSlot
 				IF itemIDX > 0 THEN 
 					actor(n).exist = 1
@@ -868,16 +869,19 @@ SUB menuLoad (menuNo%)
 					debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
 				END IF
 				
-				actor(n).lPrev = menuPrelGet%(0, 2)
-				actor(n).lNext = menuPrelGet%(0, 2)
-				actor(n).x = menuPrelGet%(0, 2)
-				actor(n).y = menuPrelGet%(0, 2)
-				actor(n).vecX = menuPrelGet%(0, 2)
-				actor(n).vecY = menuPrelGet%(0, 2)
-				actor(n).frame = menuPrelGet%(0, 2)
-				itemLen = menuPrelGet%(0, 1)
-				n = menuPrelGet%(-1, -1)
-				w40char.text = MID$(menuPreload, n, itemLen)
+				actor(n).lPrev = menuGetData%(0, 2)
+				actor(n).lNext = menuGetData%(0, 2)
+				actor(n).x = menuGetData%(0, 2)
+				actor(n).y = menuGetData%(0, 2)
+				actor(n).vecX = menuGetData%(0, 2)
+				actor(n).vecY = menuGetData%(0, 2)
+				actor(n).frame = menuGetData%(0, 2)
+				itemLen = menuGetData%(0, 1)
+				fileOfs = menuGetData%(-1, -1)
+				debugOut str$(itemLen) + str$(fileOfs)
+				w40char.text = MID$(menuPreload, fileOfs, itemLen)
+				debugOut w40char.text
+				fileOfs = fileOfs + itemLen				
 		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 		NEXT item
 	END IF	
@@ -901,15 +905,38 @@ SUB menuClear
 	NEXT n
 END SUB
 
-FUNCTION menuPrelGet%(position%, size%)
+'
+' Read a byte/word from streamed or preloaded menu data.
+'
+FUNCTION menuGetData%(position%, size%)	
 	STATIC loadPos AS INTEGER
+	STATIC loadSrc AS INTEGER
 	
-	IF loadPos > LEN(menuPreload) THEN errorMessage$ = "Prelmenu error": Quit
-	
-	IF size = -1 OR position% = -1 THEN menuPrelGet% = loadPos: EXIT FUNCTION
+	IF size = -1 OR position% = -1 THEN menuGetData% = loadPos: EXIT FUNCTION
+	IF position% = -2 THEN loadSrc = size%
 	IF position% THEN loadPos = position%
-	debugOut "read " + str$(loadPos)
-	IF size% = 1 THEN menuPrelGet% = ASC(MID$(menuPreload, loadPos, 1))
-	IF size% = 2 THEN menuPrelGet% = CVI(MID$(menuPreload, loadPos, 2))
+	
+	
+	IF loadSrc THEN
+		SELECT CASE size%
+		CASE 1 
+			GET #1, loadPos, loadStr
+			menuGetData% = ASC(loadStr)		
+		CASE 2
+			GET #1, loadPos, loadInt
+			menuGetData% = loadInt
+		END SELECT
+	ELSE
+		SELECT CASE size%
+		CASE 1
+			menuGetData% = ASC(MID$(menuPreload, loadPos, 1))
+			n = ASC(MID$(menuPreload, loadPos, 1))
+			debugOut "read " + str$(loadPos) + str$(n)
+		CASE 2
+			menuGetData% = CVI(MID$(menuPreload, loadPos, 2))
+			n = CVI(MID$(menuPreload, loadPos, 2))
+			debugOut "read " + str$(loadPos) + str$(n)
+		END SELECT
+	END IF
 	loadPos = loadPos + size%
 END FUNCTION
