@@ -784,114 +784,61 @@ SUB menuLoad (menuNo%)
 	menuClear
 	
 	IF menuNo% > 9 THEN
-	'-------------------------------------------------------------------------------------------------------------------------
-		' Process streamed-from-file menu items
-		'
-		OPEN "menu.cmm" FOR BINARY AS #1
-		GET #1, menuNo% * 6 + 1, fileOfs
-		GET #1, menuNo% * 6 + 3, loadInt
-		GET #1, menuNo% * 6 + 5, player.menuItem
-		itemCount = loadInt
-		GET #1, fileOfs, loadStr
-		tileCopyList(0, gfx.page).x = ASC(loadStr)
-		GET #1, fileOfs + 1, loadStr
-		tileCopyList(0, gfx.page).y = ASC(loadStr)
-		GET #1, fileOfs + 2, loadStr
-		tileCopyList(0, gfx.page).w = ASC(loadStr)
-		GET #1, fileOfs + 3, loadStr
-		tileCopyList(0, gfx.page).h = ASC(loadStr)
-		GET #1, fileOfs + 4, loadInt
-		fileOfs = fileOfs + 6		
-		tileCopyList(1, gfx.page).y = 255
-		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
-		
-		for item = 1 to itemCount
-				GET #1, fileOfs, loadInt
-				fileOfs = fileOfs + 2
-				itemIDX = loadInt
-				
-				n = getSpawnSlot
-				IF itemIDX > 0 THEN 
-					actor(n).exist = 1
-					actor(n).control = -16000
-					actor(n).frame = 0
-					menuItem(itemIDX) = n
-					'debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
-				END IF
-				
-				GET #1, fileOfs, actor(n).lPrev
-				GET #1, fileOfs + 2, actor(n).lNext
-				GET #1, fileOfs + 4, actor(n).x
-				GET #1, fileOfs + 6, actor(n).y
-				GET #1, fileOfs + 8, actor(n).vecX
-				GET #1, fileOfs + 10, actor(n).vecY
-				GET #1, fileOfs + 12, actor(n).frame
-				fileOfs = fileOfs + 14
-
-				'debugOut str$(actor(n).x)+str$(actor(n).y)+str$(actor(n).vecX)+str$(actor(n).vecY)+str$(actor(n).frame)
-				
-				GET #1, fileOfs, loadStr
-				itemLen = ASC(loadStr)
-				fileOfs = fileOfs + 1
-				loadVarStr = SPACE$(itemLen)
-				GET #1, fileOfs, loadVarStr
-				w40char.text = loadVarStr
-				fileOfs = fileOfs + itemLen
-		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
-		NEXT item
-		CLOSE #1
+			OPEN "menu.cmm" FOR BINARY AS #1
+			n = menuGetData(-2, 1)			'Set GetData read-mode to file
 	ELSE
-		'-------------------------------------------------------------------------------------------------------------------------
-		' Process preloaded menu items
-		'
-		debugOut "-Preloaded menu"
-		n = menuNo% * 6 + 1
-		fileOfs = menuGetData%(INT(n), 2)
-		itemCount = menuGetData%(0, 2)
-		player.menuItem = menuGetData%(0, 2)
-		tileCopyList(0, gfx.page).x = menuGetData%(fileOfs, 1)
-		tileCopyList(0, gfx.page).y = menuGetData%(0, 1)
-		tileCopyList(0, gfx.page).w = menuGetData%(0, 1)
-		tileCopyList(0, gfx.page).h = menuGetData%(0, 1)
-		loadInt = menuGetData%(0, 2)
-		tileCopyList(1, gfx.page).y = 255
-		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+			n = menuGetData(-2, 0)			'Set GetData read-mode to preload
+	END IF
+	
+	fileOfs = menuGetData%(menuNo% * 6 + 1, 2)
+	itemCount = menuGetData%(0, 2)
+	player.menuItem = menuGetData%(0, 2)
+	tileCopyList(0, gfx.page).x = menuGetData%(fileOfs, 1)
+	tileCopyList(0, gfx.page).y = menuGetData%(0, 1)
+	tileCopyList(0, gfx.page).w = menuGetData%(0, 1)
+	tileCopyList(0, gfx.page).h = menuGetData%(0, 1)
+	loadInt = menuGetData%(0, 2)
+	tileCopyList(1, gfx.page).y = 255
+	aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+	fileOfs = menuGetData%(-1, -1)
+	
+	for item = 1 to itemCount
+		itemIDX = menuGetData%(fileOfs, 2)
+		n = getSpawnSlot
+		IF itemIDX > 0 THEN 
+			actor(n).exist = 1
+			actor(n).control = -16000
+			actor(n).frame = 0
+			menuItem(itemIDX) = n
+		END IF			
+		actor(n).lPrev = menuGetData%(0, 2)
+		actor(n).lNext = menuGetData%(0, 2)
+		actor(n).x = menuGetData%(0, 2)
+		actor(n).y = menuGetData%(0, 2)
+		actor(n).vecX = menuGetData%(0, 2)
+		actor(n).vecY = menuGetData%(0, 2)
+		actor(n).frame = menuGetData%(0, 2)
+		itemLen = menuGetData%(0, 1)
 		fileOfs = menuGetData%(-1, -1)
-		
-		for item = 1 to itemCount
-				itemIDX = menuGetData%(fileOfs, 2)
-				n = getSpawnSlot
-				IF itemIDX > 0 THEN 
-					actor(n).exist = 1
-					actor(n).control = -16000
-					actor(n).frame = 0
-					menuItem(itemIDX) = n
-					debugOut "Loaded item"+str$(itemIDX)+" to Actor"+str$(n)
-				END IF
-				
-				actor(n).lPrev = menuGetData%(0, 2)
-				actor(n).lNext = menuGetData%(0, 2)
-				actor(n).x = menuGetData%(0, 2)
-				actor(n).y = menuGetData%(0, 2)
-				actor(n).vecX = menuGetData%(0, 2)
-				actor(n).vecY = menuGetData%(0, 2)
-				actor(n).frame = menuGetData%(0, 2)
-				itemLen = menuGetData%(0, 1)
-				fileOfs = menuGetData%(-1, -1)
-				debugOut str$(itemLen) + str$(fileOfs)
-				w40char.text = MID$(menuPreload, fileOfs, itemLen)
-				debugOut w40char.text
-				fileOfs = fileOfs + itemLen				
+		IF menuNo% > 9 THEN
+			loadVarStr = SPACE$(itemLen)
+			GET #1, fileOfs, loadVarStr
+			w40char.text = loadVarStr
+		ELSE
+			w40char.text = MID$(menuPreload, fileOfs, itemLen)
+		END IF
+		fileOfs = fileOfs + itemLen				
 		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
-		NEXT item
-	END IF	
+	NEXT item
+	
 	debugOut " Menu load OK. Actors:"
 	FOR n = 1 to 60
 		IF actor(n).exist OR n = 1 THEN
 			debugOut str$(n) + str$(actor(n).lPrev) + str$(actor(n).lNext) + str$(actor(n).control)
 		END IF
 	NEXT n
-		
+	
+	IF menuNo% > 9 THEN CLOSE #1	
 END SUB
 
 SUB menuClear
@@ -913,7 +860,7 @@ FUNCTION menuGetData%(position%, size%)
 	STATIC loadSrc AS INTEGER
 	
 	IF size = -1 OR position% = -1 THEN menuGetData% = loadPos: EXIT FUNCTION
-	IF position% = -2 THEN loadSrc = size%
+	IF position% = -2 THEN loadSrc = size%: EXIT FUNCTION
 	IF position% THEN loadPos = position%
 	
 	
@@ -931,11 +878,9 @@ FUNCTION menuGetData%(position%, size%)
 		CASE 1
 			menuGetData% = ASC(MID$(menuPreload, loadPos, 1))
 			n = ASC(MID$(menuPreload, loadPos, 1))
-			debugOut "read " + str$(loadPos) + str$(n)
 		CASE 2
 			menuGetData% = CVI(MID$(menuPreload, loadPos, 2))
 			n = CVI(MID$(menuPreload, loadPos, 2))
-			debugOut "read " + str$(loadPos) + str$(n)
 		END SELECT
 	END IF
 	loadPos = loadPos + size%

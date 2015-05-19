@@ -414,7 +414,7 @@ CASE 258
 				player.menuHLcolor = &H6E6E
 			END IF
 			IF actor(2).count < 5 THEN
-				IF kbArray(80) = 0 AND kbArray(72) = 0 THEN actor(2).count = 1
+				IF kbArray(80) = 0 AND kbArray(72) = 0 AND kbArray(75) = 0 AND kbArray(77) = 0 THEN actor(2).count = 1
 			END IF
 			actor(2).count = actor(2).count - 1
 			player.menuHLcolor = &HCECF
