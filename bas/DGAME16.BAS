@@ -561,7 +561,6 @@ CASE 256
 		player.menuContext = 3
 		player.menuMode = 0
 		actor(2).control = 258
-		debugOut "Switch to menu mode after player death."
 	END IF
 '------------------------------------------------------------------------------
 'Normal player
@@ -785,11 +784,6 @@ DO
 	n = actor(listIDX).lNext
 	'IF n = 0 THEN quit
 	listIDX = n
-	
-	'debug
-	IF actor(2).control = 258 THEN
-		debugOut str$(n)
-	END IF
 	
 	
 	'------------------------------------------------------------------------------

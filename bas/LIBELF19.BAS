@@ -19,7 +19,8 @@ DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
 DECLARE SUB menuClear ()
 DECLARE FUNCTION tileRead% (x%, y%)
-DECLARE FUNCTION menuGetData% (position%, size%)
+DECLARE FUNCTION menuGetByte% ()
+DECLARE FUNCTION menuGetWord% ()
 
 DEFINT A-Z
 
@@ -69,6 +70,8 @@ DIM SHARED camSpeedY(-19 TO 19)
 DIM SHARED soundTrack AS STRING * 256
 
 DIM SHARED menuPreload AS STRING
+DIM SHARED menuLoadPos AS INTEGER
+DIM SHARED menuLoadSrc AS INTEGER
 
 SUB aDrawTiles (area, forceOfs)
 	p0% = forceOfs  'gfx.tileOfs
@@ -778,32 +781,33 @@ END SUB
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
 	
-	debugOut "Loading menu " + str$(menuNo%) + "."
-	debugOut " Page ofs: " + str$(gfx.pageOfs(0)) + "," + str$(gfx.pageOfs(1))
+'	debugOut "Loading menu " + str$(menuNo%) + "."
+'	debugOut " Page ofs: " + str$(gfx.pageOfs(0)) + "," + str$(gfx.pageOfs(1))
 	
 	menuClear
 	
 	IF menuNo% > 9 THEN
-			OPEN "menu.cmm" FOR BINARY AS #1
-			n = menuGetData(-2, 1)			'Set GetData read-mode to file
+		OPEN "menu.cmm" FOR BINARY AS #1
+		menuLoadSrc = 1
 	ELSE
-			n = menuGetData(-2, 0)			'Set GetData read-mode to preload
+		menuLoadSrc = 0
 	END IF
 	
-	fileOfs = menuGetData%(menuNo% * 6 + 1, 2)
-	itemCount = menuGetData%(0, 2)
-	player.menuItem = menuGetData%(0, 2)
-	tileCopyList(0, gfx.page).x = menuGetData%(fileOfs, 1)
-	tileCopyList(0, gfx.page).y = menuGetData%(0, 1)
-	tileCopyList(0, gfx.page).w = menuGetData%(0, 1)
-	tileCopyList(0, gfx.page).h = menuGetData%(0, 1)
-	loadInt = menuGetData%(0, 2)
+	menuLoadPos = menuNo% * 6 + 1
+	fileOfs = menuGetWord%
+	itemCount = menuGetWord%
+	player.menuItem = menuGetWord%
+	menuLoadPos = fileOfs
+	tileCopyList(0, gfx.page).x = menuGetByte%
+	tileCopyList(0, gfx.page).y = menuGetByte%
+	tileCopyList(0, gfx.page).w = menuGetByte%
+	tileCopyList(0, gfx.page).h = menuGetByte%
+	loadInt = menuGetWord%
 	tileCopyList(1, gfx.page).y = 255
 	aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
-	fileOfs = menuGetData%(-1, -1)
 	
 	for item = 1 to itemCount
-		itemIDX = menuGetData%(fileOfs, 2)
+		itemIDX = menuGetWord%
 		n = getSpawnSlot
 		IF itemIDX > 0 THEN 
 			actor(n).exist = 1
@@ -811,32 +815,31 @@ SUB menuLoad (menuNo%)
 			actor(n).frame = 0
 			menuItem(itemIDX) = n
 		END IF			
-		actor(n).lPrev = menuGetData%(0, 2)
-		actor(n).lNext = menuGetData%(0, 2)
-		actor(n).x = menuGetData%(0, 2)
-		actor(n).y = menuGetData%(0, 2)
-		actor(n).vecX = menuGetData%(0, 2)
-		actor(n).vecY = menuGetData%(0, 2)
-		actor(n).frame = menuGetData%(0, 2)
-		itemLen = menuGetData%(0, 1)
-		fileOfs = menuGetData%(-1, -1)
+		actor(n).lPrev = menuGetWord%
+		actor(n).lNext = menuGetWord%
+		actor(n).x = menuGetWord%
+		actor(n).y = menuGetWord%
+		actor(n).vecX = menuGetWord%
+		actor(n).vecY = menuGetWord%
+		actor(n).frame = menuGetWord%
+		itemLen = menuGetByte%		
 		IF menuNo% > 9 THEN
 			loadVarStr = SPACE$(itemLen)
-			GET #1, fileOfs, loadVarStr
+			GET #1, menuLoadPos, loadVarStr
 			w40char.text = loadVarStr
 		ELSE
-			w40char.text = MID$(menuPreload, fileOfs, itemLen)
+			w40char.text = MID$(menuPreload, menuLoadPos, itemLen)
 		END IF
-		fileOfs = fileOfs + itemLen				
+		menuLoadPos = menuLoadPos + itemLen				
 		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 	NEXT item
 	
-	debugOut " Menu load OK. Actors:"
-	FOR n = 1 to 60
-		IF actor(n).exist OR n = 1 THEN
-			debugOut str$(n) + str$(actor(n).lPrev) + str$(actor(n).lNext) + str$(actor(n).control)
-		END IF
-	NEXT n
+	'debugOut " Menu load OK. Actors:"
+	'FOR n = 1 to 60
+'		IF actor(n).exist OR n = 1 THEN
+'			debugOut str$(n) + str$(actor(n).lPrev) + str$(actor(n).lNext) + str$(actor(n).control)
+'		END IF
+'	NEXT n
 	
 	IF menuNo% > 9 THEN CLOSE #1	
 END SUB
@@ -855,33 +858,24 @@ END SUB
 '
 ' Read a byte/word from streamed or preloaded menu data.
 '
-FUNCTION menuGetData%(position%, size%)	
-	STATIC loadPos AS INTEGER
-	STATIC loadSrc AS INTEGER
-	
-	IF size = -1 OR position% = -1 THEN menuGetData% = loadPos: EXIT FUNCTION
-	IF position% = -2 THEN loadSrc = size%: EXIT FUNCTION
-	IF position% THEN loadPos = position%
-	
-	
-	IF loadSrc THEN
-		SELECT CASE size%
-		CASE 1 
-			GET #1, loadPos, loadStr
-			menuGetData% = ASC(loadStr)		
-		CASE 2
-			GET #1, loadPos, loadInt
-			menuGetData% = loadInt
-		END SELECT
+FUNCTION menuGetByte%
+	IF menuLoadSrc THEN
+		GET #1, menuLoadPos, loadStr
+		menuGetByte% = ASC(loadStr)		
 	ELSE
-		SELECT CASE size%
-		CASE 1
-			menuGetData% = ASC(MID$(menuPreload, loadPos, 1))
-			n = ASC(MID$(menuPreload, loadPos, 1))
-		CASE 2
-			menuGetData% = CVI(MID$(menuPreload, loadPos, 2))
-			n = CVI(MID$(menuPreload, loadPos, 2))
-		END SELECT
+		menuGetByte% = ASC(MID$(menuPreload, menuLoadPos, 1))
 	END IF
-	loadPos = loadPos + size%
+	menuLoadPos = menuLoadPos + 1
+	'debugOut STR$(menuLoadPos)
+END FUNCTION
+
+FUNCTION menuGetWord%
+	IF menuLoadSrc THEN
+		GET #1, menuLoadPos, loadInt
+		menuGetWord% = loadInt
+	ELSE
+		menuGetWord% = CVI(MID$(menuPreload, menuLoadPos, 2))
+	END IF
+	menuLoadPos = menuLoadPos + 2
+	'debugOut STR$(menuLoadPos)
 END FUNCTION
