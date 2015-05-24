@@ -12,7 +12,6 @@ DECLARE SUB initLookUps ()
 DECLARE SUB loadSprites (file$, offset%)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
-DECLARE SUB loadKeyboard ()
 DECLARE SUB quit ()
 DECLARE SUB debugOut (text$)
 DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
@@ -90,6 +89,7 @@ SUB aUpdateTile (x, y)
 END SUB
 
 SUB elfInit
+	PRINT "MagiDuck startup..."
 	'--------------------------------------------------------------------------
 	' Setup variables
 	'--------------------------------------------------------------------------
@@ -165,7 +165,7 @@ SUB elfInit
 	'KBarray(6) = tileBufferSeg
 	'KBarray(7) = tileBankOfs
 	'KBarray(8) = tileMapOfs
-	'KBarray(9) = tileBufferOfs
+	'KBarray(9) = tileBufferOfs	
 	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
 	aSoundStop
 	FOR n = 0 TO 130
@@ -175,7 +175,6 @@ SUB elfInit
 	' Detect and initialize video adapter
 	'--------------------------------------------------------------------------
 	 aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
-	 'debugOut "initvideo"
 	 gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
 	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
 	 IF gfx.adapter > 0 THEN
@@ -200,13 +199,9 @@ SUB elfInit
 	'-----------------------------------------------------------------------
 	' Setup keyboard
 	'-----------------------------------------------------------------------
-	 loadKeyboard
-	 DEF SEG = 0
-	 Keyflags = PEEK(&H417) AND &H70       'Save keyboard flags
-	 DEF SEG
-	 p2% = SSEG(asmKBroutine)
-	 p3% = SADD(asmKBroutine)
-	 aKBinit KBoldSeg, KBoldOfs, p2%, p3%
+	DEF SEG
+	Keyflags = PEEK(&H417) AND &H70       'Save keyboard flags
+	aKBinit 'KBoldSeg, KBoldOfs, p2%, p3%
 END SUB
 
 FUNCTION getSpawnSlot
@@ -218,42 +213,41 @@ FUNCTION getSpawnSlot
 END FUNCTION
 
 SUB handleCamera
- IF screenTargetX < 0 THEN screenTargetX = 0
- IF screenTargetX > 40 THEN screenTargetX = 40
- IF screenTargetY < 4 THEN screenTargetY = 4
- IF screenTargetY > 590 THEN screenTargetY = 590
- 
-FOR n = 0 TO 1
- 
- diffX = screenTargetX - gfx.screenX(n)
- diffY = screenTargetY - gfx.screenY(n)
- 
- IF diffX THEN
-  IF ABS(diffX) > 23 THEN
-	 speed = 4
-	 IF diffX < -23 THEN speed = -4
-  ELSE
-	 speed = camSpeedX(diffX)
-  END IF
-  gfx.screenX(n) = gfx.screenX(n) + speed
-  IF gfx.screenX(n) < 0 THEN gfx.screenX(n) = 0
-  IF gfx.screenX(n) > 40 THEN gfx.screenX(n) = 40
- END IF
+	IF screenTargetX < 0 THEN screenTargetX = 0
+	IF screenTargetX > 40 THEN screenTargetX = 40
+	IF screenTargetY < 4 THEN screenTargetY = 4
+	IF screenTargetY > 590 THEN screenTargetY = 590
+	 
+	FOR n = 0 TO 1
+	 
+	 diffX = screenTargetX - gfx.screenX(n)
+	 diffY = screenTargetY - gfx.screenY(n)
+	 
+	 IF diffX THEN
+	  IF ABS(diffX) > 23 THEN
+		 speed = 4
+		 IF diffX < -23 THEN speed = -4
+	  ELSE
+		 speed = camSpeedX(diffX)
+	  END IF
+	  gfx.screenX(n) = gfx.screenX(n) + speed
+	  IF gfx.screenX(n) < 0 THEN gfx.screenX(n) = 0
+	  IF gfx.screenX(n) > 40 THEN gfx.screenX(n) = 40
+	 END IF
 
- IF diffY THEN
-  IF ABS(diffY) > 19 THEN
-	 speed = 4
-	 IF diffY < -19 THEN speed = -4
-  ELSE
-	 speed = camSpeedY(diffY)
-  END IF
-  gfx.screenY(n) = gfx.screenY(n) + speed
-  IF gfx.screenY(n) < 4 THEN gfx.screenY(n) = 4
-  IF gfx.screenY(n) > 590 THEN gfx.screenY(n) = 590
- END IF
-		
-NEXT n
-
+	 IF diffY THEN
+	  IF ABS(diffY) > 19 THEN
+		 speed = 4
+		 IF diffY < -19 THEN speed = -4
+	  ELSE
+		 speed = camSpeedY(diffY)
+	  END IF
+	  gfx.screenY(n) = gfx.screenY(n) + speed
+	  IF gfx.screenY(n) < 4 THEN gfx.screenY(n) = 4
+	  IF gfx.screenY(n) > 590 THEN gfx.screenY(n) = 590
+	 END IF
+			
+	NEXT n
 END SUB
 
 SUB handleScroll
@@ -412,20 +406,7 @@ SUB initLookUps
 		menuPreload = SPACE$(n)
 		GET #1, 1, menuPreload
 	CLOSE #1
-	debugOut "Preloaded menu, lenght:" + str$(len(preLoad))	
-END SUB
-
-SUB loadKeyboard
-
-OPEN "kbint.bin" FOR BINARY AS #1          'Keyboard interrupt routine
- asmKBroutine = SPACE$(LOF(1))
- GET #1, , asmKBroutine
-CLOSE #1
-
-'Write KB array segment and offset into the KB routine.
-MID$(asmKBroutine, 5, 2) = MKI$(VARSEG(KBarray(0)))      'Segment
-MID$(asmKBroutine, 10, 2) = MKI$(VARPTR(KBarray(0)))    'Offset
-
+	debugOut "Preloaded menu, length:" + str$(len(menuPreLoad))	
 END SUB
 
 SUB loadLevel
@@ -565,55 +546,52 @@ SUB myPrint (x, y, text$, attributes)
 END SUB
 
 SUB quit
+	IF gfx.adapter > 0 THEN
+	 aKBremove KBoldSeg, KBoldOfs     'Restore old keyboard routine
+	 
+	 DEF SEG = 0
+	 POKE (&H417), Keyflags           'Restore old keyboard flags
+	 DEF SEG
 
-IF gfx.adapter > 0 THEN
- aKBremove KBoldSeg, KBoldOfs     'Restore old keyboard routine
- 
- DEF SEG = 0
- POKE (&H417), Keyflags           'Restore old keyboard flags
- DEF SEG
-
- CALL aSoundStop
- CALL aTimerEnd
-
-END IF
- 
- aExitVideo gfx.adapter, gfx.oldMode
-
- 'SHELL "cls"
- PRINT errorMessage$
- PRINT FRE(-1)
- PRINT gfx.pageOfs(0), gfx.pageOfs(1)
- C = 1
-
- FOR n = 1 TO 80
-  C = C + 4
-  COLOR (n AND 1) + 7
-  PRINT HEX$(level.spawner(n).object); TAB(C);
-  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
- NEXT n
-
-	FOR n = 1 TO 60
-		IF actor(n).exist THEN
-			COLOR 7
-			PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
-		ELSE
-			COLOR 8
+	 CALL aSoundStop
+	 CALL aTimerEnd
 	END IF
-	NEXT n
- END
- for n = 1 to 60
-  print n;
-  print animation(n).offset(0);
-  print animation(n).offset(1);
-  print animation(n).x;
-  print animation(n).y;
-  print animation(n).w;
-  print animation(n).h;
-  print animation(n).jump
- next n
-END
+	 
+	 aExitVideo gfx.adapter, gfx.oldMode
 
+	 'SHELL "cls"
+	 PRINT errorMessage$
+	 PRINT FRE(-1)
+	 PRINT gfx.pageOfs(0), gfx.pageOfs(1)
+	 C = 1
+
+	 FOR n = 1 TO 80
+	  C = C + 4
+	  COLOR (n AND 1) + 7
+	  PRINT HEX$(level.spawner(n).object); TAB(C);
+	  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
+	 NEXT n
+
+		FOR n = 1 TO 60
+			IF actor(n).exist THEN
+				COLOR 7
+				PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
+			ELSE
+				COLOR 8
+		END IF
+		NEXT n
+	 END
+	 for n = 1 to 60
+	  print n;
+	  print animation(n).offset(0);
+	  print animation(n).offset(1);
+	  print animation(n).x;
+	  print animation(n).y;
+	  print animation(n).w;
+	  print animation(n).h;
+	  print animation(n).jump
+	 next n
+	END
 END SUB
 
 SUB screenFakePos (y)

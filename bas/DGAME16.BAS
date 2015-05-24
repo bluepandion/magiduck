@@ -1789,6 +1789,7 @@ SUB initTestGame
 	player.level = 0
 	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)
 	DO
+		debugOut "main loop call"
 		main
 		IF player.level = -1 THEN quit
 	LOOP
@@ -1803,7 +1804,7 @@ END SUB
 	hudTextLoad &HA0, 1
 
 	loadLevel
-	
+	debugOut "level loaded"
 	for n = 1 to 60
 		actor(n).exist = 0
 		actor(n).parentDX = 0
@@ -1890,6 +1891,7 @@ END SUB
 		actor(2).control = 258
 		actor(2).frame = 1
 		player.menuContext = 10
+		debugOut "resetpos"
 		screenResetPos actor(2).x - 20, actor(2).y - 52
 		for n = 1 to 16
 			player.levelScore(n) = 0
@@ -1898,9 +1900,12 @@ END SUB
 	ELSE
 		hudTextLoad &H1E0 + player.level * 160, 0
 		player.hudLock = 5
+		debugOut "resetpos"
 		screenResetPos actor(2).x - 20, actor(2).y - 46
 	END IF
-		
+
+	debugOut "timerReset"
+	
 	CALL aTimerReset
 	
 	player.levelPrev = player.level

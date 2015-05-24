@@ -219,9 +219,9 @@ aKBinit PROC
 	mov kbOld, es
 	mov kbOld + 2, bx
 	
-	mov dx, [bp + 10]	;DS = New keyboard routine segment
+	mov dx, cs ;[bp + 10]		;DS = New keyboard routine segment
 	mov ds, dx			
-	mov dx, [bp + 8]	;DX = New keyboard routine offset
+	mov dx, keyboardInterrupt	;[bp + 8]	;DX = New keyboard routine offset
 
 						;Pass DS:DX to the interrupt
 	mov ah, 025h		;Subfunction 25h: Change interrupt handler address
@@ -231,7 +231,7 @@ aKBinit PROC
 	pop ds
 	pop bp
 
-	retf 8
+	retf ;8
 aKBinit ENDP
 aClearList PROC
 
@@ -2288,11 +2288,12 @@ aSoundStop PROC
 	retf 0
 aSoundStop ENDP
 aSetup PROC
+	push es
 	push ds
 	push si
 	push bp
 	mov bp, sp
-	add bp, 4
+	add bp, 6
 	
 	mov soundPos, 0			; Setup pc speaker control values.
 	in al, 61h
@@ -2309,14 +2310,14 @@ aSetup PROC
 	lodsw
 	mov soundData+2, ax
 	
-	lodsw
+	lodsw					;Get keyboard array offsets
 	mov kbArray, ax
 	lodsw
 	mov kbArray+2, ax	
-	
 	pop bp
 	pop si
 	pop ds
+	pop es
 	retf 4
 aSetup ENDP
 aCopyPage PROC
@@ -2544,6 +2545,60 @@ timerISR:
 		mov  timerCount, 8
 		db 234
 		oldTimerISR dw 1234h, 5678h, 0000h, 0000h
+
+;==============================================================================
+;
+; Keyboard interrupt
+;
+; Modified after Jim Leonard's help & article to ensure it works
+; on PC/XT machines.
+;
+;==============================================================================	
+keyboardInterrupt:
+	push ds
+	push ax
+	push bx
+
+	mov bx, kbArray							;This number will be overwritten in
+	mov ds, bx								;Qbasic. Set our write segment
+											;to the Keyboard array.
+	mov bx, kbArray + 2						;And an offset value too
+											
+	xor ah, ah								;AH = 0
+	in al, 060h								;AL = Read from port 60
+
+	CMP al, 7Fh								;Is it < 127?
+	JA keyrelease
+		shl al, 1							;AL * 2
+		add bx, ax							;BX = Keyboard array offset + Key offset (AX)
+		mov al, 1							;Write a one to enable key
+		mov ds:[bx], al
+		JMP keyExit							;-------------------------------------------
+	keyrelease:
+											;Key released.
+		and al, 7Fh							;Remove higheset bit of AL
+		shl al, 1							;AL * 2
+		add bx, ax							;BX = Keyboard array offset + Key offset (AX)
+		mov al, 0
+		mov ds:[bx], al						;Write a zero to disable key
+		
+	keyExit:
+
+	in al, 061h								;Reset keyboard, send EOI to XT keyboard
+	mov ah, al								;Store value to AH
+	or al, 080h								;Set Bit 7 to acknowledge scancode.
+	out 061h, al
+	xchg ah, al
+	out 061h, al
+
+	mov al, 020h							;Send EOI to master PIC
+	out 020h, al
+
+	pop bx									;Pop registers
+	pop ax
+	pop ds
+
+	iret									;Exit interrupt
 
 ;==============================================================================
 ;

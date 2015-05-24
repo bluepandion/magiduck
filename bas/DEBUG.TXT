@@ -1,5 +1,5 @@
-16:21:01
-Preloaded menu, lenght: 2
+21:03:45
+Preloaded menu, length: 1004
 load Anims:
  0 1 2 11366 11406
  1 5 6 11846 11886
@@ -73,3 +73,19 @@ load Anims:
  89 7 11 16472 16512
  90 7 11 17352 17392
  91 7 11 18232 18272
+main loop call
+level loaded
+resetpos
+timerReset
+main loop call
+level loaded
+resetpos
+timerReset
+main loop call
+level loaded
+resetpos
+timerReset
+main loop call
+level loaded
+resetpos
+timerReset

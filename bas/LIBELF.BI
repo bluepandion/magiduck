@@ -1,7 +1,7 @@
 DEFINT A-Z
 
 DECLARE SUB aPageFlip (BYVAL wrapOfs%, BYVAL hudSSeg%, BYVAL hudSofs%, BYVAL prevPageOfs%, BYVAL setPageOfs%)
-DECLARE SUB aKBinit (BYVAL oldSeg%, BYVAL oldOfs%, BYVAL newSeg%, BYVAL newOfs%)
+DECLARE SUB aKBinit ()'(BYVAL oldSeg%, BYVAL oldOfs%, BYVAL newSeg%, BYVAL newOfs%)
 DECLARE SUB aKBremove (BYVAL oldSeg%, BYVAL oldOfs%)
 DECLARE SUB aClearList (BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL ClearWord%, BYVAL sprListSeg%, BYVAL sprListOfs%)
 DECLARE SUB aRectList (BYVAL tileBufWindowOfs%, BYVAL wrapOfs%, BYVAL videoSeg%, BYVAL videoOfs%, BYVAL tileBufWrap%, BYVAL tileBufSeg%, BYVAL tileBugOfs%, BYVAL sprListSeg%, BYVAL sprListOfs%)
