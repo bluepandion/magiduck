@@ -713,31 +713,30 @@ CASE 255
       switchAnim n, 8
    END IF
 
-   IF player.hp = 0 THEN
-      actor(2).exist = 1
-	  actor(2).parentDX = 0
-	  actor(2).parentDY = 0
-	  actor(2).collider = 0
-      actor(2).control = 256
-      actor(2).count = 0
-	  actor(2).frame = 0
-	  actor(3).frame = 0
-      actor(2).vecX = 0
-      actor(2).vecY = 0
-      FOR b = 0 TO 63 STEP 8
-         xs = angle.x(b) \ 2
-         ys = angle.y(b) \ 2
-         spawnObject actor(2).x, actor(2).y, 257, xs, ys
-      NEXT b
-      aSoundFX 4, 22
-      aSoundFX 14, 23
-      'hudTextLoad &H140, 0
-      player.hudLock = 999
-      player.score = 0
-      'actor(2).x = 0
-      'actor(2).y = 0
-      player.jumpRelease = -1
-   END IF
+	IF player.hp = 0 THEN
+		actor(2).exist = 1
+		actor(2).parentDX = 0
+		actor(2).parentDY = 0
+		actor(2).collider = 0
+		actor(2).control = 256
+		actor(2).count = 0
+		actor(2).frame = 0
+		actor(3).frame = 0
+		actor(2).vecX = 0
+		actor(2).vecY = 0
+		FOR b = 0 TO 63 STEP 8
+		 xs = angle.x(b) \ 2
+		 ys = angle.y(b) \ 2
+		 spawnObject actor(2).x, actor(2).y, 257, xs, ys
+		NEXT b
+		aSoundFX 4, 22
+		aSoundFX 14, 23
+		player.hudLock = 999
+		player.score = 0
+		player.jumpRelease = -1
+		w40char.text = "         PRESS SPACE TO CONTINUE        |"
+		aPrint &HFFFF, &HD0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+	END IF
 
 	IF player.vecX > 10 THEN player.vecX = 10
 	IF player.vecX < -10 THEN player.vecX = -10
@@ -1927,7 +1926,13 @@ END SUB
 			END IF
 			updateText = updateText + 1
 			IF updateText = 24 THEN
-				IF actor(2).control = 255 THEN player.time = player.time + (player.time > 0)
+				IF actor(2).control = 255 THEN 
+					IF player.time > 0 THEN
+						player.time = player.time - 1
+					ELSE
+						player.hp = 0
+					END IF
+				END IF
 				updateText = 0
 				hudUpdate &H8
 			END IF

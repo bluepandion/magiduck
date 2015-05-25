@@ -47,9 +47,9 @@ DIM SHARED readOfs AS LONG                ' Read/Write variables
 DIM SHARED storeOfs AS LONG
 DIM SHARED pageOfs AS INTEGER
 
-'DIM SHARED asmKBroutine AS STRING
-'DIM SHARED KBoldSeg AS INTEGER              'KB state save.
-'DIM SHARED KBoldOfs AS INTEGER
+DIM SHARED asmKBroutine AS STRING
+DIM SHARED KBoldSeg AS INTEGER              'KB state save.
+DIM SHARED KBoldOfs AS INTEGER
 DIM SHARED Keyflags AS INTEGER
 
 DIM SHARED spriteBank AS STRING * 7680
@@ -89,25 +89,6 @@ SUB aUpdateTile (x, y)
 END SUB
 
 SUB elfInit
-	PRINT 
-	COLOR 12, 0
-	PRINT " WARNING!"
-	COLOR 7, 0
-	PRINT
-	PRINT "   This version of MagiDuck has never been tested on real hardware."
-	PRINT "   It is still an early version and only meant for testing purposes."
-	PRINT
-	PRINT "   You are running this software at your own risk!"
-	PRINT	
-	COLOR 14, 0
-	PRINT
-	PRINT "   Press Y to start the game, any other key to exit."
-	COLOR 7, 0
-	DO
-	 D$ = INKEY$
-	LOOP WHILE D$ = ""
-	IF LCASE$(D$) <> "y" THEN END
-	PRINT
 	PRINT "MagiDuck startup..."
 	'--------------------------------------------------------------------------
 	' Setup variables
@@ -424,7 +405,8 @@ SUB initLookUps
 		n = LOF(1)
 		menuPreload = SPACE$(n)
 		GET #1, 1, menuPreload
-	CLOSE #1	
+	CLOSE #1
+	debugOut "Preloaded menu, length:" + str$(len(menuPreLoad))	
 END SUB
 
 SUB loadLevel
@@ -502,7 +484,8 @@ SUB loadSprites (file$, offset)
 
 	DEF SEG = spriteBankSeg
 	BLOAD file$ + ".csg", offset
-	DEF SEG	
+	DEF SEG
+	debugOut "load Anims:"
 	OPEN file$ + ".csd" FOR BINARY AS #1
 		fileOfs = 1
 		DO
@@ -513,7 +496,7 @@ SUB loadSprites (file$, offset)
 				animation(n).offset(0) = animation(n).offset(0) + spriteBankOfs
 				animation(n).offset(1) = animation(n).offset(1) + spriteBankOfs
 				fileOfs = fileOfs + 14
-				'debugOut str$(n) + str$(animation(n).w) + str$(animation(n).h) + str$(animation(n).offset(0)) + str$(animation(n).offset(1))
+				debugOut str$(n) + str$(animation(n).w) + str$(animation(n).h) + str$(animation(n).offset(0)) + str$(animation(n).offset(1))
 			END IF
 		LOOP UNTIL n = -1
 	CLOSE #1
@@ -540,28 +523,38 @@ SUB loadText (screenOfs, textOfs)
 END SUB
 
 SUB loadTiles (file$)
-	DEF SEG = tileBufferSeg
-	BLOAD file$ + ".ctg", tileBankOfs
-	player.tileSet = file$
-	player.levelColor = PEEK(tileBankOfs)
-	player.levelColor = player.levelColor + player.levelColor * 256
-	player.levelColor = player.levelColor AND &HF0F0
-	DEF SEG
+
+ DEF SEG = tileBufferSeg
+ 
+ BLOAD file$ + ".ctg", tileBankOfs
+
+ player.tileSet = file$
+ 
+ player.levelColor = PEEK(tileBankOfs)
+ player.levelColor = player.levelColor + player.levelColor * 256
+ player.levelColor = player.levelColor AND &HF0F0
+
+ DEF SEG
+
 END SUB
 
 SUB myPrint (x, y, text$, attributes)
-	w40char.text = text$ + "|"
-	aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page)
+
+ w40char.text = text$ + "|"
+ aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page)
+
 END SUB
 
 SUB quit
 	IF gfx.adapter > 0 THEN
-		aKBremove KBoldSeg, KBoldOfs     'Restore old keyboard routine
-		DEF SEG = 0
-		POKE (&H417), Keyflags           'Restore old keyboard flags
-		DEF SEG
-		CALL aSoundStop
-		CALL aTimerEnd
+	 aKBremove KBoldSeg, KBoldOfs     'Restore old keyboard routine
+	 
+	 DEF SEG = 0
+	 POKE (&H417), Keyflags           'Restore old keyboard flags
+	 DEF SEG
+
+	 CALL aSoundStop
+	 CALL aTimerEnd
 	END IF
 	 
 	 aExitVideo gfx.adapter, gfx.oldMode
@@ -602,136 +595,156 @@ SUB quit
 END SUB
 
 SUB screenFakePos (y)
+
  ' - Works on the assumption that the buffer window Y > 24, how to fix?
  '
  ' - windowY and windowOfs must match current situation.
  '
  ' - y(change) && 0x8 must match y(current) && 0x8.
-	yTileRelative = gfx.screenY(gfx.page) AND 7
 
-	y = (y AND &HFFF8) + yTileRelative
 
-	diffY = y - gfx.screenY(gfx.page)
+yTileRelative = gfx.screenY(gfx.page) AND 7
 
-	FOR n = 2 TO 60
-		actor(n).y = actor(n).y + diffY
-		actor(n).parentDY = actor(n).parentDY + diffY
-	NEXT n
+y = (y AND &HFFF8) + yTileRelative
 
-	FOR n = 0 TO 1
-		gfx.screenY(n) = y
-		gfx.screenOldY(n) = y
-	'gfx.windowOfs(n) = gfx.windowX(gfx.page)
-	'gfx.windowX(n) = gfx.windowX(gfx.page)
-	'gfx.windowY(n) = 0
-	NEXT n
+diffY = y - gfx.screenY(gfx.page)
 
-	IF gfx.windowY(gfx.page) < 24 THEN
+ FOR n = 2 TO 60
+  actor(n).y = actor(n).y + diffY
+  actor(n).parentDY = actor(n).parentDY + diffY
+ NEXT n
 
-	END IF
+ FOR n = 0 TO 1
+  gfx.screenY(n) = y
+  gfx.screenOldY(n) = y
+  'gfx.windowOfs(n) = gfx.windowX(gfx.page)
+  'gfx.windowX(n) = gfx.windowX(gfx.page)
+  'gfx.windowY(n) = 0
+ NEXT n
 
-	IF gfx.windowY(gfx.page) > 23 AND gfx.windowY(gfx.page) < 48 THEN
-		aDrawTiles 0, gfx.tileOfs
-	END IF
+ IF gfx.windowY(gfx.page) < 24 THEN
 
-	gfx.windowOfs(gfx.page XOR 1) = gfx.windowOfs(gfx.page)
-	gfx.windowY(gfx.page XOR 1) = gfx.windowY(gfx.page)
+ END IF
 
-	'gfx.windowX(gfx.page XOR 1) = gfx.windowX(gfx.page)
+ IF gfx.windowY(gfx.page) > 23 AND gfx.windowY(gfx.page) < 48 THEN
+	aDrawTiles 0, gfx.tileOfs
+ END IF
 
-	gfx.tileOfs = tilePosYlookUp(y) 
+ gfx.windowOfs(gfx.page XOR 1) = gfx.windowOfs(gfx.page)
+ gfx.windowY(gfx.page XOR 1) = gfx.windowY(gfx.page)
+
+ 'gfx.windowX(gfx.page XOR 1) = gfx.windowX(gfx.page)
+ 
+ gfx.tileOfs = tilePosYlookUp(y)
+ 
 END SUB
 
 DEFSNG A-Z
 SUB screenResetPos (x%, y%)
-	 ' To-Do
-	 '
-	 ' -Keep current offset (don't flip)
-	 ' -Add 4000 AND 16383 to both page offsets (changes won't be visible).
-	 ' -Draw new data to set offset
-	 ' -Page flip to set offset 
-	IF x% < 0 THEN x% = 0
-	IF x% > 40 THEN x% = 40
-	IF y% < 0 THEN y% = 0
-	IF y% > 615 THEN y% = 615
 
-	screenTargetYlock = -1
-	screenTargetX = x%
-	screenTargetY = y%
+ ' To-Do
+ '
+ ' -Keep current offset (don't flip)
+ ' -Add 4000 AND 16383 to both page offsets (changes won't be visible).
+ ' -Draw new data to set offset
+ ' -Page flip to set offset
+ 
+ IF x% < 0 THEN x% = 0
+ IF x% > 40 THEN x% = 40
+ IF y% < 0 THEN y% = 0
+ IF y% > 615 THEN y% = 615
 
-	yp = y% - (y% AND &HFFF8)
+ screenTargetYlock = -1
+ screenTargetX = x%
+ screenTargetY = y%
 
-	FOR n = 0 TO 1
-		gfx.screenX(n) = x%
-		gfx.screenY(n) = y%
-		gfx.screenOldX(n) = x%
-		gfx.screenOldY(n) = y%
-		gfx.windowX(n) = x%
-		gfx.windowY(n) = 24 + yp
-		gfx.windowOfs(n) = 1920 + x% + yp * 80
-		spriteList(0, n).y = 255
-	NEXT n
+ yp = y% - (y% AND &HFFF8)
+ 
+ FOR n = 0 TO 1
+  gfx.screenX(n) = x%
+  gfx.screenY(n) = y%
+  gfx.screenOldX(n) = x%
+  gfx.screenOldY(n) = y%
+  gfx.windowX(n) = x%
+  gfx.windowY(n) = 24 + yp
+  gfx.windowOfs(n) = 1920 + x% + yp * 80
+  spriteList(0, n).y = 255
+ NEXT n
 
-	x% = x% AND &HFFFC
-	y% = y% AND &HFFF8
+ x% = x% AND &HFFFC
+ y% = y% AND &HFFF8
 
-	'IF Y% < 24 THEN Y% = 24
-	'IF Y% > 590 THEN Y% = 590
+ 'IF Y% < 24 THEN Y% = 24
+ 'IF Y% > 590 THEN Y% = 590
+ 
+ gfx.tileOfs = tilePosYlookUp(y%) - 60
+ gfx.tileArea = 0
 
-	gfx.tileOfs = tilePosYlookUp(y%) - 60
-	gfx.tileArea = 0
+ aDrawTiles 0, gfx.tileOfs
+ aDrawTiles 1, gfx.tileOfs + 60
+ aDrawTiles 2, gfx.tileOfs + 120
+ aDrawTiles 3, gfx.tileOfs + 180
 
-	aDrawTiles 0, gfx.tileOfs
-	aDrawTiles 1, gfx.tileOfs + 60
-	aDrawTiles 2, gfx.tileOfs + 120
-	aDrawTiles 3, gfx.tileOfs + 180
+ spriteList(1, gfx.page).y = 255
+ spriteList(0, gfx.page).x = 0
+ spriteList(0, gfx.page).y = 0
+ spriteList(0, gfx.page).w = 40
+ spriteList(0, gfx.page).h = 50
 
-	spriteList(1, gfx.page).y = 255
-	spriteList(0, gfx.page).x = 0
-	spriteList(0, gfx.page).y = 0
-	spriteList(0, gfx.page).w = 40
-	spriteList(0, gfx.page).h = 50
+ aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+ 
+ aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+ gfx.page = gfx.page XOR 1
+ 
+ spriteList(1, gfx.page).y = 255
+ spriteList(0, gfx.page).x = 0
+ spriteList(0, gfx.page).y = 0
+ spriteList(0, gfx.page).w = 40
+ spriteList(0, gfx.page).h = 50
+ 
+ aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
-	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
-
-	aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-	gfx.page = gfx.page XOR 1
-
-	spriteList(1, gfx.page).y = 255
-	spriteList(0, gfx.page).x = 0
-	spriteList(0, gfx.page).y = 0
-	spriteList(0, gfx.page).w = 40
-	spriteList(0, gfx.page).h = 50
-
-	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
-
-	' FOR n = 0 to 1
-	'	 handleScroll
-	'	 aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-	'	 gfx.Page = gfx.Page xor 1
-	' NEXT n
+' FOR n = 0 to 1
+'	 handleScroll
+'	 aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+'	 gfx.Page = gfx.Page xor 1
+' NEXT n
+ 
 END SUB
 
 DEFINT A-Z
 SUB switchAnim (objectIndex, anim)
-	IF actor(objectIndex).anim = anim THEN EXIT SUB
-	actor(objectIndex).frame = anim
-	actor(objectIndex).anim = anim
+
+ IF actor(objectIndex).anim = anim THEN EXIT SUB
+
+ actor(objectIndex).frame = anim
+ actor(objectIndex).anim = anim
+ 
 END SUB
 
 FUNCTION tileRead (x, y)
-	DEF SEG = tileBufferSeg
-	readOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
-	tileRead = PEEK(readOfs)
-	DEF SEG
+ 
+ DEF SEG = tileBufferSeg
+
+ readOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
+ 
+ tileRead = PEEK(readOfs)
+ 
+ DEF SEG
+
 END FUNCTION
 
 DEFSNG A-Z
 SUB tileWrite (x AS INTEGER, y AS INTEGER, index AS INTEGER)
+
 	 DEF SEG = tileBufferSeg
+
 	 writeOfs = 0& + TileMapOfs + tilePosXlookUp(x) + tilePosYlookUp(y)
+
 	 POKE writeOfs, index
+
 	 DEF SEG
+
 END SUB
 
 SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)

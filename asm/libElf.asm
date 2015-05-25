@@ -2007,7 +2007,7 @@ loopRegs:
 	
 	mov es, vSegment
 	mov di, 0
-	mov ax, 00DEh
+	mov ax, 11DEh
 	mov cx, vWrap
 	inc cx
 	shr cx, 1
