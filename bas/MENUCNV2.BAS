@@ -52,7 +52,7 @@ CLS
          itemCount = 0
          DO
             INPUT #1, itemIDX
-            IF itemIDX > -1 THEN
+            IF itemIDX <> -1 THEN
                itemCount = itemCount + 1
                PRINT itemIDX;
                INPUT #1, itemPrev
@@ -87,12 +87,13 @@ CLS
                   
                byte = CHR$(itemColor2)
                saveString = saveString + byte
-                  
-               byte = CHR$(itemLen)
-               saveString = saveString + byte
-               saveString = saveString + UCASE$(itemText$)
+               IF itemIDX > -1 THEN
+                  byte = CHR$(itemLen)
+                  saveString = saveString + byte
+                  saveString = saveString + UCASE$(itemText$)
+               END IF
             END IF
-         LOOP WHILE itemIDX > -1
+         LOOP WHILE itemIDX <> -1
          IF menuNo > 9 THEN
             'PUT #2, ofsData, saveString
             MID$(fileString, menuNo * 6 + 1, 2) = MKI$(LEN(fileString) + 1)

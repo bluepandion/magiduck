@@ -770,16 +770,15 @@ SUB menuLoad (menuNo%)
 	loadInt = menuGetWord%
 	tileCopyList(1, gfx.page).y = 255
 	aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
-	
+	prevGfxItem = 1
 	for item = 1 to itemCount
 		itemIDX = menuGetWord%
 		n = getSpawnSlot
 		IF itemIDX > 0 THEN 
 			actor(n).exist = 1
 			actor(n).control = -16000
-			actor(n).frame = 0
 			menuItem(itemIDX) = n
-		END IF			
+		END IF
 		actor(n).lPrev = menuGetWord%
 		actor(n).lNext = menuGetWord%
 		actor(n).x = menuGetWord%
@@ -787,16 +786,34 @@ SUB menuLoad (menuNo%)
 		actor(n).vecX = menuGetWord%
 		actor(n).vecY = menuGetWord%
 		actor(n).frame = menuGetWord%
-		itemLen = menuGetByte%		
-		IF menuNo% > 9 THEN
-			loadVarStr = SPACE$(itemLen)
-			GET #1, menuLoadPos, loadVarStr
-			w40char.text = loadVarStr
-		ELSE
-			w40char.text = MID$(menuPreload, menuLoadPos, itemLen)
+		IF itemIDX < 0 THEN 
+			actor(n).exist = 1
+			actor(n).control = -16001
+			actor(n).x = actor(n).x + gfx.screenX(0)
+			actor(n).y = actor(n).y + gfx.screenY(0)
+			actor(n).vecX = 0
+			actor(n).vecY = 0
+			actor(prevGfxItem).lNext = n
+			actor(1).lPrev = n
+			actor(n).lPrev = prevGfxItem
+			actor(n).lNext = 1
+			actor(n).visX = 50
+			actor(n).visY = 60
+			actor(n).life = -1
+			prevGfxItem = n
 		END IF
-		menuLoadPos = menuLoadPos + itemLen				
-		aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
+		IF itemIDX > -1 THEN
+			itemLen = menuGetByte%		
+			IF menuNo% > 9 THEN
+				loadVarStr = SPACE$(itemLen)
+				GET #1, menuLoadPos, loadVarStr
+				w40char.text = loadVarStr
+			ELSE
+				w40char.text = MID$(menuPreload, menuLoadPos, itemLen)
+			END IF
+			menuLoadPos = menuLoadPos + itemLen				
+			aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
+		END IF
 	NEXT item
 	
 	'debugOut " Menu load OK. Actors:"
@@ -817,7 +834,7 @@ SUB menuClear
 		actor(nn).lNext = 0
 		actor(nn).lPrev = 0
 		menuItem(n) = 0
-	NEXT n
+	NEXT n	
 END SUB
 
 '

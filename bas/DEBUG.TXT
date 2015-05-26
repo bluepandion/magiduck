@@ -1,4 +1,8 @@
-22:27:39
+16:25:58
+main loop call
+level loaded
+resetpos
+timerReset
 main loop call
 level loaded
 resetpos
