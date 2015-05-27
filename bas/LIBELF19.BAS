@@ -364,7 +364,7 @@ SUB initLookUps
 		GET #1, 1, angle
 	CLOSE #1
 
-	OPEN "floats.txt" FOR INPUT AS #1
+	OPEN "floats.clu" FOR INPUT AS #1
 		FOR ff = 0 TO 9
 			FOR n = 0 TO 9
 				INPUT #1, v
@@ -487,7 +487,7 @@ SUB loadLevel
 END SUB
 
 SUB loadSounds (file$)
-	OPEN file$ + ".snd" FOR BINARY AS #1
+	OPEN file$ + ".cst" FOR BINARY AS #1
 		GET #1, 1, soundTrack
 	CLOSE #1
 END SUB
@@ -587,6 +587,13 @@ SUB quit
 				COLOR 8
 		END IF
 		NEXT n
+	 PRINT
+	 PRINT
+	 COLOR 7
+	 PRINT " Thanks for playing!"
+	 PRINT " If you found bugs or things to improve, please send your feedback to"
+	 PRINT "  toni.svenstrom @ hotmail.com"
+	 PRINT
 	 END
 	 for n = 1 to 60
 	  print n;
@@ -800,6 +807,7 @@ SUB menuLoad (menuNo%)
 			actor(n).visX = 50
 			actor(n).visY = 60
 			actor(n).life = -1
+			actor(n).flags = 0
 			prevGfxItem = n
 		END IF
 		IF itemIDX > -1 THEN

@@ -46,17 +46,15 @@
 00, 00, 00, " greets to:", 5, 5, 10, 10, &H0E, &H0C
 -1
 0011, 01, 0, -5, 1, 7, 38, 46, " ", &H11
-00, 00, 00, "..................", 4, 9, 30, 4, &H19, &H19
-00, 00, 00, "menu layout demo", 5, 8, 30, 4, &H1F, &H1F
-00, 00, 00, "this layout is completely",  1, 14, 30, 4, &H1E, &H17
-00, 00, 00, "created with the new menu system.",  1, 17, 30, 4, &H1E, &H17
-00, 00, 00, "it's capable of rendering an unlimited",  1, 22, 30, 4, &H17, &H17
-00, 00, 00, "amount of static elements and",  1, 25, 30, 4, &H17, &H17
-00, 00, 00, "16 interactive menu elements.",  1, 28, 30, 4, &H1C, &H1C
-00, 00, 00, "it only uses 32 bytes to store menu",  1, 32, 38, 12, &H19, &H19
-00, 00, 00, "items but otherwise uses video memory",  1, 35, 30, 4, &H19, &H19
-00, 00, 00, "and the general entity data for",  1, 38, 30, 4, &H19, &H19
-00, 00, 00, "variables!",  1, 41, 30, 4, &H19, &H19
-02, 02, 01, " lame! ", 18, 48, 30, 4, &H0E, &H0C
-01, 02, 01, " awesome! ", 28, 48, 30, 4, &H0E, &H0C
+00, 00, 00, ".............", 4, 9, 30, 4, &H19, &H19
+00, 00, 00, "quick guide", 5, 8, 30, 4, &H1F, &H1F
+00, 00, 00, "arrow keys   move",  1, 14, 30, 4, &H1E, &H17
+00, 00, 00, "down arrow   look down",  1, 17, 30, 4, &H1E, &H17
+00, 00, 00, "ctrl         jump",  1, 22, 30, 4, &H17, &H17
+00, 00, 00, "alt          shoot",  1, 25, 30, 4, &H17, &H17
+00, 00, 00, "find the star at the end of each level",  1, 32, 38, 12, &H19, &H19
+00, 00, 00, "try to get all the treasures too for",  1, 35, 30, 4, &H19, &H19
+00, 00, 00, "high score, just watch your step.",  1, 38, 30, 4, &H19, &H19
+00, 00, 00, "good luck!",  1, 42, 30, 4, &H1D, &H1D
+01, 01, 01, " ok! ", 28, 48, 30, 4, &H0E, &H0C
 -1

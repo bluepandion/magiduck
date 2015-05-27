@@ -2,13 +2,13 @@
 &H00A0, " LOADING, PLEASE WAIT...                ", &HE, &HC
 &H0140, "         PRESS SPACE TO RESTART         ", &HC, &HC
 &H01E0, "          LEVEL 1 - THE LOBBY           ", &HE, &HC
-&H0280, "          LEVEL 2                       ", &HE, &HC
-&H0320, "          LEVEL 3                       ", &HE, &HC
-&H03C0, "          LEVEL 4                       ", &HE, &HC
-&H0460, "          LEVEL 5                       ", &HE, &HC
-&H0500, "          LEVEL 6                       ", &HE, &HC
-&H05A0, "          LEVEL 7                       ", &HE, &HC
-&H0640, "          LEVEL 8                       ", &HE, &HC
+&H0280, "             THE DUCK CASTLE            ", &HE, &HC
+&H0320, "  LEVEL 1 - TREASURY STAIRWELLS         ", &HE, &HC
+&H03C0, "  LEVEL 2 - CHAIN TOWER                 ", &HE, &HC
+&H0460, "  LEVEL 3 - HIGH COIN CHASE             ", &HE, &HC
+&H0500, "  LEVEL 4 - BOUNCY PARK                 ", &HE, &HC
+&H05A0, "  LEVEL 5 - ELEVATOR GARDEN             ", &HE, &HC
+&H0640, "  LEVEL 6 - SKULL KEEP                  ", &HE, &HC
 &H06E0, "  ARROW KEYS TO MOVE . ENTER TO SELECT  ", &HE, &HC
 &H0780, "  ARE YOU SURE YOU WANT TO QUIT? Y / N  ", &HFC, &HFC
 &H0820, "  COMPLETION:                        %  ", &H1F, &H1F

@@ -1,19 +1,4 @@
-23:46:01
-main loop call
-level loaded
-timerReset
-main loop call
-level loaded
-timerReset
-main loop call
-level loaded
-timerReset
-main loop call
-level loaded
-timerReset
-main loop call
-level loaded
-timerReset
+23:57:53
 main loop call
 level loaded
 timerReset

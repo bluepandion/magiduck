@@ -223,7 +223,7 @@ CASE 262
        CASE -2 to -1
 		actor(2).jump = actor(2).jump + 1
 	   CASE 0 TO 1
-          c = &H0D0D OR player.levelColor
+          c = &H0A0A OR player.levelColor
 		  myPrint 2, 22, "TIME BONUS            X 30", c
           myPrint 2, 26, "LIFE BONUS            X 1000", c
           myPrint 2, 30, "KEYS                  /" + str$(level.keys), c
@@ -254,7 +254,7 @@ CASE 262
           w40char.text = "        |"
           a$ = STR$(0& + player.scoreCounter)
           MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
-          c = &H0D0D OR player.levelColor
+          c = &H0A0A OR player.levelColor
 		  aPrint gfx.videoWrap, c, w40char.seg, w40char.ofs, 16, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
 
           IF player.scoreCounter >= player.scoreCounterTarget THEN
@@ -463,6 +463,10 @@ CASE 258
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
 					player.menuMode = 999
+				CASE 7	'forfeit
+					player.menuMode = 999
+					player.menuContext = -1
+					player.level = 1
 				END SELECT
 		'----------------------------------------------------------------------
 		CASE 3	'Death menu
@@ -613,19 +617,7 @@ CASE 255
 		END IF
 	END IF
 
-	IF actor(2).y - screenTargetYlock > 50 THEN 
-		screenTargetYlock = -1
-	END IF
-
-'	'IF c = 27 OR c = 26 THEN
-'		IF kbArray(29) = 0 THEN player.jumpRelease = -1
-'			collisionFloor = 1
-'			maxY = 5
-'			IF c = 27 THEN minY = -15
-'			friction = 1
-'			speedMod = 4
-'		END IF
-'	END IF
+	IF actor(2).y - screenTargetYlock > 50 OR player.bouncing THEN screenTargetYlock = -1
 
     IF player.parent > 0 THEN
 		IF kbArray(29) = 0 THEN player.jumpRelease = -1
@@ -849,7 +841,7 @@ DO
 		playerDeltaX = ABS(actor(n).x - playerX)		
 		playerDeltaY = ABS(actor(n).y - playerY)
 		
-		IF player.parent <> n THEN
+		IF player.parent = 0 THEN
 			playerDeltaY = actor(n).y - playerY
 			IF playerDeltaX < 6 AND playerDeltaY < 1 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 				actor(n).jump = 1
@@ -860,12 +852,12 @@ DO
 				player.parent = n
 				actor(2).exist = 1
 			END IF
-		ELSE
-			IF playerDeltaX > 5 OR playerDeltaY > 2 OR player.vecY < -5 THEN 
+		ELSEIF player.parent = n THEN
+			IF playerDeltaX > 5 OR playerDeltaY > 2 OR player.vecY < -5 THEN
 				unParent 2
 				player.parent = 0
 				actor(n).jump = 0
-			END IF				
+			END IF
         END IF
 		
 		' Platform type specific events
@@ -1221,16 +1213,15 @@ DO
 			actor(n).y = actor(n).y - 6
 			actor(n).life = -50
 			actor(n).count = 16
-			actor(n).collider = 2
+			actor(n).collider = 0
 			actor(n).visY = 50
-			'actor(n).dir = actor(n).vecX
-			'actor(n).vecX = 0
         END IF
         
 		IF actor(n).count = 0 THEN 
 			speed = 4
 		ELSE
-			speed = 10
+			speed = 0
+			actor(n).vecX = 0
 			IF c THEN actor(n).count = actor(n).count - 1
 			actor(n).frame = 75
 			IF actor(n).count = 0 THEN
@@ -1255,8 +1246,8 @@ DO
 		c = tileRead(actor(n).x + xp, actor(n).y - 2)
 		c2 = tileRead(actor(n).x + xp, actor(n).y + 2)
 		IF actor(n).count THEN c2 = 999
-		IF c > 29 OR c2 < 30 THEN
-			IF actor(n).count THEN soundEvent = SndHelmetBump
+		IF c > 29 OR c2 < 30 AND actor(n).count = 0 THEN
+			'IF actor(n).count THEN soundEvent = SndHelmetBump
 			actor(n).flags = flags
 			actor(n).vecX = -speed
 			actor(n).x = actor(n).x AND &HFFFC + 2
@@ -1790,7 +1781,9 @@ SUB initTestGame
 	DO
 		debugOut "main loop call"
 		main
-		IF player.level = -1 THEN quit
+		IF player.level = -1 THEN 
+			quit
+		END IF
 	LOOP
 END SUB
 
@@ -1800,8 +1793,11 @@ END SUB
  REM |  |  | |     | __|__ |  \_|                             
 '==============================================================================
  SUB main
-	hudTextLoad &HA0, 1
-
+	'hudTextLoad &HA0, 1
+	w40char.text = " LOADING, PLEASE WAIT...                |"
+	aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+	aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+	
 	loadLevel
 	debugOut "level loaded"
 	for n = 1 to 60
@@ -1833,6 +1829,7 @@ END SUB
 	player.gotCoins = 0
 	player.gotKeys = 0
 	player.gotChests = 0	
+	player.parent = 0
 	actor(2).flash = 0
 	actor(2).lPrev = 1
 	actor(2).lNext = 3
@@ -1890,16 +1887,15 @@ END SUB
 		actor(2).control = 258
 		actor(2).frame = 1
 		player.menuContext = 10
-		debugOut "resetpos"
 		screenResetPos actor(2).x - 20, actor(2).y - 52
 		for n = 1 to 16
 			player.levelScore(n) = 0
 		next n
 		player.score = 0
 	ELSE
-		hudTextLoad &H1E0 + player.level * 160, 0
-		player.hudLock = 5
-		debugOut "resetpos"
+		'hudTextLoad &H1E0 + player.level * 160, 0
+		player.hudLock = 0
+		hudUpdate 255
 		screenResetPos actor(2).x - 20, actor(2).y - 46
 	END IF
 
@@ -1926,7 +1922,7 @@ END SUB
 			END IF
 			updateText = updateText + 1
 			IF updateText = 24 THEN
-				IF actor(2).control = 255 THEN 
+				IF actor(2).control = 255 AND player.level > 1 THEN 
 					IF player.time > 0 THEN
 						player.time = player.time - 1
 					ELSE
@@ -2005,16 +2001,16 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = 0
 		SELECT CASE spawnerFlags
 		CASE 0							'Twinkle
-			actor(n).life = 4
+			actor(n).life = 3
 			actor(n).flash = 0
 			actor(n).frame = 38
 		CASE 1							'Debris left/right
-			actor(n).life = 4
+			actor(n).life = 3
 			actor(n).flash = 8
 			actor(n).frame = 57
 			actor(n).vecX = spawner
 		CASE 2							'Bounce
-			actor(n).life = 4
+			actor(n).life = 2
 			actor(n).frame = 39
 			actor(n).vecY = spawner
 		CASE 3							'Mover
@@ -2024,7 +2020,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).visX = 70
 			actor(n).visY = 70
 			actor(n).control = 99
-		CASE 4							'Bounce
+		CASE 4							'---
 			actor(n).life = 4
 			actor(n).frame = 39
 			actor(n).vecY = spawner
