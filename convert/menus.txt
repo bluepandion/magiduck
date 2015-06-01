@@ -50,7 +50,7 @@
 00, 00, 00, "quick guide", 5, 8, 30, 4, &H1F, &H1F
 00, 00, 00, "arrow keys   move",  1, 14, 30, 4, &H1E, &H17
 00, 00, 00, "down arrow   look down",  1, 17, 30, 4, &H1E, &H17
-00, 00, 00, "ctrl         jump",  1, 22, 30, 4, &H17, &H17
+00, 00, 00, "ctrl         jump - hold to float",  1, 22, 30, 4, &H17, &H17
 00, 00, 00, "alt          shoot",  1, 25, 30, 4, &H17, &H17
 00, 00, 00, "find the star at the end of each level",  1, 32, 38, 12, &H19, &H19
 00, 00, 00, "try to get all the treasures too for",  1, 35, 30, 4, &H19, &H19

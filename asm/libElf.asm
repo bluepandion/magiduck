@@ -62,7 +62,6 @@ aPageFlip PROC
 		cmp al, 1
 		jne egaVgaPageflip
 	
-	
 	;---------------------------------------------------------------------------
 	; CGA Wait for vertical overscan and retrace.
 	;---------------------------------------------------------------------------
@@ -186,7 +185,7 @@ aPageFlip endp
 aKBinit PROC
 	;------------------------------------------------------------------------------
 	;
-	; Keyboard init v2
+	; Keyboard init
 	;
 	;------------------------------------------------------------------------------
 
@@ -1862,7 +1861,11 @@ aInitVideo PROC
 ;---------------------------------------------------------------------------
 	mov es, [bp + 08]				;ES = Write seg (video adapter data)
 	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
-	
+	push di
+	xor ax, ax
+	mov cx, 32						;Format string to test for data.
+	rep stosw						
+	pop di
 ;---------------------------------------------------------------------------
 test_VGA:
 	xor ax, ax						;Interrupt call 10h AH=1Bh AL=0 BX=0
@@ -1910,7 +1913,7 @@ test_CGA:
 	jmp detected_CGA
 
 ;---------------------------------------------------------------------------
-	
+
 detected_MONO:
 	mov dx, 0						;Video adapter data for game
 	jmp get_current_mode
@@ -2011,9 +2014,7 @@ loopRegs:
 	mov cx, vWrap
 	inc cx
 	shr cx, 1
-clearLoop:
-		stosw
-	loop clearLoop
+	rep	stosw
 ;------------------------------------------------------------------------------
 exit:
 	mov es, [bp + 08]				;ES = Write seg (video adapter data)

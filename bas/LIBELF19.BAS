@@ -160,7 +160,7 @@ SUB elfInit
 	 spriteList(2, n).y = 255
 	NEXT n
 	'------------------------------------------------------
-	'debugOut "timer"
+	debugOut "timer init"
 	CALL aTimerStart
 	'-----------------------------------------------------------------------
 	' Set up lookups, preload some data and setup screen
@@ -169,6 +169,7 @@ SUB elfInit
 	'myPrint 2, 1, a$, &H20E0
 	'aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page XOR 1)
 	'myPrint 2, 4, "LOOKUPS...", &H7070
+	debugOut "lookups init"
 	initLookUps
 	w40char.seg = VARSEG(w40char.glyph1(32))
 	w40char.ofs = VARPTR(w40char.glyph1(32))
@@ -218,8 +219,9 @@ SUB elfInit
 	'-----------------------------------------------------------------------
 	' Setup keyboard
 	'-----------------------------------------------------------------------
-	DEF SEG
+	DEF SEG = 0
 	Keyflags = PEEK(&H417) AND &H70       'Save keyboard flags
+	DEF SEG
 	aKBinit 'KBoldSeg, KBoldOfs, p2%, p3%
 END SUB
 
@@ -510,8 +512,19 @@ SUB loadSprites (file$, offset)
 			fileOfs = fileOfs + 2
 			IF n > -1 THEN
 				GET #1, fileOfs, animation(n)
-				animation(n).offset(0) = animation(n).offset(0) + spriteBankOfs
-				animation(n).offset(1) = animation(n).offset(1) + spriteBankOfs
+				
+				'Calculate and convert actual sprite memory offset
+				' for both flip-states.
+				pLong& = animation(n).offset(0)
+				pLong& = pLong& + spriteBankOfs
+				a$ = MKL$(pLong&)                              					
+				animation(n).offset(0) = CVI(a$)
+				
+				pLong& = animation(n).offset(1)
+				pLong& = pLong& + spriteBankOfs
+				a$ = MKL$(pLong&)                              					
+				animation(n).offset(1) = CVI(a$)				
+				
 				fileOfs = fileOfs + 14
 				'debugOut str$(n) + str$(animation(n).w) + str$(animation(n).h) + str$(animation(n).offset(0)) + str$(animation(n).offset(1))
 			END IF
@@ -542,11 +555,11 @@ END SUB
 SUB loadTiles (file$)
 	DEF SEG = tileBufferSeg
 	BLOAD file$ + ".ctg", tileBankOfs
-	player.tileSet = file$
 	player.levelColor = PEEK(tileBankOfs)
+	DEF SEG
 	player.levelColor = player.levelColor + player.levelColor * 256
 	player.levelColor = player.levelColor AND &HF0F0
-	DEF SEG
+	player.tileSet = file$
 END SUB
 
 SUB myPrint (x, y, text$, attributes)

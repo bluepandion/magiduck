@@ -1431,19 +1431,25 @@ DO
 			
 	'FIRE BREATH
 	CASE 11
-		 x = (dtMain1 + actor(n).y) AND 31
-		 IF x > 10 THEN
-          IF x = 11 THEN
-           actor(n).frame = 48: soundEvent = 66
-          END IF
-          IF x = 15 THEN
-           spawnObject actor(n).x + actor(n).dir, actor(n).y, 111, actor(n).flags, -10
-           spawnObject actor(n).x + actor(n).dir, actor(n).y, 111, actor(n).flags, 0
-           spawnObject actor(n).x + actor(n).dir, actor(n).y, 111, actor(n).flags, 10
-          END IF
-         ELSE
+		'c = (dtMain1 + actor(n).y) AND 31
+		IF actor(n).jump < 36 THEN actor(n).jump = actor(n).jump + 1
+		IF actor(n).jump > 35 THEN
+			IF ABS(actor(n).y - playerY) < 20 THEN
+				IF actor(n).jump = 36 THEN
+					actor(n).frame = 48
+					soundEvent = 66
+				END IF
+				actor(n).jump = actor(n).jump + 1
+			END IF						
+			IF actor(n).jump > 40 THEN
+				actor(n).jump = 0
+				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, -10
+				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, 0
+				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, 10
+			END IF
+		ELSE
            actor(n).frame = 47
-         END IF
+        END IF
 
     'SPIKE BALL BOUNCE
     CASE 15
@@ -2173,9 +2179,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	   actor(n).visX = 21
 	   IF object = 12 THEN 
 			actor(n).flags = 1
-			actor(n).dir = -1
+			actor(n).dir = -2
 		ELSE
-			actor(n).dir = 1
+			actor(n).dir = 2
 		END IF
 	CASE 15			'Bouncing spike ball
 		actorListNew n

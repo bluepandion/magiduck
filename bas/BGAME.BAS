@@ -22,8 +22,6 @@
 
 DECLARE SUB initGame ()
 
-CLS
-
 initGame
 
 
