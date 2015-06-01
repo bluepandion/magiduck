@@ -1,9 +1,3 @@
-00:06:11
+00:29:29
 timer init
 lookups init
-main loop call
-level loaded
-timerReset
-main loop call
-level loaded
-timerReset

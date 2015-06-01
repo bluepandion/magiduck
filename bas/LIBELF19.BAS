@@ -196,7 +196,7 @@ SUB elfInit
 	'--------------------------------------------------------------------------
 	 aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
 	 gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
-	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))
+	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))	 
 	 IF gfx.adapter > 0 THEN
 		gfx.pageOfs(0) = 0
 		gfx.pageOfs(1) = 4000
@@ -209,7 +209,8 @@ SUB elfInit
 			gfx.videoWrap = 16383
 		END IF
 	  ELSE
-		errorMessage$ = "CGA, EGA or VGA compatible display adapter required."
+		PRINT "Unable to detect CGA, EGA or VGA compatible display adapter."
+		END
 		quit
 	 END IF
 	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip

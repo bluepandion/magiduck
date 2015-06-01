@@ -1916,7 +1916,7 @@ test_CGA:
 
 detected_MONO:
 	mov dx, 0						;Video adapter data for game
-	jmp get_current_mode
+	jmp exit
 	
 detected_VGA:
 	mov ax, 1003h					;Disable blink for VGA one extra time to be sure.
