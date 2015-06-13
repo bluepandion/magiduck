@@ -2,7 +2,7 @@
 
 .data
 
-.code	
+.code
 
 ;==============================================================================	
 aPageFlip PROC
@@ -58,8 +58,8 @@ aPageFlip PROC
 		and di, dx						
 	loop copyHud
 	
-		lodsb							;CL = Video adapter (stored at the
-		cmp al, 1
+		;lodsb							;CL = Video adapter (stored at the
+		cmp vAdapter, 1
 		jne egaVgaPageflip
 	
 	;---------------------------------------------------------------------------
@@ -1826,8 +1826,7 @@ exit:
 
 ;================================================================================	
 aPrint ENDP
-aInitVideo PROC
-
+aVideoDetect PROC
 ;============================================================================
 ;
 ;	Checks for video adapters VGA, EGA, CGA or MONO/OTHER
@@ -1847,17 +1846,21 @@ aInitVideo PROC
 
 ;06 Video adapter data offset	/	64 bytes of data to accommodate
 ;08 Video adapter data segment	/	VGA state check and adapter test result.
-
+;
+; RETURNS AX = detected adapter
 ;============================================================================
-
+	push bp
+	mov bp,sp
+	
 	push es
 	push di
 	push ds
 	push si
-	push bp
-	mov bp,sp
-	add bp, 8
-
+;---------------------------------------------------------------------------
+	mov ax, 0F00h					;Get current video mode
+	int 10h							;Stored by interrupt to to AL
+	
+	mov vOldMode, al
 ;---------------------------------------------------------------------------
 	mov es, [bp + 08]				;ES = Write seg (video adapter data)
 	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
@@ -1875,8 +1878,9 @@ test_VGA:
 	int 10h
 		
 	cmp al, 01bh					;If AL=1Bh this is a VGA
-	je detected_VGA
-	
+	je VGAdetected
+									;Check through data dump before
+									; giving up on VGA:
 	mov ds, [bp + 08]				;DS = seg (video adapter data)
 	mov si, [bp + 06]				;SI = ofs (video adapter data)
 	xor bx, bx
@@ -1888,8 +1892,10 @@ loop VGAstatedatacheck				;If nothing's there, this isn't a VGA.
 	
 	cmp bx, 0
 	jz test_EGA
-	jmp detected_VGA
-
+VGAdetected:
+	mov dx, 3						;Save adapter # to DX
+	jmp exit
+;---------------------------------------------------------------------------
 test_EGA:
 	xor ax, ax
 	xor bx, bx						;Interrupt call 10h:
@@ -1900,60 +1906,163 @@ test_EGA:
 									
 	cmp bl, 4						;BL =< 4 means we're EGA
 	ja test_CGA						;compatible.
-	jmp detected_EGA
-
-test_CGA:
 	
+	mov dx, 2						;Save adapter # to DX
+	jmp exit
+;---------------------------------------------------------------------------
+test_CGA:	
 	int 11h							;Interrupt call: Equipment check.
 	
 	and ax, 30h						;Check bits 4 & 5
 	
 	cmp ax, 30h						;If bits are on, this is a mono adapter.
 	jz detected_MONO
-	jmp detected_CGA
-
+	mov dx, 1						;Save adapter # to DX
+	jmp exit
+;---------------------------------------------------------------------------
+detected_MONO:
+	mov dx, 0						;Save adapter # to DX
 ;---------------------------------------------------------------------------
 
-detected_MONO:
-	mov dx, 0						;Video adapter data for game
-	jmp exit
+exit:
+	mov ax, dx						;Store detected video adapter to AX
 	
-detected_VGA:
-	mov ax, 1003h					;Disable blink for VGA one extra time to be sure.
-	xor bx, bx						
-	int 10h	
-	mov dx, 3						;Video adapter data for game
+	pop si
+	pop ds
+	pop di
+	pop es
+	pop bp
+	retf 4
+;================================================================================	
+aVideoDetect ENDP
+aVideoSet PROC
+;============================================================================
+;
+; Sets video mode to 40x50 tweaked text mode with 8x8 characters
+; for desired video adapter:
+;  1 = CGA
+;  2 = EGA
+;  3 = VGA
+;
+; Qbasic stack parameters:
+;
+; 00 bp
+; 02 Qbasic return segment
+; 04 Qbasic return offset
+;
+; 06 Video adapter to set up for.
+;
+;============================================================================
+	push bp
+	mov bp, sp
+	
+	push es
+	push di
+	push ds
+	push si
+	
+	mov bx, [bp + 6]				;DX = desired video-adapter for setup
+
+	cmp bx, 4
+	jb parameterOk					;Only accept unsigned values < 4.
+	jmp exit
+parameterOk:
+	
+	mov vAdapter, bl
+	mov dx, bx
+	
+	shl bx, 1
+	jmp [jumpTableAdapter + bx]
+	jumpTableAdapter	dw	exit, set_CGA, set_EGA, set_VGA
+;-----------------------------------------------------------------------------	
+set_VGA:
 	mov si, vVGAregs
 	mov vWrap, 32767
-	jmp get_current_mode
-vVGAregs:
-	dw	2
-	dw 03D4h, 0009h, 03D5h, 0083h 
+	jmp set_EGAVGA
 
-detected_EGA:
-	mov dx, 2						;Video adapter data for game
+set_EGA:
 	mov si, vEGAregs
 	mov vWrap, 32767
-	jmp get_current_mode
-vEGAregs:		
-	dw	18
-	dw 03D4h, 0006h, 03D5h, 0004h
-	dw 03D4h, 0007h, 03D5h, 0011h
-	dw 03D4h, 0008h, 03D5h, 0000h
-	dw 03D4h, 0009h, 03D5h, 0003h
-	dw 03D4h, 0010h, 03D5h, 00E1h
-	dw 03D4h, 0011h, 03D5h, 0024h
-	dw 03D4h, 0012h, 03D5h, 00C7h
-	dw 03D4h, 0015h, 03D5h, 00E0h
-	dw 03D4h, 0016h, 03D5h, 00F0h
+	jmp set_EGAVGA
 
-detected_CGA:
-	mov dx, 1						;Video adapter data for game
+set_CGA:
 	mov si, vCGAregs
 	mov vWrap, 16383
-	jmp get_current_mode
+	jmp startLoopVideoRegs
+
+;-----------------------------------------------------------------------------		
+set_EGAVGA:
+	xor ax, ax
+	mov al, 01h						;Set video mode 01h
+	int 10h							;40x25 colour text mode
+	
+	mov ax, 1112h					;Load and activate 8x8 character
+	xor bx, bx						;set 0
+	int 10h
+;-----------------------------------------------------------------------------	
+startLoopVideoRegs:	
+	mov cx, cs:[si]					;Load # of register data entries for looper.
+	inc si
+	inc si
+	
+	cli								;Disable interrupts and NMI (non-maskable interrupts),
+	in   al, 70h					; so they don't disrupt CRTC setup.
+	and  al, 7Fh					
+	out  70h, al
+
+	mov  dx, 03D8h					;Disable video until CRTC setup is done,
+	mov  al, 00h					; to protect the monitor hardware.
+	out  dx, al
+
+loopRegs:
+	mov dx, cs:[si]
+	inc si
+	inc si
+	mov ax, cs:[si]
+	inc si
+	inc si
+	out dx, al
+loop loopRegs
+;-----------------------------------------------------------------------------	
+	mov  dx, 03D8h					;Enable video, 40x25 mode
+	xor  ax, ax
+	mov  al, 08h
+	out  dx, al
+	
+	in   al, 70h					;Restore interrupts and NMI
+	or   al, 80h
+	out  70h, al
+	sti
+	
+	cmp vAdapter, 2					;Disable blink for EGA/VGA
+	jb clearScreen
+	mov ax, 1003h					;Select FG Blink / 16 bg colors (BL = 0)
+	xor bx, bx						;Clear whole BX to avoid problems on some adapters.
+	int 10h
+	mov ax, 1003h					;Disable blink for VGA one extra time to be sure.
+	xor bx, bx						
+	int 10h
+
+clearScreen:		
+	mov es, vSegment				;Clear video-memory with attribute 11
+	mov di, 0						; and ASCII 222
+	mov ax, 11DEh
+	mov cx, vWrap
+	inc cx
+	shr cx, 1
+	rep	stosw
+;-----------------------------------------------------------------------------	
+exit:	
+	pop si
+	pop ds
+	pop di
+	pop es
+	
+	pop bp
+	retf 2
+	
 vCGAregs:
-	dw	21
+	dw	21	;Number of entries
 	dw 03D4h, 0000h, 03D5h, 0038h
 	dw 03D4h, 0001h, 03D5h, 0028h
 	dw 03D4h, 0002h, 03D5h, 002Dh
@@ -1965,90 +2074,36 @@ vCGAregs:
 	dw 03D4h, 0008h, 03D5h, 0002h
 	dw 03D4h, 0009h, 03D5h, 0003h
 	dw 03D8h, 0008h
-
-get_current_mode:
-	mov ax, 0F00h					;Get current video mode
-	int 10h							;Stored to BL
-	
-	mov es, [bp + 08]				;ES = Write seg (video adapter data)
-	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
-	add di, 2
-	stosw							;AL = current video mode
-	
-	cmp dx, 1						;If adapter is EGA/VGA
-	ja set_EGAVGA					;set mode with interrupts
-	jmp loopVideoRegs
-	
-set_EGAVGA:
-	xor ax, ax
-	mov al, 01h						;Set video mode 01h
-	int 10h							;40x25 colour text mode
-	
-	mov ax, 1112h					;Load and activate 8x8 character
-	xor bx, bx						;set 0
-	int 10h
-	
-	mov ax, 1003h					;Select FG Blink / 16 bg colors (BL = 0)
-	xor bx, bx						;Clear whole BX to avoid problems on some adapters.
-	int 10h
-
-loopVideoRegs:
-	push dx
-	mov cx, cs:[si]
-	inc si
-	inc si
-loopRegs:
-	mov dx, cs:[si]
-	inc si
-	inc si
-	mov ax, cs:[si]
-	inc si
-	inc si
-	out dx, al
-	loop loopRegs
-	pop dx
-	
-	mov es, vSegment
-	mov di, 0
-	mov ax, 11DEh
-	mov cx, vWrap
-	inc cx
-	shr cx, 1
-	rep	stosw
-;------------------------------------------------------------------------------
-exit:
-	mov es, [bp + 08]				;ES = Write seg (video adapter data)
-	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
-	
-	mov ax, dx						;Store detected video adapter
-	stosw							;data at ES:[DI]
-	
-	pop bp
-	pop si
-	pop ds
-	pop di
-	pop es
-	retf 4
-
-;================================================================================	
-aInitVideo ENDP
-aExitVideo PROC
+vEGAregs:
+	dw	36	;Number of entries	
+	dw 03D4h, 0000h, 03D5h, 0037h ;H total
+	dw 03D4h, 0001h, 03D5h, 0027h ;H Disp end
+	dw 03D4h, 0002h, 03D5h, 002Dh ;Start H blank
+	dw 03D4h, 0003h, 03D5h, 0037h ;End H Blank
+	dw 03D4h, 0004h, 03D5h, 0031h ;Start H Retr
+	dw 03D4h, 0005h, 03D5h, 0015h ;End H Retr
+	dw 03D4h, 0006h, 03D5h, 0004h ;V Total
+	dw 03D4h, 0007h, 03D5h, 0011h ;Overflow
+	dw 03D4h, 0008h, 03D5h, 0000h ;Preset row SC
+	dw 03D4h, 0009h, 03D5h, 0003h ;Max scanline
+	dw 03D4h, 0010h, 03D5h, 00E1h ;V Retr Start
+	dw 03D4h, 0011h, 03D5h, 0024h ;V Retr End
+	dw 03D4h, 0012h, 03D5h, 00C7h ;V Disp End
+	dw 03D4h, 0013h, 03D5h, 0014h ;Offset
+	dw 03D4h, 0015h, 03D5h, 00E0h ;Start V blank
+	dw 03D4h, 0016h, 03D5h, 00F0h ;End V blank
+	dw 03D4h, 0017h, 03D5h, 00A3h ;Mode control
+	dw 03D4h, 0018h, 03D5h, 00FFh ;Line compare	
+vVGAregs:
+	dw	2	;Number of entries
+	dw 03D4h, 0009h, 03D5h, 0083h 
+;============================================================================
+aVideoSet ENDP
+aVideoExit PROC
 ;============================================================================
 ;
 ;	Sets video mode back to original state
 ;
-;============================================================================
-
-; Parameter stack offsets
-; Order is inverted from qbasic CALL ABSOLUTE parameter order
-
-;00 bp
-;02 Qbasic return segment
-;04 Qbasic return offset
-
-;06 Old video mode
-;08 Video adapter
-
 ;============================================================================
 
 	push bp
@@ -2056,13 +2111,11 @@ aExitVideo PROC
 
 ;---------------------------------------------------------------------------
 	
-	mov ax, [bp + 06]				;AX = old mode
-		
-	xor ah, ah						;Clear AH, just in case.
+	mov al, vOldMode				;AX = old mode		
+	xor ah, ah						;
 	int 10h							;Set mode
-
-	mov dx, [bp + 08]				;DX = video adapter
-	cmp dx, 3						;IF adapter is VGA, set scanlines to 400
+	
+	cmp vAdapter, 3					;IF adapter is VGA, set scanlines to 400
 	jne exit
 	
 	mov ax, 1202h
@@ -2070,17 +2123,12 @@ aExitVideo PROC
 	mov bl, 30h
 	int 10h
 	
-	
 ;------------------------------------------------------------------------------
 exit:
-	
 	pop bp
-	retf 4
-
-;================================================================================	
-	
-	
-aExitVideo ENDP
+	retf 0
+;================================================================================
+aVideoExit ENDP
 aTileRead PROC
 ;============================================================================
 ;
@@ -2560,10 +2608,10 @@ keyboardInterrupt:
 	push ax
 	push bx
 
-	mov bx, kbArray							;This number will be overwritten in
-	mov ds, bx								;Qbasic. Set our write segment
-											;to the Keyboard array.
-	mov bx, kbArray + 2						;And an offset value too
+	mov bx, kbArray							;Set keyboard array seg/ofs
+	mov ds, bx								; to save key states into.
+											;
+	mov bx, kbArray + 2						;
 											
 	xor ah, ah								;AH = 0
 	in al, 060h								;AL = Read from port 60
@@ -2662,8 +2710,9 @@ public aTileDraw
 public aTilePan
 public aKBremove
 public aPrint
-public aInitVideo
-public aExitVideo
+public aVideoDetect
+public aVideoSet
+public aVideoExit
 public aTileRead
 public aTileWrite
 public aSoundNote

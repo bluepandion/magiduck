@@ -89,18 +89,35 @@ SUB aUpdateTile (x, y)
 END SUB
 
 SUB elfInit
-	PRINT 
+	gfx.adapter = aVideoDetect(VARSEG(hudBuffer), VARPTR(hudBuffer))
+	CLS
+	PRINT
 	COLOR 12, 0
 	PRINT " WARNING!"
 	COLOR 7, 0
-	PRINT
+	PRINT 
+	PRINT "   Alpha 1.1 (2015-06-14)
 	PRINT "   This version of MagiDuck has never been tested on real hardware."
 	PRINT "   It is still an early version and only meant for testing purposes."
+	COLOR 12, 0
 	PRINT
 	PRINT "   You are running this software at your own risk!"
 	PRINT	
-	COLOR 14, 0
 	PRINT
+	COLOR 7, 0
+	a$ = UCASE$(MID$(COMMAND$, 1, 3))
+	IF a$ = "CGA" THEN gfx.adapter = 1
+	IF a$ = "EGA" THEN gfx.adapter = 2
+	IF a$ = "VGA" THEN gfx.adapter = 3
+	IF gfx.adapter THEN 
+		PRINT "   " MID$("CEV", gfx.adapter, 1) + "GA DETECTED."
+	ELSE
+		PRINT "    No compatible video adapter detected."
+	END IF
+	COLOR 8, 0
+	PRINT "   Use command line parameter CGA, EGA or VGA to override automatic detection."
+	PRINT
+	COLOR 14, 0
 	PRINT "   Press Y to start the game, any other key to exit."
 	COLOR 7, 0
 	DO
@@ -159,9 +176,6 @@ SUB elfInit
 	 gfx.windowOfs(n) = 1920
 	 spriteList(2, n).y = 255
 	NEXT n
-	'------------------------------------------------------
-	debugOut "timer init"
-	CALL aTimerStart
 	'-----------------------------------------------------------------------
 	' Set up lookups, preload some data and setup screen
 	'-----------------------------------------------------------------------
@@ -194,10 +208,12 @@ SUB elfInit
 	'--------------------------------------------------------------------------
 	' Detect and initialize video adapter
 	'--------------------------------------------------------------------------
-	 aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
-	 gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
-	 gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))	 
+	 'aInitVideo VARSEG(hudBuffer), VARPTR(hudBuffer)
+	 
+	 'gfx.adapter = ASC(MID$(hudBuffer, 1, 1))
+	 'gfx.oldMode = ASC(MID$(hudBuffer, 3, 1))	 
 	 IF gfx.adapter > 0 THEN
+		aVideoSet gfx.adapter
 		gfx.pageOfs(0) = 0
 		gfx.pageOfs(1) = 4000
 		gfx.page = 0
@@ -209,14 +225,14 @@ SUB elfInit
 			gfx.videoWrap = 16383
 		END IF
 	  ELSE
-		PRINT "Unable to detect CGA, EGA or VGA compatible display adapter."
-		END
-		quit
+		PRINT "CGA, EGA or VGA compatible display adapter required."
+		END		
 	 END IF
 	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
 	 MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
-	
-	'hudTextLoad 0, 1
+	'------------------------------------------------------
+	debugOut "timer init"
+	CALL aTimerStart
 	'-----------------------------------------------------------------------
 	' Setup keyboard
 	'-----------------------------------------------------------------------
@@ -578,7 +594,8 @@ SUB quit
 		CALL aTimerEnd
 	END IF
 	 
-	 aExitVideo gfx.adapter, gfx.oldMode
+	 'aExitVideo gfx.adapter, gfx.oldMode
+	 aVideoExit
 
 	 'SHELL "cls"
 	 PRINT errorMessage$
