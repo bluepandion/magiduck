@@ -2014,7 +2014,7 @@ startLoopVideoRegs:
 	mov  al, 00h					; to protect the monitor hardware.
 	out  dx, al
 
-loopRegs:
+loopRegs:							;Loop through CRTC register data
 	mov dx, cs:[si]
 	inc si
 	inc si

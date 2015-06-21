@@ -220,6 +220,8 @@ SUB elfInit
 		IF gfx.adapter > 1 THEN
 			gfx.pageWrap = 16383
 			gfx.videoWrap = 32767
+			gfx.pageOfs(0) = 3000
+			gfx.pageOfs(1) = 9000
 		ELSE
 			gfx.pageWrap = 8191
 			gfx.videoWrap = 16383
@@ -290,88 +292,101 @@ END SUB
 
 SUB handleScroll
  
- diffX = gfx.screenX(gfx.page) - gfx.screenOldX(gfx.page)
- diffY = gfx.screenY(gfx.page) - gfx.screenOldY(gfx.page)
+	diffX = gfx.screenX(gfx.page) - gfx.screenOldX(gfx.page)
+	diffY = gfx.screenY(gfx.page) - gfx.screenOldY(gfx.page)
 
- IF diffX = 0 AND diffY = 0 THEN EXIT SUB
- 
- n = 0
+	IF diffX = 0 AND diffY = 0 THEN EXIT SUB
 
- IF diffX THEN
-  gfx.screenOldX(gfx.page) = gfx.screenX(gfx.page)
-  gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + diffX
-  gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) + diffX
-	 IF diffX > 0 THEN
-		tileCopyList(n, gfx.page).x = 40 - diffX
-		tileCopyList(n, gfx.page).y = 0
-		tileCopyList(n, gfx.page).w = diffX
-		tileCopyList(n, gfx.page).h = 50
-		n = n + 1
-	 END IF
+	n = 0
 
-	IF diffX < 0 THEN
-		tileCopyList(n, gfx.page).x = 0
-		tileCopyList(n, gfx.page).y = 0
-		tileCopyList(n, gfx.page).w = ABS(diffX)
-		tileCopyList(n, gfx.page).h = 50
-		n = n + 1
+	IF diffX THEN
+		gfx.screenOldX(gfx.page) = gfx.screenX(gfx.page)
+		gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + diffX
+		gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) + diffX
+		IF diffX > 0 THEN
+			tileCopyList(n, gfx.page).x = 40 - diffX
+			tileCopyList(n, gfx.page).y = 0
+			tileCopyList(n, gfx.page).w = diffX
+			tileCopyList(n, gfx.page).h = 50
+			n = n + 1
+		END IF
+		IF diffX < 0 THEN
+			tileCopyList(n, gfx.page).x = 0
+			tileCopyList(n, gfx.page).y = 0
+			tileCopyList(n, gfx.page).w = ABS(diffX)
+			tileCopyList(n, gfx.page).h = 50
+			n = n + 1
+		END IF
 	END IF
- END IF
 
- IF diffY THEN
-  gfx.screenOldY(gfx.page) = gfx.screenY(gfx.page)
-  gfx.windowY(gfx.page) = gfx.windowY(gfx.page) + diffY
-  gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + diffY * 80
-  gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) + diffY * 40
-	IF diffY > 0 THEN
-		tileCopyList(n, gfx.page).x = 0
-		tileCopyList(n, gfx.page).y = 50 - diffY - 1
-		tileCopyList(n, gfx.page).w = 40
-		tileCopyList(n, gfx.page).h = diffY + 1
-		n = n + 1
-	  ELSE
-		tileCopyList(n, gfx.page).x = 0
-		tileCopyList(n, gfx.page).y = 0
-		tileCopyList(n, gfx.page).w = 40
-		tileCopyList(n, gfx.page).h = ABS(diffY) + 2
-		n = n + 1
+	IF diffY THEN
+		gfx.screenOldY(gfx.page) = gfx.screenY(gfx.page)
+		gfx.windowY(gfx.page) = gfx.windowY(gfx.page) + diffY
+		gfx.windowOfs(gfx.page) = gfx.windowOfs(gfx.page) + diffY * 80
+		gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) + diffY * 40
+		IF diffY > 0 THEN
+			tileCopyList(n, gfx.page).x = 0
+			tileCopyList(n, gfx.page).y = 50 - diffY - 1
+			tileCopyList(n, gfx.page).w = 40
+			tileCopyList(n, gfx.page).h = diffY + 1
+			n = n + 1
+		  ELSE
+			tileCopyList(n, gfx.page).x = 0
+			tileCopyList(n, gfx.page).y = 0
+			tileCopyList(n, gfx.page).w = 40
+			tileCopyList(n, gfx.page).h = ABS(diffY) + 2
+			n = n + 1
+		END IF
 	END IF
- END IF
-
- gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) AND gfx.pageWrap
- 
- IF gfx.windowY(gfx.page) < 0 THEN
-	gfx.windowY(0) = gfx.windowY(0) + 24
-	gfx.windowY(1) = gfx.windowY(1) + 24
-	gfx.windowOfs(0) = gfx.windowOfs(0) + 1920
-	gfx.windowOfs(1) = gfx.windowOfs(1) + 1920
-	gfx.tileOfs = gfx.tileOfs - 60 'tilePosYlookUp(gfx.screenY(gfx.page)) - 60
-
-	aTilePan 1, tileBufferSeg, tileBufferOfs
-
-	aDrawTiles gfx.tileArea, gfx.tileOfs
- END IF
-
- IF gfx.windowY(gfx.page) > 47 THEN
-	gfx.windowY(0) = gfx.windowY(0) - 24
-	gfx.windowY(1) = gfx.windowY(1) - 24
-
-	gfx.windowOfs(0) = gfx.windowOfs(0) - 1920
-	gfx.windowOfs(1) = gfx.windowOfs(1) - 1920
 	
-	gfx.tileOfs = gfx.tileOfs + 60 ' tilePosYlookUp(gfx.screenY(gfx.page)) - 60
+	gfx.pageOfs(gfx.page) = gfx.pageOfs(gfx.page) AND gfx.pageWrap
+	
+	IF gfx.windowY(gfx.page) < 0 THEN
+		gfx.windowY(0) = gfx.windowY(0) + 24
+		gfx.windowY(1) = gfx.windowY(1) + 24
+		gfx.windowOfs(0) = gfx.windowOfs(0) + 1920
+		gfx.windowOfs(1) = gfx.windowOfs(1) + 1920
+		gfx.tileOfs = gfx.tileOfs - 60 'tilePosYlookUp(gfx.screenY(gfx.page)) - 60
+		
+		aTilePan 1, tileBufferSeg, tileBufferOfs
+		
+		aDrawTiles gfx.tileArea, gfx.tileOfs
+	END IF
 
-	aTilePan 0, tileBufferSeg, tileBufferOfs
+	IF gfx.windowY(gfx.page) > 47 THEN
+		gfx.windowY(0) = gfx.windowY(0) - 24
+		gfx.windowY(1) = gfx.windowY(1) - 24
 
-	aDrawTiles gfx.tileArea + 3, gfx.tileOfs + 180
- END IF
+		gfx.windowOfs(0) = gfx.windowOfs(0) - 1920
+		gfx.windowOfs(1) = gfx.windowOfs(1) - 1920
+		
+		gfx.tileOfs = gfx.tileOfs + 60 ' tilePosYlookUp(gfx.screenY(gfx.page)) - 60
 
- tileCopyList(n, gfx.page).y = 255
- 
- 'aCopyTileAreas gfx.page, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		aTilePan 0, tileBufferSeg, tileBufferOfs
 
- aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		aDrawTiles gfx.tileArea + 3, gfx.tileOfs + 180
+	END IF
 
+	tileCopyList(n, gfx.page).y = 255
+
+	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+	
+	IF gfx.adapter > 1 THEN
+		IF gfx.pageOfs(0) < 500 OR gfx.pageOfs(1) > 13500 THEN
+			'debugOut str$(gfx.pageOfs(0)) + str$(gfx.pageOfs(1))
+			tileCopyList(0, 0).x = 0
+			tileCopyList(0, 0).y = 0
+			tileCopyList(0, 0).w = 40
+			tileCopyList(0, 0).h = 2
+			tileCopyList(1, 0).y = 255
+			aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page xor 1), &HDE, VARSEG(tileCopyList(0, 0).offset), VARPTR(		tileCopyList(0, 0).offset)
+			aCopyPage gfx.pageOfs(0), 3000
+			aCopyPage gfx.pageOfs(1), 9000
+			gfx.pageOfs(0) = 3000
+			gfx.pageOfs(1) = 9000
+		END IF
+	END IF
+	
 END SUB
 
 SUB initLookUps
@@ -783,10 +798,7 @@ END SUB
 
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
-	
-'	debugOut "Loading menu " + str$(menuNo%) + "."
-'	debugOut " Page ofs: " + str$(gfx.pageOfs(0)) + "," + str$(gfx.pageOfs(1))
-	
+		
 	menuClear
 	
 	IF menuNo% > 9 THEN

@@ -1434,7 +1434,7 @@ DO
 		'c = (dtMain1 + actor(n).y) AND 31
 		IF actor(n).jump < 36 THEN actor(n).jump = actor(n).jump + 1
 		IF actor(n).jump > 35 THEN
-			IF ABS(actor(n).y - playerY) < 20 THEN
+			IF ABS(actor(n).y - playerY) < 25 THEN
 				IF actor(n).jump = 36 THEN
 					actor(n).frame = 48
 					soundEvent = 66

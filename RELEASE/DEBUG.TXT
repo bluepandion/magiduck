@@ -1,6 +1,1 @@
-23:22:19
-lookups init
-timer init
-main loop call
-level loaded
-timerReset
+09:36:09
