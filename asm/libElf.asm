@@ -2384,11 +2384,11 @@ aCopyPage PROC
 	mov si, [bp + 8]
 	shl di, 1
 	shl si, 1
-	add di, 160
-	add si, 160
+	;add di, 160
+	;add si, 160
 	
 	mov dx, vWrap
-	mov cx, 1920
+	mov cx, 2000
 copyPage:
 	and di, dx
 	and si, dx
