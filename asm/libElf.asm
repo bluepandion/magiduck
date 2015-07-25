@@ -1629,15 +1629,12 @@ aPrint PROC
 ;20 Buffer wrap
 
 ;============================================================================
-
+	push bp
+	mov bp,sp
 	push es
 	push di
 	push ds
 	push si
-	push bp
-	mov bp,sp
-	add bp, 8
-
 ;---------------------------------------------------------------------------
 	mov dx, [bp + 20]				;DX = Buffer wrap
 	
@@ -1737,11 +1734,11 @@ jmp printLoop2						;Next character     -----------------------
 exit:
 ;------------------------------------------------------------------------------
 
-	pop bp
 	pop si
 	pop ds
 	pop di
 	pop es
+	pop bp
 	retf 16
 
 ;================================================================================	
@@ -2049,120 +2046,6 @@ exit:
 	retf 0
 ;================================================================================
 aVideoExit ENDP
-aTileRead PROC
-;============================================================================
-;
-; Read tile from tilemap
-;
-; Returns AX = tile index from the tilemap at position (x,y).
-;
-;============================================================================
-	push ds
-	push si
-	push bp
-	mov bp,sp
-	add bp, 4
-	
-	mov ds, gfxTileBank
-	mov si, gfxTileBank + 2
-	
-	mov bx, [bp + 8]				;BX = X / 4
-	shr bx, 1
-	shr bx, 1
-cmp bx, 80
-jb xInBounds
-	xor bx, bx
-xInBounds:
-	add si, bx
-									
-	mov ax, [bp + 6]				;Current y is (tile y * 8)
-	and al, 0F8h
-cmp ax, 640
-jb yInBounds
-	xor ax, ax
-yInBounds:
-	mov bx, ax						
-	shr bx, 1						;BX = y * 4
-	shl ax, 1						;AX = y * 16
-	add si, bx
-	add si, ax
-		
-	lodsb							;AL = tile index at (x,y)
-	xor ah, ah						;AH = 0
-									;QuickBasic reads AX as the
-	pop bp							; result integer.
-	pop si
-	pop ds
-	retf 4
-;================================================================================	
-aTileRead ENDP
-aTileWrite PROC
-;============================================================================
-;
-; Write a tile to tilemap.
-;
-; Write a tile index into the tilemap at (x,y).
-;
-;============================================================================
-
-; Parameter stack offsets
-; Order is inverted from qbasic CALL ABSOLUTE parameter order
-
-;00 bp
-;02 Qbasic return segment
-;04 Qbasic return offset
-
-;06 tileMap offset
-;08 tileBuffer Segment
-;10 Tile X
-;12 Tile Y
-;14 Tile index to write.
-
-;============================================================================
-	push es
-	push di
-	push ds
-	push si
-	push bp
-	mov bp,sp
-	add bp, 8
-;---------------------------------------------------------------------------
-
-begin:
-
-	mov es, [bp + 08]				;ES = Tilebuffer seg
-	mov di, [bp + 06]				;DI = Tilemap tile read offset
-
-	mov ax, [bp + 10]				;AX = X / 4
-	shr ax, 1
-	shr ax, 1
-	add di, ax						;DI += AX
-
-	mov ax, [bp + 12]				;AX = Y * 8 (from pixel coords to tile index)
-	and ax, 0FFF8h					;Remove pixels from coordinate
-	mov bx, ax						;BX = AX / 2
-	shr bx, 1
-	shl ax, 1						;AX = AX * 2
-	add ax, bx						;AX = Y * 20
-	add di, ax						;DI += AX
-
-	mov ax, [bp + 14]				;AX = Tile index to write
-	
-	stosb							;Write index at ES:DI
-
-;---------------------------------------------------------------------------
-
-exit:
-
-	pop bp
-	pop si
-	pop ds
-	pop di
-	pop es
-	retf 10
-
-;================================================================================	
-aTileWrite ENDP
 aSoundNote PROC
 	push bp
 	mov bp, sp
@@ -2176,11 +2059,10 @@ aSoundNote PROC
 	retf 2
 aSoundNote ENDP
 aSoundFX PROC
-	push ds
-	push si
 	push bp
 	mov bp, sp
-	add bp, 4
+	push ds
+	push si
 	
 	xor ax, ax
 	mov bx, [bp + 8]
@@ -2201,9 +2083,9 @@ aSoundFX PROC
 	jmp fillQueue
 	
 	exit:
-	pop bp
 	pop si
 	pop ds
+	pop bp
 	retf 4	
 aSoundFX ENDP
 aSoundPlay PROC
@@ -2257,12 +2139,11 @@ aSoundStop PROC
 	retf 0
 aSoundStop ENDP
 aSetup PROC
+	push bp
+	mov bp, sp
 	push es
 	push ds
 	push si
-	push bp
-	mov bp, sp
-	add bp, 6
 	
 	mov soundPos, 0			; Setup pc speaker control values.
 	in al, 61h
@@ -2303,21 +2184,20 @@ aSetup PROC
 	lodsw
 	mov hudBuffer+2, ax
 	
-	pop bp
 	pop si
 	pop ds
 	pop es
+	pop bp
 	retf 4
 aSetup ENDP
 aCopyPage PROC
+	push bp
+	mov bp,sp
 	push es
 	push di
 	push ds
 	push si
-	push bp
-	mov bp,sp
-	add bp, 8
-	
+		
 	mov es, vSegment
 	mov di, [bp + 6]
 	mov ds, vSegment
@@ -2335,11 +2215,11 @@ copyPage:
 	movsw
 loop copyPage
 	
-	pop bp
 	pop si
 	pop ds
 	pop di
 	pop es
+	pop bp
 	retf 4
 aCopyPage ENDP
 aMenuHiLite PROC
@@ -2350,13 +2230,12 @@ aMenuHiLite PROC
 	;	12 w
 	;	14 y
 	;	16 x
+	push bp
+	mov bp,sp
 	push es
 	push di
 	push ds
 	push si
-	push bp
-	mov bp,sp
-	add bp, 8
 	
 	mov es, vSegment
 	mov di, [bp + 6]
@@ -2409,11 +2288,11 @@ loop loopX
 	dec ch
 jnz loopY
 
-	pop bp
 	pop si
 	pop ds
 	pop di
 	pop es
+	pop bp
 	retf 12
 aMenuHiLite ENDP
 aFadeOut PROC
@@ -2693,8 +2572,6 @@ public aPrint
 public aVideoDetect
 public aVideoSet
 public aVideoExit
-public aTileRead
-public aTileWrite
 public aSoundNote
 public aSoundFX
 public aSoundPlay

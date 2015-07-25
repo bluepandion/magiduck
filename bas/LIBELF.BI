@@ -16,9 +16,6 @@ DECLARE FUNCTION aVideoDetect% (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aVideoSet (BYVAL mode%)
 DECLARE SUB aVideoExit ()
 
-DECLARE FUNCTION aTileRead% (BYVAL x%, BYVAL y%)
-DECLARE SUB aTileWrite (BYVAL writeIndex%, BYVAL tileY%, BYVAL tileX%, BYVAL mapSeg%, BYVAL mapOfs%)
-
 DECLARE SUB aSoundFX (BYVAl fx%, BYVAL offset%)
 DECLARE SUB aSoundNote (BYVAL note%)
 DECLARE SUB aSoundStop ()
