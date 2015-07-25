@@ -1285,13 +1285,6 @@ aTileArea PROC
 ;02 Qbasic return segment
 ;04 Qbasic return offset
 
-;-06 tileBank offset
-;-08 tileMap offset
-;-10 tileBuffer offset
-;-12 tileBuffer Segment
-;-14 Write area offset
-;-16 Tilemap read offset
-
 ;06 Write area offset
 ;08 Tilemap read offset
 
@@ -1398,10 +1391,9 @@ retf 4
 ;============================================================================
 aTileArea ENDP
 aTileDraw PROC
-
 ;============================================================================
 ;
-; Update Tile routine v. 8.01
+; Update Tile 
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
@@ -1416,36 +1408,42 @@ aTileDraw PROC
 ;02 Qbasic return segment
 ;04 Qbasic return offset
 
-;06 tileBank offset
-;08 tileMap offset
-;10 tileBuffer offset
-;12 tileBuffer Segment
+;-06 tileBank offset
+;-08 tileMap offset
+;-10 tileBuffer offset
+;-12 tileBuffer Segment
 ;14 Tilemap read offset
 ;16 Tile X offset
 ;18 Tile Y offset
 ;
-;============================================================================
+;06 Tilemap read offset
+;08 Tile X offset
+;10 Tile Y offset
 
+;============================================================================
 push bp
 mov bp,sp
-
+push es
+push di
+push ds
+push si
 ;---------------------------------------------------------------------------
 
 begin:
 
-mov es, [bp + 12]				;ES = tile buffer seg
-mov di, [bp + 10]				;DI = tile buffer ofs
+mov es, gfxTileSeg				;ES = tile buffer seg
+mov di, gfxTileBuffer			;DI = tile buffer ofs
 
-mov ds, [bp + 12]				;DS = Tilebuffer seg
-mov si, [bp + 14]				;SI = Tilemap tile read offset
-add si, [bp + 08]				;	+ Tilemap start offset
+mov ds, gfxTileSeg				;DS = Tilebuffer seg
+mov si, [bp + 06]				;SI = Tilemap tile read offset
+add si, gfxTileMap				;	+ Tilemap start offset
 
-mov ax, [bp + 18]				;DI = DI + (Y * 640)
+mov ax, [bp + 10]				;DI = DI + (Y * 640)
 mov bx, 640
 mul bx
 add di, ax						
 
-mov ax, [bp + 16]				;DI = DI + (X * 4)
+mov ax, [bp + 08]				;DI = DI + (X * 4)
 shl ax, 1
 shl ax, 1
 add di, ax						
@@ -1461,7 +1459,7 @@ shl ax, 1
 shl ax, 1
 
 mov si, ax						;SI = Tile bank offset
-add si, [bp + 06]				;SI + AX (tile index)
+add si, gfxTileBank				;SI + AX (tile index)
 
 mov bx, 76						;BX = Tile draw CR value.
 
@@ -1494,10 +1492,12 @@ movsw
 ;----------------------------------------------------------------------------
 
 exit:
-
+pop si
+pop ds
+pop di
+pop es
 pop bp
-retf 14
-
+retf 6
 ;================================================================================	
 aTileDraw ENDP
 aTilePan PROC

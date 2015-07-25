@@ -79,7 +79,7 @@ SUB aUpdateTile (x, y)
 	p0% = (tilePosYlookUp(y) - gfx.tileOfs) \ 20
 	IF p0% > 11 THEN p0% = 11
 	
-	aTileDraw p0%, tilePosXlookUp(x), p2%, tileBufferSeg, tileBufferOfs, TileMapOfs, tileBankOfs
+	aTileDraw p0%, tilePosXlookUp(x), p2%
 END SUB
 
 SUB elfInit
