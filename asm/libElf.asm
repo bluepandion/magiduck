@@ -391,9 +391,8 @@ JMP loopYsafe			;		else { GOTO loopy }
 ;--------------------------------------------------------------------------
 aClearList ENDP
 aRectList PROC
-
 	;---------------------------------------------------------------------------
-	; Rectangle Copy Routine v. 8.1
+	; Rectangle list Copy
 	;
 	; 40x50 mode drawing. 2 Pixels per byte.
 	;
@@ -420,31 +419,22 @@ aRectList PROC
 
 	;06 Sprite list offset
 	;08 Sprite list segment
-	;10 Tile buffer offset
-	;12 Tile buffer segment
-	;14 Tile buffer Wrap
-	;16 Video buffer offset
-	;18 Video buffer segment
-	;20 Video Wrap (CGA = 16384, EGA-> = 32768)
-	;22 Tile buffer Window offset
-
+	;10 Page offset	
+	;12 Tile buffer Window offset	
 	;----------------------------------------------------------------------------
-
+		push bp			
+		mov bp, sp				
 		push es
 		push di
 		push ds
 		push si
-		push bp			
-		mov bp, sp				;Get stack pointer
-		add bp, 8
 		
-		mov di, [bp + 16]		;Video buffer offset * 2
+		mov di, [bp + 10]		;Page offset * 2
 		shl di, 1
-		mov [bp + 16], di
+		mov [bp + 10], di
 
 		mov si, [bp + 06]		;SI = sprite List read offset
 		push si					;Push SI for routine logic
-
 	;============================================================================
 	; SPRITE LIST READ
 	;============================================================================
@@ -461,14 +451,14 @@ aRectList PROC
 
 		cmp ax, 255				;Has list ended?
 		JNZ continuelist		;
-	exit:					;----------------------------------------------------
-		pop bp
+	exit:						;----------------------------------------------------
 		pop si
 		pop ds
 		pop di
 		pop es
-		retf 18					;		EXIT
-							;----------------------------------------------------
+		pop bp
+		retf 8					;		EXIT
+								;----------------------------------------------------
 
 	continuelist:
 		xchg ah, al				;AX * 256
@@ -493,8 +483,8 @@ aRectList PROC
 	;============================================================================
 	;============================================================================
 
-		mov di, [bp + 16]		;DI = video memory write offset
-		mov si, [bp + 10]		;SI = tile buffer read offset
+		mov di, [bp + 10]		;DI = video memory write offset
+		mov si, gfxTileBuffer		;SI = tile buffer read offset
 			
 		xor ax, ax
 		mov al, bl
@@ -521,10 +511,10 @@ aRectList PROC
 		add di, bx				;add Y * 80 to write offset
 		inc di					;DI + 1, to hit the attribute byte.
 
-		and di, [bp + 20]		;		Wrap DI with video wrap offset.
+		and di, vWrap		;		Wrap DI with video wrap offset.
 
 		add si, bx				;add Y * 80 to read offset
-		add si, [bp + 22]		;add Window offset to read offset
+		add si, [bp + 12]		;add Window offset to read offset
 
 	;Store row change value to BX
 
@@ -539,11 +529,11 @@ aRectList PROC
 	; COPY RECTANGLE
 	;============================================================================
 
-		mov ds, [bp + 12]		;DS = Tile Buffer segment
-		mov es, [bp + 18]		;ES = video memory write segment (0xB800)
+		mov ds, gfxTileSeg		;DS = Tile Buffer segment
+		mov es, vSegment		;ES = video memory write segment (0xB800)
 
 		push cx					;Check if video memory offset is
-		mov cx, [bp + 20]		; safe for drawing without wrap check.
+		mov cx, vWrap		; safe for drawing without wrap check.
 		sub cx, 4000
 		cmp di, cx
 		pop cx
@@ -560,7 +550,7 @@ aRectList PROC
 		mov bx, cx			;Get value for jump.
 		xor bh, bh			;Clear height-value from jump.
 		
-		mov cx, [bp + 20]	;...Store Wrap value to CX.
+		mov cx, vWrap	;...Store Wrap value to CX.
 		
 		shl bx, 1
 		jmp [rectWrap + bx]
@@ -713,14 +703,14 @@ rwi00:
 		add di, ax				;2		Change write line by BX
 		add si, dx				;2		Change read line by DX
 
-		and di, [bp + 20]		;		Wrap DI with video wrap offset.
+		and di, vWrap		;		Wrap DI with video wrap offset.
 
 		pop cx					;		Pop CL = Width, CH = Height
 		
 		dec ch					;2		Height - 1, IF Height = 0 {
 		JZ backToRectList		;		 GOTO backtolist } ELSE
 		push cx					;		Push CX...
-		mov cx, [bp + 20]		; 		and store Wrap value there.
+		mov cx, vWrap		; 		and store Wrap value there.
 		jmp [rectWrap + bx]		;		Draw next line.
 		;============================================================================
 

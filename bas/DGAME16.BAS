@@ -535,7 +535,7 @@ CASE 258
 		tileCopyList(0, gfx.page).h = 50
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), &HDE
-		aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 		player.menuMode = player.menuMode + 1
 	CASE 1001
 		actor(1).lNext = actor(2).jump
@@ -1944,7 +1944,7 @@ END SUB
 			END IF
 	  aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
       gfx.page = gfx.page XOR 1
-	  aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+	  aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 	LOOP
 END SUB
 

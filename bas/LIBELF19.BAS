@@ -372,7 +372,7 @@ SUB handleScroll
 
 	tileCopyList(n, gfx.page).y = 255
 
-	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+	aRectList gfx.windowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 	
 	IF gfx.adapter > 1 THEN
 		IF gfx.pageOfs(0) < 500 OR gfx.pageOfs(1) > 13500 THEN
@@ -750,7 +750,7 @@ SUB screenResetPos (x%, y%)
 	spriteList(0, gfx.page).w = 40
 	spriteList(0, gfx.page).h = 50
 
-	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+	aRectList gfx.windowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
 	aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 	gfx.page = gfx.page XOR 1
@@ -761,7 +761,7 @@ SUB screenResetPos (x%, y%)
 	spriteList(0, gfx.page).w = 40
 	spriteList(0, gfx.page).h = 50
 
-	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+	aRectList gfx.windowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
 	' FOR n = 0 to 1
 	'	 handleScroll
