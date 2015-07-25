@@ -345,7 +345,7 @@ SUB handleScroll
 		gfx.windowOfs(1) = gfx.windowOfs(1) + 1920
 		gfx.tileOfs = gfx.tileOfs - 60 'tilePosYlookUp(gfx.screenY(gfx.page)) - 60
 		
-		aTilePan 1, tileBufferSeg, tileBufferOfs
+		aTilePan 1
 		
 		aTileArea gfx.tileOfs, gfx.tileArea
 	END IF
@@ -359,7 +359,7 @@ SUB handleScroll
 		
 		gfx.tileOfs = gfx.tileOfs + 60 ' tilePosYlookUp(gfx.screenY(gfx.page)) - 60
 
-		aTilePan 0, tileBufferSeg, tileBufferOfs
+		aTilePan 0
 
 		aTileArea gfx.tileOfs + 180, gfx.tileArea + 3
 		

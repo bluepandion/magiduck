@@ -7,7 +7,7 @@ DECLARE SUB aRectList (BYVAL tileBufWindowOfs%, BYVAL videoOfs%, BYVAL sprListSe
 DECLARE SUB aSpriteList (BYVAL videoOfs%, BYVAL sprListSeg%, BYVAL sprListOfs%)
 DECLARE SUB aTileArea (BYVAL forceOfs%, BYVAL area%)
 DECLARE SUB aTileDraw (BYVAL tileYOfs%, BYVAL tileXOfs%, BYVAL tileMapReadOfs%)
-DECLARE SUB aTilePan (BYVAL panDir%, BYVAL tileBufSeg%, BYVAL tileBufOfs%)
+DECLARE SUB aTilePan (BYVAL panDir%)
 DECLARE SUB aPrint (BYVAL wrapOfs%, BYVAL attributes%, BYVAL TextSeg%, BYVAL TextOfs%, BYVAL Column%, BYVAL Row%, BYVAL writeSeg%, BYVAL writeOfs%)
 'DECLARE SUB aInitVideo (BYVAL dataSeg%, BYVAL dataOfs%)
 'DECLARE SUB aExitVideo (BYVAL adapter%, BYVAL oldMode%)

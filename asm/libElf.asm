@@ -1408,14 +1408,6 @@ aTileDraw PROC
 ;02 Qbasic return segment
 ;04 Qbasic return offset
 
-;-06 tileBank offset
-;-08 tileMap offset
-;-10 tileBuffer offset
-;-12 tileBuffer Segment
-;14 Tilemap read offset
-;16 Tile X offset
-;18 Tile Y offset
-;
 ;06 Tilemap read offset
 ;08 Tile X offset
 ;10 Tile Y offset
@@ -1501,10 +1493,9 @@ retf 6
 ;================================================================================	
 aTileDraw ENDP
 aTilePan PROC
-
 ;============================================================================
 ;
-; Tile buffer Pan routine v8.0
+; Tile buffer Pan routine
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
@@ -1519,30 +1510,26 @@ aTilePan PROC
 ;02 Qbasic return segment
 ;04 Qbasic return offset
 
-;06 tileBuffer offset
-;08 tileBuffer Segment
-;10 Pan direction (0 = up, 1 = down)
+;06 Pan direction (0 = up, 1 = down)
 
 ;============================================================================
+push bp
+mov bp,sp
 push es
 push di
 push ds
 push si
-push bp
-mov bp,sp
-add bp, 8
-
 ;---------------------------------------------------------------------------
 
 begin:
 
-mov es, [bp + 08]				;ES = tile buffer seg
-mov di, [bp + 06]				;DI = tile buffer ofs
+mov es, gfxTileSeg				;ES = tile buffer seg
+mov di, gfxTileBuffer			;DI = tile buffer ofs
 
-mov ds, [bp + 08]				;DS = Tilebuffer seg
-mov si, [bp + 06]				;SI = Tilemap ofs
+mov ds, gfxTileSeg				;DS = Tilebuffer seg
+mov si, gfxTileBuffer			;SI = Tilemap ofs
 
-mov ax, [bp + 10]
+mov ax, [bp + 06]
 
 cmp ax, 0
 je panup
@@ -1566,16 +1553,16 @@ add si, 3840
 mov cx, 960
 rep movsw
 
-mov di, [bp + 06]				;DI = Tilebuffer ofs
-mov si, [bp + 06]				;SI = Tilebuffer ofs
+mov di, gfxTileBuffer			;DI = Tilebuffer ofs
+mov si, gfxTileBuffer			;SI = Tilebuffer ofs
 
 add di, 3840
 add si, 1920
 mov cx, 960
 rep movsw
 
-mov di, [bp + 06]				;DI = Tilebuffer ofs
-mov si, [bp + 06]				;SI = Tilebuffer ofs
+mov di, gfxTileBuffer			;DI = Tilebuffer ofs
+mov si, gfxTileBuffer			;SI = Tilebuffer ofs
 
 add di, 1920
 mov cx, 960
@@ -1584,13 +1571,12 @@ rep movsw
 ;----------------------------------------------------------------------------
 
 exit:
-pop bp
 pop si
 pop ds
 pop di
 pop es
-retf 6
-
+pop bp
+retf 2
 ;================================================================================	
 aTilePan ENDP
 aKBremove PROC
