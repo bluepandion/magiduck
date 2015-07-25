@@ -1920,7 +1920,7 @@ END SUB
 		handleBehaviors
 		CALL aSoundPlay
 		handleScroll
-		aSpriteList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), spriteBankSeg, spriteBankOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)		
+		aSpriteList gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)		
 		IF actor(2).control = 259 THEN aSoundStop: EXIT SUB				
 		IF actor(2).control = 255 THEN
 			IF kbArray(1) THEN

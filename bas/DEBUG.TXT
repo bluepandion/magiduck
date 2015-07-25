@@ -1,6 +1,12 @@
-21:45:13
+22:20:15
 lookups init
 timer init
+main loop call
+level loaded
+timerReset
+main loop call
+level loaded
+timerReset
 main loop call
 level loaded
 timerReset

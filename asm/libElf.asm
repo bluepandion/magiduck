@@ -845,7 +845,6 @@ safeRectEnd:
 ;--------------------------------------------------------------------------
 aRectList ENDP
 aSpriteList PROC
-
 ;---------------------------------------------------------------------------
 ; Sprite CLIP & BLIT routine version 8.1
 ;
@@ -875,92 +874,96 @@ aSpriteList PROC
 
 ;06 Sprite list offset
 ;08 Sprite list segment
-;10 Sprite bank offset
-;12 Sprite bank segment
-;14 Video offset
-;16 Video segment
+;-10 Sprite bank offset
+;-12 Sprite bank segment
+;-14 Video offset
+;-16 Video segment
 ;18 Screen buffer Wrap (CGA = 16383, EGA-> = 32767)
+
+;06 Sprite list offset
+;08 Sprite list segment
+;10 Page offset
 ;----------------------------------------------------------------------------
-				push es
-				push di
-				push ds
-				push si
-				push bp
-				mov bp, sp				;Get stack pointer
-				add bp, 8
-				
-				mov di, [bp + 14]		;Video buffer offset * 2
-				shl di, 1
-				mov [bp + 14], di
-				
-				mov si, [bp + 06]		;SI = sprite List read offset
-				push si					;Push SI for routine logic
+	push bp
+	mov bp, sp				;Get stack pointer
+	
+	push es
+	push di
+	push ds
+	push si
+	
+	mov di, [bp + 10]		;Video buffer offset * 2
+	shl di, 1
+	mov [bp + 10], di
+	
+	mov si, [bp + 06]		;SI = sprite List read offset
+	push si					;Push SI for routine logic
 
 ;============================================================================
 ; SPRITE LIST READ
 ;============================================================================
 
 newSprite:
-				mov ds, [bp + 08]		;DS = sprite List read segment
-				pop si					;Pop SI, sprite list offset from stack
-				lodsw					;AX = DS:[SI], [SI] + 2			AX = Sprite offset
-				push ax					;Store AX to stack														;Push 1
+	mov ds, [bp + 08]		;DS = sprite List read segment
+	pop si					;Pop SI, sprite list offset from stack
+	lodsw					;AX = DS:[SI], [SI] + 2			AX = Sprite offset
+	push ax					;Store AX to stack														;Push 1
 
-				lodsw					;Sprite X
-				mov bx, ax
-				lodsw					;Sprite Y
+	lodsw					;Sprite X
+	mov bx, ax
+	lodsw					;Sprite Y
 
-				cmp ax, 255				;Has list ended?
-				JNZ continuelist		;
-				exit:					;----------------------------------------------------
-				pop ax					;		
-				pop bp
-				pop si
-				pop ds
-				pop di
-				pop es
-				retf 14					;		EXIT
-										;----------------------------------------------------
+	cmp ax, 255				;Has list ended?
+	JNZ continuelist		;
+	exit:					;----------------------------------------------------
+	pop ax					;		
+	pop si
+	pop ds
+	pop di
+	pop es
+	pop bp
+	retf 6					;		EXIT
+							;----------------------------------------------------
 continuelist:
-				mov bh, al				;BH = Sprite Y		BL = Sprite X
-				lodsw					;Sprite W
-				mov cx, ax
-				lodsw					;Sprite H
-				mov ch, al				;CH = Sprite H		CL = Sprite W
-				and cl, cl				;IF Width = 0 THEN goto newSprite
-				jz newSprite
+	mov bh, al				;BH = Sprite Y		BL = Sprite X
+	lodsw					;Sprite W
+	mov cx, ax
+	lodsw					;Sprite H
+	mov ch, al				;CH = Sprite H		CL = Sprite W
+	and cl, cl				;IF Width = 0 THEN goto newSprite
+	jz newSprite
 ;----------------------------------------------------------------
-				pop di					;Pop Sprite offset from stack (this was pushed as AX)					;Pop 1
-				push si					;Push Sprite list offset to stack										
-				mov si, di				;Start to read from Sprite Bank
+	pop di					;Pop Sprite offset from stack (this was pushed as AX)					;Pop 1
+	push si					;Push Sprite list offset to stack										
+	mov si, di				;Start to read from Sprite Bank
 ;============================================================================
 ; WIDTH CLIP TEST
 ;============================================================================
-testXclip_left:							;CLIPTEST
-				cmp bl, 0				;Sprite X < 0 Clip Test			X has been offset by 20 to avoid overflows with negative values.
-				JL xClip_left			;
-				JMP testXclip_right		;
-xClip_left:								;Clip = (20 - x)
-				mov dh, 255
-				mov dl, bl
-				sub si, dx				;Sprite Offset + Clip
-				sub si, dx				;Sprite Offset + Clip
-				add cl, bl				;Sprite Width  - Clip
-				xor bl, bl				;X = 0, after clip
-				JMP testWidthLess
-testXclip_right:						;CLIPTEST
-				xor dx, dx
-				mov dl, bl				;Sprite (X + Width) > 40 Clip Test
-				add dl, cl				;
-				cmp dl, 41
-				JL testWidthLess
+testXclip_left:				;CLIPTEST
+	cmp bl, 0				;Sprite X < 0 Clip Test			X has been offset by 20 to avoid overflows with negative values.
+	JL xClip_left			;
+	JMP testXclip_right		;
+xClip_left:					;Clip = (20 - x)
+	mov dh, 255
+	mov dl, bl
+	sub si, dx				;Sprite Offset + Clip
+	sub si, dx				;Sprite Offset + Clip
+	add cl, bl				;Sprite Width  - Clip
+	xor bl, bl				;X = 0, after clip
+	JMP testWidthLess
+testXclip_right:			;CLIPTEST
+	xor dx, dx
+	mov dl, bl				;Sprite (X + Width) > 40 Clip Test
+	add dl, cl				;
+	cmp dl, 41
+	JL testWidthLess
 xClip_right:							;
-				sub dl, 40				;Clip = (X + Width) - 40
-				sub cl, dl				;Width - Clip
-testWidthLess:							;IF Width < 0, skip this sprite.
-				cmp cl, 0
-				JG testWidthOver
-				JMP skipSprite
+	sub dl, 40				;Clip = (X + Width) - 40
+	sub cl, dl				;Width - Clip
+testWidthLess:				;IF Width < 0, skip this sprite.
+	cmp cl, 0
+	JG testWidthOver
+	JMP skipSprite
 testWidthOver:
 cmp cl, 16
 JL widthOK
@@ -969,115 +972,114 @@ widthOK:
 ;============================================================================
 ; HEIGHT CLIP TEST
 ;============================================================================
-testYclip_up:							;CLIPTEST
-				cmp bh, 0				;Sprite Y < 0 Clip Test
-				JL yClip_up				;
-				JMP testYclip_down		;
+testYclip_up:				;CLIPTEST
+	cmp bh, 0				;Sprite Y < 0 Clip Test
+	JL yClip_up				;
+	JMP testYclip_down		;
 yClip_up:								
-				add ch, bh				;Sprite Height - Clip
-				inc ch
-				mov dx, 0FF00h			;Sprite offset + (Clip * 80)
-				sub dh, bh
-				shr dx, 1
-				shr dx, 1
-				mov ax, dx
-				shr dx, 1
-				shr dx, 1
-				add dx, ax
+	add ch, bh				;Sprite Height - Clip
+	inc ch
+	mov dx, 0FF00h			;Sprite offset + (Clip * 80)
+	sub dh, bh
+	shr dx, 1
+	shr dx, 1
+	mov ax, dx
+	shr dx, 1
+	shr dx, 1
+	add dx, ax
 
-				add si, dx				;Sprite Offset + Clip
-				xor bh, bh				;Sprite Y = 0
-				JMP testHeightLess
-testYclip_down:							;CLIPTEST
-				mov dh, bh				;Sprite (Y + Height) > 51 Clip Test
-				add dh, ch				;
-				cmp dh, 51				;
-				JL testHeightLess
+	add si, dx				;Sprite Offset + Clip
+	xor bh, bh				;Sprite Y = 0
+	JMP testHeightLess
+testYclip_down:				;CLIPTEST
+	mov dh, bh				;Sprite (Y + Height) > 51 Clip Test
+	add dh, ch				;
+	cmp dh, 51				;
+	JL testHeightLess
 yClip_down:								;
-				sub dh, 50				;Clip = (Y + Height) - 50
-				sub ch, dh				;Height - Clip
-testHeightLess:							;IF Height < 0, skip this sprite.
-				cmp ch, 0
-				JG testHeightOver
-				JMP skipSprite
+	sub dh, 50				;Clip = (Y + Height) - 50
+	sub ch, dh				;Height - Clip
+testHeightLess:				;IF Height < 0, skip this sprite.
+	cmp ch, 0
+	JG testHeightOver
+	JMP skipSprite
 testHeightOver:
-cmp ch, 24
+	cmp ch, 24
 JL heightOK
 JMP skipSprite
 heightOK:
 ;============================================================================
 ; STORE CLIPPED VALUES BACK TO SPRITE LIST
 ;============================================================================
-				mov es, [bp + 08]		;ES = sprite List segment.
-				pop di					;Pop Sprite list offset.
-				push di					;Push Sprite list offset back to stack.
+	mov es, [bp + 08]		;ES = sprite List segment.
+	pop di					;Pop Sprite list offset.
+	push di					;Push Sprite list offset back to stack.
 
-				sub di, 8				;Go back a few Words to write our clipped values back.
-				xor ax, ax				;AX = 0
+	sub di, 8				;Go back a few Words to write our clipped values back.
+	xor ax, ax				;AX = 0
 
-				mov al, bl				;AL = X
-				stosw					;ES:DI = AX, DI + 2
-				mov al, bh				;AL = Y
-				stosw					;ES:DI = AX, DI + 2
-				mov al, cl				;AL = W
-				stosw					;ES:DI = AX, DI + 2
-				mov al, ch				;AL = H
-				stosw					;ES:DI = AX, DI + 2
+	mov al, bl				;AL = X
+	stosw					;ES:DI = AX, DI + 2
+	mov al, bh				;AL = Y
+	stosw					;ES:DI = AX, DI + 2
+	mov al, cl				;AL = W
+	stosw					;ES:DI = AX, DI + 2
+	mov al, ch				;AL = H
+	stosw					;ES:DI = AX, DI + 2
 ;============================================================================
 ;============================================================================
 ; write_offset_prep:
 ;============================================================================
 ;============================================================================
-				mov di, [bp + 14]		;DI = screen buffer write offset
+	mov di, [bp + 10]		;DI = screen buffer write offset
+		
+	xor ax, ax
+	mov al, bl
+	shl ax, 1				;X * 2
+	add di, ax				;Add X to write offset
 					
-				xor ax, ax
-				mov al, bl
-				shl ax, 1				;X * 2
-				add di, ax				;Add X to write offset
-								
-				xor bl, bl				;Calculate BH (y) * 80, currently at Y * 256
-				shr bx, 1				;
-				shr bx, 1				;BX / 4
-				mov ax, bx				;AX = Y * 64
-				shr bx, 1				;BX / 4
-				shr bx, 1				;BX = Y * 16
-				add bx, ax				;BX = Y * 80						
-				add di, bx				;add Y * 80 from write offset
-				inc di					; + 1, to hit the attribute.
+	xor bl, bl				;Calculate BH (y) * 80, currently at Y * 256
+	shr bx, 1				;
+	shr bx, 1				;BX / 4
+	mov ax, bx				;AX = Y * 64
+	shr bx, 1				;BX / 4
+	shr bx, 1				;BX = Y * 16
+	add bx, ax				;BX = Y * 80						
+	add di, bx				;add Y * 80 from write offset
+	inc di					; + 1, to hit the attribute.
 
-				;Store row change value to BX
-				xor bx, bx
-				mov bl, 40				;BL = 40
-				sub bl, cl				;BL = 40 - Width 
-				shl bx, 1				;BL * 2
+	;Store row change value to BX
+	xor bx, bx
+	mov bl, 40				;BL = 40
+	sub bl, cl				;BL = 40 - Width 
+	shl bx, 1				;BL * 2
 
-				mov dx, [bp + 18]		;DX = Video wrap offset
-				and di, dx				;Wrap DI with video wrap offset.
-
+	mov dx, vWrap		;DX = Video wrap offset
+	and di, dx				;Wrap DI with video wrap offset.
 spritedraw:
 ;============================================================================
 ; DRAW SPRITE
 ;============================================================================
-				mov ds, [bp + 12]		;DS = Sprite Bank Segment
-				mov es, [bp + 16]		;ES = screen buffer write segment
+	mov ds, gfxSpriteBank	;DS = Sprite Bank Segment
+	mov es, vSegment		;ES = screen buffer write segment
 
-				push dx					;Check if video memory offset is safe for drawing without wrap check.
-				sub dx, 1600			;Compare to Video wrap - 1600, which means 20 pixels maximum height for sprites.
-				cmp di, dx
-				pop dx
-				JA loopYwrap
-				JMP loopYsafe
+	push dx					;Check if video memory offset is safe for drawing without wrap check.
+	sub dx, 1600			;Compare to Video wrap - 1600, which means 20 pixels maximum height for sprites.
+	cmp di, dx
+	pop dx
+	JA loopYwrap
+	JMP loopYsafe
 ;============================================================================
-loopYwrap:								;Sprite requires Wrap check.
+loopYwrap:					;Sprite requires Wrap check.
 
-				push cx					;Push CL=width, CH=height to stack
-				xor ch, ch				;Height = 0, for X-loop
-				
-				push bx
-				mov bx, cx
-				xor bh, bh
-				shl bx, 1	
-				jmp [spriteWrap + bx]
+	push cx					;Push CL=width, CH=height to stack
+	xor ch, ch				;Height = 0, for X-loop
+	
+	push bx
+	mov bx, cx
+	xor bh, bh
+	shl bx, 1	
+	jmp [spriteWrap + bx]
 spriteWrap	dw	swi00, swi01, swi02, swi03, swi04, swi05, swi06, swi07, swi08, swi09, swi10								
 ;-----------------------------------------------------------------------------
 swi10:
@@ -1153,18 +1155,18 @@ swi01:
 				and di, dx			
 swi00:
 ;--------------------------------------------------------------------------
-				pop bx
-				
-				add di, bx				;2		Change write line by BX
-				add si, bx				;2		Change read line by BX 
+	pop bx
+	
+	add di, bx				;2		Change write line by BX
+	add si, bx				;2		Change read line by BX 
 
-				and di, dx				;		Wrap DI with video wrap offset.
+	and di, dx				;		Wrap DI with video wrap offset.
 
-				pop cx					;		Pop CL = Width, CH = Height
-				dec ch					;2		Height - 1					;
-										;		IF Height = 0 {
-				JZ backtolist			;		 GOTO backtolist }
-JMP loopYwrap							;		else { GOTO loopy }
+	pop cx					;		Pop CL = Width, CH = Height
+	dec ch					;2		Height - 1					;
+							;		IF Height = 0 {
+	JZ backtolist			;		 GOTO backtolist }
+JMP loopYwrap				;		else { GOTO loopy }
 ;--------------------------------------------------------------------------
 
 backtolist:
@@ -1172,11 +1174,11 @@ JMP newsprite
 
 ;--------------------------------------------------------------------------
 loopYsafe:							
-				mov dx, bx
-				mov bx, cx
-				xor bh, bh
-				shl bx, 1	
-				jmp [spriteSafe + bx]
+	mov dx, bx
+	mov bx, cx
+	xor bh, bh
+	shl bx, 1	
+	jmp [spriteSafe + bx]
 spriteSafe	dw	si00, si01, si02, si03, si04, si05, si06, si07, si08, si09, si10								
 si10:
 				 lodsw					;5		AX = DS:[SI], [SI] + 2
@@ -1240,30 +1242,29 @@ si01:
 				 inc di					
 si00:
 ;----------------------------------------------------------------------------------
-				add di, dx				;Change write line by BX
-				add si, dx				;Change read line by BX 
+	add di, dx				;Change write line by BX
+	add si, dx				;Change read line by BX 
 
-				dec ch
-				jnz safeContinue
-				jmp newSprite
+	dec ch
+	jnz safeContinue
+	jmp newSprite
 safeContinue:					
-				jmp [spriteSafe + bx]
+	jmp [spriteSafe + bx]
 				
 ;============================================================================
 ; STORE CLIPPED VALUES BACK TO SPRITE LIST
 ;============================================================================
 skipSprite:				
-				mov es, [bp + 08]		;ES = sprite List segment.
-				pop di					;Pop Sprite list offset.
-				push di					;Push Sprite list offset back to stack.
+	mov es, [bp + 08]		;ES = sprite List segment.
+	pop di					;Pop Sprite list offset.
+	push di					;Push Sprite list offset back to stack.
 
-				sub di, 4				;Go back a few Words to write our clipped values back.
+	sub di, 4				;Go back a few Words to write our clipped values back.
 
-				xor ax, ax				;AX = 0
+	xor ax, ax				;AX = 0
 
-				stosw					;Width = 0, ES:DI = AX, DI + 2	
+	stosw					;Width = 0, ES:DI = AX, DI + 2	
 jmp newSprite
-
 ;============================================================================
 aSpriteList ENDP
 aTileArea PROC
