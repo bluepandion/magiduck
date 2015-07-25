@@ -24,24 +24,23 @@ aPageFlip PROC
 	;12 hud string segment
 	;14 video wrap offset
 	;============================================================================
+		push bp	
+		mov bp,sp
+				
 		push es
 		push di
 		push ds
 		push si
-		push bp
-		mov bp,sp
-		add bp, 8
 
 	;---------------------------------------------------------------------------
 	; Copy HUD to set page
 	;---------------------------------------------------------------------------
-		mov dx, [bp + 14]				;DX = Video wrap offset
+		mov dx, vWrap					;DX = Video wrap offset
 
-		mov ds, [bp + 12]
-		mov si, [bp + 10]
+		mov ds, hudBuffer
+		mov si, hudBuffer+2
 
-		mov ax, 0b800h
-		mov es, ax						;ES:DI = Page offset * 2
+		mov es, vSegment				;ES:DI = Page offset * 2
 		mov di, [bp + 06]
 		shl di, 1
 	mov cx, 16							;Hud string = 160 bytes
@@ -148,16 +147,15 @@ aPageFlip PROC
 		in  al, dx
 		and al, ah
 	jz egavgawait2
-	
-	
+		
 	;---------------------------------------------------------------------------
 	; Clear HUD from previous page
 	;---------------------------------------------------------------------------
 	clearHudPrevPage:
-		mov dx, [bp + 14]				;DX = Video wrap offset
+		mov dx, vWrap					;DX = Video wrap offset
 		mov di, [bp + 08]				;DI = previous page offset * 2
 		shl di, 1
-		mov ax, 011DEh					;Clear attribute = 11, character = 222
+		mov ax, 00DEh					;Clear attribute = 00, character = 222
 	mov cx, 16
 	clearHud:		
 		stosw							;Copy character and attribute
@@ -171,16 +169,15 @@ aPageFlip PROC
 		stosw							
 		and di, dx						
 	loop clearHud
-
-	;============================================================================
-
+	;---------------------------------------------------------------------------
 	exit:
-		pop bp
 		pop si
 		pop ds
 		pop di
 		pop es
-		retf 10
+		pop bp
+		retf 4
+	;============================================================================
 aPageFlip endp
 aKBinit PROC
 	;------------------------------------------------------------------------------
@@ -1639,28 +1636,10 @@ retf 6
 ;================================================================================	
 aTilePan ENDP
 aKBremove PROC
-
 ;------------------------------------------------------------------------------
 ; Keyboard routine remove and restore.
-;
 ;------------------------------------------------------------------------------
-
-; Parameter stack offsets
-; Order is inverted from qbasic CALL ABSOLUTE parameter order
-
-;00 bp
-;02 ds
-;04 Qbasic return segment
-;06 Qbasic return offset
-
-;08 Old offset
-;10 Old segment
-
-;------------------------------------------------------------------------------
-
 push ds
-push bp
-mov bp, sp
 
 mov dx, kbOld
 mov ds, dx
@@ -1670,12 +1649,9 @@ mov ah, 025h
 mov al, 09h
 int 021h
 
-pop bp
 pop ds
-retf 4
-
+retf 0
 ;------------------------------------------------------------------------------
-
 aKBremove ENDP
 aPrint PROC
 
@@ -2359,10 +2335,30 @@ aSetup PROC
 	lodsw
 	mov soundData+2, ax
 	
-	lodsw					;Get keyboard array offsets
+	lodsw					
 	mov kbArray, ax
 	lodsw
 	mov kbArray+2, ax	
+	
+	lodsw
+	mov gfxSpriteBank, ax
+	lodsw
+	mov gfxSpriteBank+2, ax
+	
+	lodsw
+	mov gfxTileSeg, ax
+	lodsw
+	mov gfxTileBank, ax
+	lodsw
+	mov gfxTileMap, ax
+	lodsw
+	mov gfxTileBuffer, ax
+	
+	lodsw
+	mov hudBuffer, ax
+	lodsw
+	mov hudBuffer+2, ax
+	
 	pop bp
 	pop si
 	pop ds
@@ -2476,7 +2472,48 @@ jnz loopY
 	pop es
 	retf 12
 aMenuHiLite ENDP
+aFadeOut PROC
+;==============================================================================
+	push bp
+	mov bp, sp
+	push es
+	push di
+	push ds
+	push si
+	
+	mov di, [bp + 08]		;Parameter: Video offset
+	mov es, [bp + 06]		;Parameter: Video segment
+	mov ds, [bp + 06]
+	mov si, di
+	
+	xor bx, bx
+	mov cx, 3840
+fadeOutLoop:
+	lodsb					;Load byte from video memory
+	mov ah, al				
+	and al, 00Fh			;Mask AL for lookup value 0-15
+	mov bl, al
+	mov al, lupFadeOutLo[bx]
+	xchg ah, al				;Shift hi-nybble of byte for
+	shr al, 1				;lookup value 0-15
+	shr al, 1
+	shr al, 1
+	shr al, 1
+	mov bl, al
+	mov ah, lupFadeOutLo[bx]
+	or al, ah				;Combine nybbles and store back.
+	stosb
+loop fadeOutLoop
 
+	pop si
+	pop ds
+	pop di
+	pop es
+	pop bp
+	retf 4
+
+;==============================================================================
+aFadeOut ENDP
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2677,17 +2714,16 @@ keyboardInterrupt:
 		dw 1140 , 1075 , 1015 , 959 , 898 , 854 , 806 , 760 , 718 , 677 , 639 , 604
 		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301, 256, 256
 		
-		vFadeOutLo		db	00, 00, 08, 08, 01, 01, 08, 09, 01, 08, 07, 14, 06, 09, 07, 14
-		vFadeOutHi		db	00, 00, 128, 128, 16, 16, 128, 144, 16, 128, 112, 224, 96, 144, 112, 224
+		lupFadeOutLo	db	00, 00, 08, 08, 01, 01, 08, 09, 01, 08, 07, 14, 06, 09, 07, 14
+		lupFadeOutHi	db	00, 00, 128, 128, 16, 16, 128, 144, 16, 128, 112, 224, 96, 144, 112, 224
 		
 		tileRead		dw	0000h, 0000h
 		gfxSpriteBank	dw	0000h, 0000h
-		gfxTileBank		dw	0000h, 0000h, 0000h, 0000h
-		gfxAnims		dw	0000h, 0000h
-		gfxActorList	dw	0000h, 0000h
-		gfxSpriteList	dw	0000h, 0000h
-		gfxClearList	dw	0000h, 0000h
-		gfxCollList		dw	0000h, 0000h
+		gfxTileSeg		dw	0000h
+		gfxTileBank		dw	0000h
+		gfxTileMap		dw	0000h
+		gfxTileBuffer	dw	0000h
+		hudBuffer		dw	0000h, 0000h
 		kbArray			dw 	0000h, 0000h
 		kbOld			dw  0000h, 0000h
 		kbFlags			db	00h

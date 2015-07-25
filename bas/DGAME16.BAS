@@ -396,7 +396,7 @@ CASE 258
 		player.hudLock = 999
 		spriteList(0, 0).y = 255
 		spriteList(0, 1).y = 255
-		aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+		aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 		gfx.page = gfx.page XOR 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		player.menuMode = 2
@@ -1469,23 +1469,23 @@ DO
 		playerDeltaY = ABS(actor(n).y - playerY)
 		
 		IF playerDeltaY < 32 THEN
-			check = 0
+			c = 0
 			IF player.wave = actor(n).flags THEN
-				IF player.wavePrev < actor(n).flags THEN
+				IF player.wavePrev <> actor(n).flags THEN
 					player.wavePrev = player.wave
 					player.wave = actor(n).flags + 1
-					check = 1
+					c = 1
 				END IF
 			ELSE
 				IF player.wave > actor(n).flags THEN
-					IF player.wavePrev > actor(n).flags THEN
+					IF player.wavePrev <> actor(n).flags THEN
 						player.wavePrev = player.wave
 						player.wave = actor(n).flags
-						check = 1
+						c = 1
 					END IF
 				END IF
 			END IF
-			IF check THEN
+			IF c THEN
 				level.spawner(actor(n).spawner).object = 62
 				FOR nn = 4 TO 60
 					IF ABS(actor(nn).y - actor(2).y) > 240 THEN
@@ -1537,6 +1537,9 @@ DO
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
 				IF actor(n).count = 0 AND player.levelScore(actor(n).jump) = 0 THEN
 					w40char.text = "         PRESS UP TO ENTER LEVEL        |"
+					aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+				ELSE
+					w40char.text = "         LEVEL SCORE: " + STR$(player.levelScore(actor(n).jump)) + "|"
 					aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 				END IF
 				player.hudLock = 999
@@ -1720,7 +1723,7 @@ SUB hudUpdate (flags AS INTEGER)
 	END IF
 	IF player.level > 1 THEN
 		IF flags AND 1 THEN
-			w40char.text = "KEYS:     0000000              TIME:    |"
+			w40char.text = " KEYS:    0000000              TIME:    |"
 			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		END IF
 		IF flags AND 8 THEN
@@ -1730,7 +1733,7 @@ SUB hudUpdate (flags AS INTEGER)
 		END IF
 		IF flags AND 16 THEN
 			w40char.text = STR$(player.hasKey) + "|"
-			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 5, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 6, 0, hudBufferSeg, hudBufferOfs
 		END IF
 	ELSE
 		IF flags AND 1 THEN
@@ -1802,7 +1805,7 @@ END SUB
 	'hudTextLoad &HA0, 1
 	w40char.text = " LOADING, PLEASE WAIT...                |"
 	aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
-	aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+	aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 	
 	loadLevel
 	debugOut "level loaded"
@@ -1939,7 +1942,7 @@ END SUB
 				hudUpdate &H8
 			END IF
 			END IF
-	  aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+	  aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
       gfx.page = gfx.page XOR 1
 	  aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 	LOOP

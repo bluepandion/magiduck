@@ -96,7 +96,7 @@ SUB elfInit
 	PRINT " WARNING!"
 	COLOR 7, 0
 	PRINT 
-	PRINT "   Alpha 1.1 (2015-06-14)
+	PRINT "   Alpha 2 (2015-07-25)"
 	PRINT "   This version of MagiDuck has never been tested on real hardware."
 	PRINT "   It is still an early version and only meant for testing purposes."
 	COLOR 12, 0
@@ -115,7 +115,8 @@ SUB elfInit
 		PRINT "    No compatible video adapter detected."
 	END IF
 	COLOR 8, 0
-	PRINT "   Use command line parameter CGA, EGA or VGA to override automatic detection."
+	PRINT "   Use command line parameter CGA, EGA, VGA, MCGA, TANDY or PCJR"
+	PRINT "    to override automatic detection."
 	PRINT
 	COLOR 14, 0
 	PRINT "   Press Y to start the game, any other key to exit."
@@ -194,12 +195,14 @@ SUB elfInit
 	KBarray(1) = VARPTR(soundTrack)
 	KBarray(2) = VARSEG(KBarray(0))
 	KBarray(3) = VARPTR(KBarray(0))
-	'KBarray(4) = spriteBankSeg
-	'KBarray(5) = spriteBankOfs
-	'KBarray(6) = tileBufferSeg
-	'KBarray(7) = tileBankOfs
-	'KBarray(8) = tileMapOfs
-	'KBarray(9) = tileBufferOfs	
+	KBarray(4) = spriteBankSeg
+	KBarray(5) = spriteBankOfs
+	KBarray(6) = tileBufferSeg
+	KBarray(7) = tileBankOfs
+	KBarray(8) = tileMapOfs
+	KBarray(9) = tileBufferOfs
+	KBarray(10) = hudBufferSeg
+	KBarray(11) = hudBufferOfs
 	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
 	aSoundStop
 	FOR n = 0 TO 130
@@ -601,8 +604,10 @@ END SUB
 
 SUB quit
 	IF gfx.adapter > 0 THEN
-		aKBremove KBoldSeg, KBoldOfs     'Restore old keyboard routine
+		aKBremove 					     'Restore old keyboard routine
 		DEF SEG = 0
+		n = PEEK(&H417) AND &H8F
+		Keyflags = Keyflags OR n
 		POKE (&H417), Keyflags           'Restore old keyboard flags
 		DEF SEG
 		CALL aSoundStop
@@ -747,7 +752,7 @@ SUB screenResetPos (x%, y%)
 
 	aRectList gfx.windowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 
-	aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+	aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 	gfx.page = gfx.page XOR 1
 
 	spriteList(1, gfx.page).y = 255
@@ -793,7 +798,7 @@ SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 		GET #1, offset + 1, hudBuffer
 	CLOSE #1
 	MID$(hudBuffer, 161, 1) = loadStr
-	IF show THEN aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+	IF show THEN aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 END SUB
 
 SUB menuLoad (menuNo%)

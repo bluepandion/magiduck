@@ -1,4 +1,4 @@
-21:28:52
+17:22:20
 lookups init
 timer init
 main loop call
