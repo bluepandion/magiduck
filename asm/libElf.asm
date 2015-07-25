@@ -1268,10 +1268,9 @@ jmp newSprite
 ;============================================================================
 aSpriteList ENDP
 aTileArea PROC
-
 ;============================================================================
 ;
-; Tile area drawing routine		v. 8.01
+; Tile area drawing routine
 ;
 ; 40x50 mode drawing. 2 Pixels per byte.
 ;
@@ -1286,34 +1285,36 @@ aTileArea PROC
 ;02 Qbasic return segment
 ;04 Qbasic return offset
 
-;06 tileBank offset
-;08 tileMap offset
-;10 tileBuffer offset
-;12 tileBuffer Segment
-;14 Write area offset
-;16 Tilemap read offset
-;============================================================================
+;-06 tileBank offset
+;-08 tileMap offset
+;-10 tileBuffer offset
+;-12 tileBuffer Segment
+;-14 Write area offset
+;-16 Tilemap read offset
 
+;06 Write area offset
+;08 Tilemap read offset
+
+;============================================================================
+push bp
+mov bp,sp
 push es
 push di
 push ds
 push si
-push bp
-mov bp,sp
-add bp, 8
-
 ;---------------------------------------------------------------------------
 
 begin:
 
-mov es, [bp + 12]				;ES = tile buffer seg
-mov di, [bp + 10]				;DI = tile buffer ofs
+mov es, gfxTileSeg				;ES = tile buffer seg
+mov di, gfxTileBuffer			;DI = tile buffer ofs
 
-mov ds, [bp + 12]				;DS = Tilebuffer seg
-mov si, [bp + 16]				;SI = Tilemap ofs
-add si, [bp + 08]
+mov ds, gfxTileSeg				;DS = Tilebuffer seg
+mov si, [bp + 08]				;SI = Tilemap ofs
+add si, gfxTileMap
 
-mov ax, [bp + 14]				;Set write offset to point to the desired area. (Y * 640)
+mov ax, [bp + 06]				;Set write offset to point to the desired area. (Y * 640)
+and ax, 3						; only accept values 0-3.
 mov bx, 1920
 mul bx
 
@@ -1344,7 +1345,7 @@ shl ax, 1
 push si							;Push SI (as tile map read offset)
 
 mov si, ax						;SI = Tile bank offset
-add si, [bp + 06]				;SI + AX (tile index)
+add si, gfxTileBank				;SI + AX (tile index)
 
 push di							;Store current DI (buffer write offset)
 ;----------------------------------------------------------------------------
@@ -1387,12 +1388,12 @@ JMP loopY
 ;----------------------------------------------------------------------------
 
 exit:
-pop bp
 pop si
 pop ds
 pop di
 pop es
-retf 12
+pop bp
+retf 4
 
 ;============================================================================
 aTileArea ENDP

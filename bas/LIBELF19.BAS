@@ -4,7 +4,6 @@ DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
 DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
-DECLARE SUB aDrawTiles (area%, forceOfs%)
 DECLARE SUB loadLevel ()
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB elfInit ()
@@ -71,11 +70,6 @@ DIM SHARED soundTrack AS STRING * 256
 DIM SHARED menuPreload AS STRING
 DIM SHARED menuLoadPos AS INTEGER
 DIM SHARED menuLoadSrc AS INTEGER
-
-SUB aDrawTiles (area, forceOfs)
-	p0% = forceOfs  'gfx.tileOfs
-	aTileArea p0%, area AND 3, tileBufferSeg, tileBufferOfs, TileMapOfs, tileBankOfs
-END SUB
 
 SUB aUpdateTile (x, y)
 	p2% = tilePosXlookUp(x) + tilePosYlookUp(y)
@@ -353,7 +347,7 @@ SUB handleScroll
 		
 		aTilePan 1, tileBufferSeg, tileBufferOfs
 		
-		aDrawTiles gfx.tileArea, gfx.tileOfs
+		aTileArea gfx.tileOfs, gfx.tileArea
 	END IF
 
 	IF gfx.windowY(gfx.page) > 47 THEN
@@ -367,7 +361,8 @@ SUB handleScroll
 
 		aTilePan 0, tileBufferSeg, tileBufferOfs
 
-		aDrawTiles gfx.tileArea + 3, gfx.tileOfs + 180
+		aTileArea gfx.tileOfs + 180, gfx.tileArea + 3
+		
 	END IF
 
 	tileCopyList(n, gfx.page).y = 255
@@ -689,7 +684,7 @@ SUB screenFakePos (y)
 	END IF
 
 	IF gfx.windowY(gfx.page) > 23 AND gfx.windowY(gfx.page) < 48 THEN
-		aDrawTiles 0, gfx.tileOfs
+		aTileArea gfx.tileOfs, 0
 	END IF
 
 	gfx.windowOfs(gfx.page XOR 1) = gfx.windowOfs(gfx.page)
@@ -739,10 +734,10 @@ SUB screenResetPos (x%, y%)
 	gfx.tileOfs = tilePosYlookUp(y%) - 60
 	gfx.tileArea = 0
 
-	aDrawTiles 0, gfx.tileOfs
-	aDrawTiles 1, gfx.tileOfs + 60
-	aDrawTiles 2, gfx.tileOfs + 120
-	aDrawTiles 3, gfx.tileOfs + 180
+	aTileArea gfx.tileOfs, 0
+	aTileArea gfx.tileOfs + 60, 1
+	aTileArea gfx.tileOfs + 120, 2
+	aTileArea gfx.tileOfs + 180, 3
 
 	spriteList(1, gfx.page).y = 255
 	spriteList(0, gfx.page).x = 0
