@@ -384,7 +384,7 @@ SUB handleScroll
 			tileCopyList(0, 0).w = 40
 			tileCopyList(0, 0).h = 2
 			tileCopyList(1, 0).y = 255
-			aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page xor 1), &HDE, VARSEG(tileCopyList(0, 0).offset), VARPTR(		tileCopyList(0, 0).offset)
+			aClearList gfx.pageOfs(gfx.page xor 1), VARSEG(tileCopyList(0, 0).offset), VARPTR(tileCopyList(0, 0).offset), &HDE
 			gfx.pageOfs(0) = 3000
 			gfx.pageOfs(1) = 10000
 		END IF
@@ -824,7 +824,7 @@ SUB menuLoad (menuNo%)
 	tileCopyList(0, gfx.page).h = menuGetByte%
 	loadInt = menuGetWord%
 	tileCopyList(1, gfx.page).y = 255
-	aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), loadInt, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+	aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), loadInt
 	prevGfxItem = 1
 	for item = 1 to itemCount
 		itemIDX = menuGetWord%

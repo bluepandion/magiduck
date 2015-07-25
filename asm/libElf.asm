@@ -20,18 +20,13 @@ aPageFlip PROC
 
 	;06 set page offset
 	;08 previous page offset
-	;10 hud string offset
-	;12 hud string segment
-	;14 video wrap offset
 	;============================================================================
 		push bp	
-		mov bp,sp
-				
+		mov bp,sp				
 		push es
 		push di
 		push ds
 		push si
-
 	;---------------------------------------------------------------------------
 	; Copy HUD to set page
 	;---------------------------------------------------------------------------
@@ -185,21 +180,6 @@ aKBinit PROC
 	; Keyboard init
 	;
 	;------------------------------------------------------------------------------
-
-	; Parameter stack offsets
-	; Order is inverted from qbasic CALL ABSOLUTE parameter order
-
-	;00 ds
-	;02 bp
-	;04 Qbasic return segment
-	;06 Qbasic return offset
-
-	;08 New offset
-	;10 New segment
-	;12 Old offset
-	;14 Old segment
-
-	;------------------------------------------------------------------------------
 	push bp
 	push ds
 
@@ -208,9 +188,6 @@ aKBinit PROC
 	mov ah, 035h		;Subfunction 35h: Get current interrupt handler address
 	mov al, 09h			;Subfunction 09h: Get address of int 09h (keyboard handler)
 	int 021h			;Call interrupt 21h
-
-	;mov di, bx			;Set write offset to BX (address returned by interrupt)
-						;ES was set by interrupt as well.
 	
 	mov kbOld, es
 	mov kbOld + 2, bx
@@ -227,10 +204,9 @@ aKBinit PROC
 	pop ds
 	pop bp
 
-	retf ;8
+	retf 
 aKBinit ENDP
 aClearList PROC
-
 ;---------------------------------------------------------------------------
 ; Rectangle Character Clear Routine v. 8.1
 ;
@@ -257,31 +233,27 @@ aClearList PROC
 ;02 Qbasic return segment
 ;04 Qbasic return offset
 
-;06 Sprite list offset
-;08 Sprite list segment
-;10 Character and attribute to clear with
-;12 Video buffer offset
-;14 Video buffer segment
-;16 Video Wrap (CGA = 16384, EGA-> = 32768)
+;06 Character and attribute to clear with
+;08 Sprite list offset
+;10 Sprite list segment
+;12 Video offset
 
 ;----------------------------------------------------------------------------
-
+push bp			
+mov bp, sp				;Get stack pointer
 push es
 push di
 push ds
 push si
-push bp			
-mov bp, sp				;Get stack pointer
-add bp, 8
 
 mov di, [bp + 12]		;Video buffer offset * 2
 shl di, 1
 mov [bp + 12], di
 
-mov es, [bp + 14]		;ES = video memory write segment (0xB800)
+mov es, vSegment		;ES = memory write segment (video memory or custom)
 
-mov ds, [bp + 08]		;DS = sprite List read segment
-mov si, [bp + 06]		;SI = sprite List read offset
+mov ds, [bp + 10]		;DS = sprite List segment
+mov si, [bp + 08]		;SI = sprite List offset
 
 ;============================================================================
 ; SPRITE LIST READ
@@ -297,12 +269,12 @@ lodsw					;Sprite Y
 cmp ax, 255				;Has list ended?
 JNZ continuelist		;
 exit:					;----------------------------------------------------
-pop bp
 pop si
 pop ds
 pop di
-pop es					;		Pop BP
-retf 12					;		EXIT
+pop es					
+pop bp
+retf 8					;		EXIT
 						;----------------------------------------------------
 
 continuelist:
@@ -328,23 +300,18 @@ mov al, bl
 
 shl ax, 1				;X * 2
 add di, ax				;Add X to write offset
-			
-xchg bh, bl				;Move BH (y) to BL
-xor bh, bh
-	
-shl bx, 1				;+ Y * 16
-shl bx, 1
-shl bx, 1
-shl bx, 1
 
-mov ax, bx
-shl bx, 1				;+ Y * 16 * 4
-shl bx, 1
-add bx, ax				;= Y * 80
+xor bl, bl				;bx = Y * 256
+shr bx, 1				
+shr bx, 1			
+mov ax, bx				;ax = Y * 64
+shr bx, 1				
+shr bx, 1				;bx = Y * 16
+add bx, ax				;bx = Y * 80
 		
 add di, bx				;add Y * 80 to write offset
 
-and di, [bp + 16]		;Wrap DI with video wrap offset.
+and di, vWrap			;Wrap DI with video wrap offset.
 
 ;Store row change value to BX
 
@@ -359,10 +326,10 @@ sub dl, cl				;DX = 80 - Width
 ; CLEAR RECTANGLE
 ;============================================================================
 
-mov ax, [bp + 10]		;AX = character and attribute
+mov ax, [bp + 06]		;AX = character and attribute
 
 push cx					;Check if video memory offset is
-mov cx, [bp + 16]		; safe for drawing without wrap check.
+mov cx, vWrap			; safe for drawing without wrap check.
 sub cx, 4000
 cmp di, cx
 pop cx
@@ -378,20 +345,20 @@ xor ch, ch				;Height = 0, for X-loop
 ;-----------------------------------------------------------------------------
 loopXwrap:				;		
 
-stosw					;3		Store AX to ES:[DI], DI + 2
+stosw					;Store AX to ES:[DI], DI + 2
 
-and di, [bp + 16]		;		Wrap DI with video wrap offset.
+and di, vWrap			;Wrap DI with video wrap offset.
 
 loop loopXwrap
 ;--------------------------------------------------------------------------
 
-add di, bx				;2		Change write line by BX
+add di, bx				;Change write line by BX
 
-and di, [bp + 16]		;		Wrap DI with video wrap offset.
+and di, vWrap			;Wrap DI with video wrap offset.
 
-pop cx					;		Pop CL = Width, CH = Height
+pop cx					;Pop CL = Width, CH = Height
 
-dec ch					;2		Height - 1					;
+dec ch					;Height - 1					
 XOR ch, 0				;		IF Height = 0 {
 JZ backtolist			;		 GOTO backtolist }
 JMP loopYwrap			;		else { GOTO loopy }
@@ -422,7 +389,6 @@ JZ backtolist			;		 GOTO backtolist }
 JMP loopYsafe			;		else { GOTO loopy }
 
 ;--------------------------------------------------------------------------
-
 aClearList ENDP
 aRectList PROC
 

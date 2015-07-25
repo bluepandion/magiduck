@@ -318,7 +318,7 @@ CASE 262
             tileCopyList(0, gfx.page).w = 40
             tileCopyList(0, gfx.page).h = 50
             tileCopyList(1, gfx.page).y = 255
-            aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+            aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), &HDE
 
         CASE 1001
 			CALL aSoundStop
@@ -534,7 +534,7 @@ CASE 258
 		tileCopyList(0, gfx.page).w = 40
 		tileCopyList(0, gfx.page).h = 50
 		tileCopyList(1, gfx.page).y = 255
-		aClearList gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), &HDE, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), &HDE
 		aRectList gfx.WindowOfs(gfx.page), gfx.videoWrap, &HB800, gfx.pageOfs(gfx.page), tileBufferWrap, tileBufferSeg, tileBufferOfs, VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 		player.menuMode = player.menuMode + 1
 	CASE 1001
