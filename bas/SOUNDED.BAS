@@ -18,14 +18,14 @@ CLS
 
 aTimerStart
 
-   KBarray(0) = VARSEG(soundTrack)
-   KBarray(1) = VARPTR(soundTrack)
-   KBarray(2) = VARSEG(KBarray(0))
-   KBarray(3) = VARPTR(KBarray(0))
-   aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
-   FOR n = 0 TO 130
-    KBarray(n) = 0
-   NEXT n
+	KBarray(0) = VARSEG(soundTrack)
+	KBarray(1) = VARPTR(soundTrack)
+	KBarray(2) = VARSEG(KBarray(0))
+	KBarray(3) = VARPTR(KBarray(0))
+	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
+	FOR n = 0 TO 130
+	 KBarray(n) = 0
+	NEXT n
 
 WIDTH 80, 25
 VIEW PRINT 1 TO 25
@@ -80,12 +80,12 @@ DO
   
   aSoundPlay
   IF playMode THEN
-   aSoundNote sounds.track(selection)
-   aTimerWait
-   COLOR 7, 0
-   LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
-   selection = selection + 1
-   IF sounds.track(selection) = 96 THEN playMode = 0: selection = playReturn
+	aSoundNote sounds.track(selection)
+	aTimerWait
+	COLOR 7, 0
+	LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
+	selection = selection + 1
+	IF sounds.track(selection) = 96 THEN playMode = 0: selection = playReturn
   END IF
  
 
@@ -98,48 +98,49 @@ DO
 
  d$ = INKEY$
   IF d$ = CHR$(0) + CHR$(82) THEN
-   n = selection
-   DO
-    n = n + 1
-   LOOP UNTIL sounds.track(n) = 96
-   n = n - 1
-   FOR nn = n TO selection + 1 STEP -1
-    sounds.track(nn) = sounds.track(nn - 1)
-   NEXT nn
-   sounds.track(selection) = 0
-   GOTO reFresh
+	n = selection
+	DO
+	 n = n + 1
+	LOOP UNTIL sounds.track(n) = 96
+	n = n - 1
+	FOR nn = n TO selection + 1 STEP -1
+	 sounds.track(nn) = sounds.track(nn - 1)
+	NEXT nn
+	sounds.track(selection) = 0
+	GOTO reFresh
   END IF
 
  
   IF d$ = CHR$(0) + CHR$(83) THEN
-   n = selection
-   DO
-    n = n + 1
-    sounds.track(n - 1) = sounds.track(n)
-   LOOP UNTIL sounds.track(n) = 96
-   GOTO reFresh
+	n = selection
+	DO
+	 n = n + 1
+	 sounds.track(n - 1) = sounds.track(n)
+	LOOP UNTIL sounds.track(n) = 96
+	GOTO reFresh
   END IF
 
   IF d$ = CHR$(27) THEN
-   'Disconnect speaker from Timer 2
-   OUT &H61, sounds.speakerOff
+	'Disconnect speaker from Timer 2
+	OUT &H61, sounds.speakerOff
 
-   OUT &H43, &H34         'Return Timer to normal operation
-   OUT &H40, 0            'Set low 8 bits of trigger to 0
-   OUT &H40, 0            'Set hi  8 bits of trigger to 0
-   COLOR 7, 0
-   CLS
-   END
+	OUT &H43, &H34         'Return Timer to normal operation
+	OUT &H40, 0            'Set low 8 bits of trigger to 0
+	OUT &H40, 0            'Set hi  8 bits of trigger to 0
+	COLOR 7, 0
+	CLS
+	aTimerEnd
+	END
   END IF
 
  IF d$ = CHR$(13) THEN
-   IF playMode THEN
-     COLOR 7, 0
-     LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
-     selection = playReturn
-    ELSE
-     playReturn = selection
-   END IF
+	IF playMode THEN
+	  COLOR 7, 0
+	  LOCATE viewy(selection), viewx(selection): PRINT noteTable(sounds.track(selection))
+	  selection = playReturn
+	 ELSE
+	  playReturn = selection
+	END IF
   playMode = playMode XOR 1
  END IF
 
@@ -174,7 +175,7 @@ DO
  IF d$ = "u" THEN addNote = octave * 12 + 24
  
  IF d$ = "p" THEN addNote = octave * 12 + INT(RND * 24)
-                                             
+															
  IF d$ = " " THEN addNote = 0
  IF d$ = "-" THEN addNote = 96
 
@@ -204,13 +205,13 @@ DO
   COLOR 15, 4
   LOCATE 1, 50: INPUT "Save Filename:", a$
   IF LEN(a$) THEN
-   OPEN a$ + ".stk" FOR BINARY AS #1
-    PUT #1, 1, sounds
-   CLOSE #1
-   LOCATE 1, 50: PRINT "Save "; TIME$
-   ELSE
-   COLOR 7, 0
-   LOCATE 1, 50: PRINT "Cancel       "
+	OPEN a$ + ".stk" FOR BINARY AS #1
+	 PUT #1, 1, sounds
+	CLOSE #1
+	LOCATE 1, 50: PRINT "Save "; TIME$
+	ELSE
+	COLOR 7, 0
+	LOCATE 1, 50: PRINT "Cancel       "
   END IF
  END IF
 
@@ -218,29 +219,29 @@ DO
   COLOR 15, 4
   LOCATE 1, 48: INPUT "EXPORT Filename:", a$
   IF LEN(a$) THEN
-   OPEN a$ + ".snd" FOR BINARY AS #1
-    FOR n = 0 TO 255
-     loadStr = CHR$(sounds.track(n))
-     PUT #1, n + 1, loadStr
-    NEXT n
-   CLOSE #1
-   LOCATE 1, 48: PRINT "Export "; TIME$
-   ELSE
-   COLOR 7, 0
-   LOCATE 1, 48: PRINT "Cancel       "
+	OPEN a$ + ".cst" FOR BINARY AS #1
+	 FOR n = 0 TO 255
+	  loadStr = CHR$(sounds.track(n))
+	  PUT #1, n + 1, loadStr
+	 NEXT n
+	CLOSE #1
+	LOCATE 1, 48: PRINT "Export "; TIME$
+	ELSE
+	COLOR 7, 0
+	LOCATE 1, 48: PRINT "Cancel       "
   END IF
  END IF
 
  IF d$ = "*" THEN
   COLOR 7, 0
-   LOCATE 1, 50: INPUT "Load Filename:", a$
+	LOCATE 1, 50: INPUT "Load Filename:", a$
   IF LEN(a$) THEN
-   LOCATE 1, 50: PRINT "Load "; TIME$
-   OPEN a$ + ".stk" FOR BINARY AS #1
-    GET #1, 1, sounds
-   CLOSE #1
-   ELSE
-   LOCATE 1, 50: PRINT "Cancel         "
+	LOCATE 1, 50: PRINT "Load "; TIME$
+	OPEN a$ + ".stk" FOR BINARY AS #1
+	 GET #1, 1, sounds
+	CLOSE #1
+	ELSE
+	LOCATE 1, 50: PRINT "Cancel         "
   END IF
 
   GOTO reFresh

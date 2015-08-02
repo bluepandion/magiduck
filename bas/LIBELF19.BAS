@@ -3,7 +3,6 @@ DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
-DECLARE SUB hudPrint (x%, text$, colour1%, colour2%)
 DECLARE SUB loadLevel ()
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB elfInit ()
@@ -19,6 +18,7 @@ DECLARE SUB menuClear ()
 DECLARE FUNCTION tileRead% (x%, y%)
 DECLARE FUNCTION menuGetByte% ()
 DECLARE FUNCTION menuGetWord% ()
+DECLARE SUB ProgressBar (progress%)
 
 DEFINT A-Z
 
@@ -85,35 +85,55 @@ END SUB
 SUB elfInit
 	gfx.adapter = aVideoDetect(VARSEG(hudBuffer), VARPTR(hudBuffer))
 	CLS
-	PRINT
 	COLOR 12, 0
 	PRINT " WARNING!"
 	COLOR 7, 0
 	PRINT 
-	PRINT "   Alpha 2 (2015-07-25)"
-	PRINT "   This version of MagiDuck has never been tested on real hardware."
-	PRINT "   It is still an early version and only meant for testing purposes."
+	PRINT "  Alpha 2 (2015-08-02)"
+	PRINT "  This version of MagiDuck has never been 
+	PRINT "  tested on real hardware."
 	COLOR 12, 0
 	PRINT
-	PRINT "   You are running this software at your own risk!"
+	PRINT "  You are running this software at your 
+	PRINT "  own risk!"
 	PRINT	
-	PRINT
 	COLOR 7, 0
-	a$ = UCASE$(MID$(COMMAND$, 1, 3))
-	IF a$ = "CGA" THEN gfx.adapter = 1
-	IF a$ = "EGA" THEN gfx.adapter = 2
-	IF a$ = "VGA" THEN gfx.adapter = 3
-	IF gfx.adapter THEN 
-		PRINT "   " MID$("CEV", gfx.adapter, 1) + "GA DETECTED."
-	ELSE
-		PRINT "    No compatible video adapter detected."
-	END IF
+	a$ = UCASE$(MID$(COMMAND$, 1, 1))
+	IF a$ = "C" THEN gfx.adapter = 1
+	IF a$ = "P" THEN gfx.adapter = 2
+	IF a$ = "T" THEN gfx.adapter = 3
+	IF a$ = "M" THEN gfx.adapter = 5
+	IF a$ = "E" THEN gfx.adapter = 6
+	IF a$ = "V" THEN gfx.adapter = 7
+	PRINT "  ";
+	SELECT CASE gfx.adapter
+	CASE 0
+		PRINT "No compatible adapter";
+	CASE 1
+		PRINT "CGA";
+	CASE 2
+		PRINT "PCJR";
+	CASE 3
+		PRINT "Tandy SL/TL";
+	CASE 4
+		PRINT "Tandy 1000";
+	CASE 5
+		PRINT "MCGA";
+	CASE 6
+		PRINT "EGA";
+	CASE 7
+		PRINT "VGA";
+	END SELECT
+	PRINT " detected."
+	PRINT
 	COLOR 8, 0
-	PRINT "   Use command line parameter CGA, EGA, VGA, MCGA, TANDY or PCJR"
-	PRINT "    to override automatic detection."
+	PRINT "  Use command line parameter 
+	PRINT "   CGA, EGA, VGA, MCGA, TANDY or PCJR"
+	PRINT "   to override automatic detection."
 	PRINT
 	COLOR 14, 0
-	PRINT "   Press Y to start the game, any other key to exit."
+	PRINT "  Press Y to start the game, 
+	PRINT "   any other key to exit."
 	COLOR 7, 0
 	DO
 	 D$ = INKEY$
@@ -197,6 +217,8 @@ SUB elfInit
 	KBarray(9) = tileBufferOfs
 	KBarray(10) = hudBufferSeg
 	KBarray(11) = hudBufferOfs
+	KBarray(12) = VARSEG(w40char.glyph1(32))
+	KBarray(13) = VARPTR(w40char.glyph1(32))
 	aSetup VARSEG(KBarray(0)), VARPTR(KBarray(0))
 	aSoundStop
 	FOR n = 0 TO 130
@@ -214,7 +236,7 @@ SUB elfInit
 		gfx.pageOfs(0) = 0
 		gfx.pageOfs(1) = 4000
 		gfx.page = 0
-		IF gfx.adapter > 1 THEN
+		IF gfx.adapter > 2 THEN
 			gfx.pageWrap = 16383
 			gfx.videoWrap = 32767
 			gfx.pageOfs(0) = 3000
@@ -224,7 +246,7 @@ SUB elfInit
 			gfx.videoWrap = 16383
 		END IF
 	  ELSE
-		PRINT "CGA, EGA or VGA compatible display adapter required."
+		PRINT "Display adapter not compatible."
 		END		
 	 END IF
 	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
@@ -460,19 +482,6 @@ SUB initLookUps
 END SUB
 
 SUB loadLevel
-
-	'debugOut "Level load " + fileName
-	
-	'OPEN fileName + ".lvl" FOR BINARY AS #1
-	' FOR n = 1 TO 1600
-	'  GET #1, n, loadStr
-	'  MID$(tileBuffer, 9760 + n, 1) = loadStr
-	' NEXT n
-	
-	' readOfs = 1601
-	' 'debugOut "actor data"
-	' GET #1, readOfs, level
-	'CLOSE #1
 	FOR n = 1 to 80
 		level.spawner(n).object = 0
 	NEXT n
@@ -488,17 +497,25 @@ SUB loadLevel
 		GET #1, fileOfs, level.coins
 		GET #1, fileOfs + 2, level.keys
 		fileOfs = fileOfs + 4
-		n = 1
-		DO
-			GET #1, fileOfs, loadStr
-			loadInt = ASC(loadStr)
-			GET #1, fileOfs + 1, loadStr
-			fileOfs = fileOfs + 2
-			FOR nn = 9760 + n TO 9760 + n + loadInt
-				MID$(tileBuffer, nn, 1) = loadStr
-			NEXT nn
-			n = n + loadInt
-		LOOP WHILE n < 1600
+		ProgressBar 1		
+		
+		n = 1		
+		loadValue = 400
+		FOR i = 2 TO 5
+			DO
+				GET #1, fileOfs, loadStr
+				loadInt = ASC(loadStr)
+				GET #1, fileOfs + 1, loadStr
+				fileOfs = fileOfs + 2
+				FOR nn = 9760 + n TO 9760 + n + loadInt
+					MID$(tileBuffer, nn, 1) = loadStr
+				NEXT nn
+				n = n + loadInt
+			LOOP WHILE n < loadValue
+			ProgressBar i
+			loadValue = loadValue + 400
+		NEXT i
+				
 		GET #1, fileOfs, loadStr
 		fileOfs = fileOfs + 1
 		loadInt = ASC(loadStr)
@@ -508,14 +525,17 @@ SUB loadLevel
 			GET #1, fileOfs, level.spawner(ASC(loadStr))
 			fileOfs = fileOfs + 8
 		NEXT n
+		ProgressBar 6
 	CLOSE #1
 	
 	IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
 	
+	ProgressBar 7
+	
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
-
-	'debugwrite "OK"
-
+	
+	w40char.text = "        |"
+	aPrint &HFFFF, &H0000, 0, 0, hudBufferSeg, hudBufferOfs
 END SUB
 
 SUB loadSounds (file$)
@@ -594,7 +614,7 @@ END SUB
 
 SUB myPrint (x, y, text$, attributes)
 	w40char.text = text$ + "|"
-	aPrint gfx.videoWrap, attributes, w40char.seg, w40char.ofs, x, y, &HB800, gfx.pageOfs(gfx.page)
+	aPrint gfx.videoWrap, attributes, x, y, &HB800, gfx.pageOfs(gfx.page)
 END SUB
 
 SUB quit
@@ -824,11 +844,6 @@ SUB menuLoad (menuNo%)
 	for item = 1 to itemCount
 		itemIDX = menuGetWord%
 		n = getSpawnSlot
-		IF itemIDX > 0 THEN 
-			actor(n).exist = 1
-			actor(n).control = -16000
-			menuItem(itemIDX) = n
-		END IF
 		actor(n).lPrev = menuGetWord%
 		actor(n).lNext = menuGetWord%
 		actor(n).x = menuGetWord%
@@ -836,6 +851,12 @@ SUB menuLoad (menuNo%)
 		actor(n).vecX = menuGetWord%
 		actor(n).vecY = menuGetWord%
 		actor(n).frame = menuGetWord%
+		IF itemIDX > 0 THEN 
+			actor(n).exist = 1
+			actor(n).control = -16000
+			menuItem(itemIDX) = n
+			aMenuHiLite actor(n).x, actor(n).y, actor(n).vecX, actor(n).vecY, actor(n).frame, gfx.pageOfs(gfx.page)
+		END IF
 		IF itemIDX < 0 THEN 
 			actor(n).exist = 1
 			actor(n).control = -16001
@@ -863,7 +884,7 @@ SUB menuLoad (menuNo%)
 				w40char.text = MID$(menuPreload, menuLoadPos, itemLen)
 			END IF
 			menuLoadPos = menuLoadPos + itemLen				
-			aPrint gfx.videoWrap, actor(n).frame, w40char.seg, w40char.ofs, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
+			aPrint gfx.videoWrap, actor(n).frame, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 		END IF
 	NEXT item
 	
@@ -912,3 +933,14 @@ FUNCTION menuGetWord%
 	menuLoadPos = menuLoadPos + 2
 	'debugOut STR$(menuLoadPos)
 END FUNCTION
+
+SUB DEBUGOUT (s$)
+	OPEN "debug.txt" FOR APPEND AS #3
+		PRINT #3, s$
+	CLOSE #3
+END SUB
+
+SUB ProgressBar(progress%)
+	w40char.text = ".|"
+	aPrint gfx.videoWrap, &H0C0C, 8 + progress%, 0, &HB800, gfx.pageOfs(gfx.page)
+END SUB

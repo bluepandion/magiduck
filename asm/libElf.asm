@@ -1598,10 +1598,9 @@ retf 0
 ;------------------------------------------------------------------------------
 aKBremove ENDP
 aPrint PROC
-
 ;============================================================================
 ;
-; Print routine 1.0
+; Print routine 
 ;
 ; 40x50 mode drawing. Characters consist of two half-height glyphs.
 ;
@@ -1611,7 +1610,6 @@ aPrint PROC
 ; Can print one line of text up to 40 characters in length.
 ;
 ;============================================================================
-
 ; Parameter stack offsets
 ; Order is inverted from qbasic CALL ABSOLUTE parameter order
 
@@ -1623,11 +1621,8 @@ aPrint PROC
 ;08 Write segment
 ;10 Row
 ;12 Column
-;14 Text data offset
-;16 Text data segment
-;18 Color attributes
-;20 Buffer wrap
-
+;14 Color attributes
+;16 Buffer wrap
 ;============================================================================
 	push bp
 	mov bp,sp
@@ -1636,7 +1631,7 @@ aPrint PROC
 	push ds
 	push si
 ;---------------------------------------------------------------------------
-	mov dx, [bp + 20]				;DX = Buffer wrap
+	mov dx, [bp + 16]				;DX = Buffer wrap
 	
 	mov es, [bp + 08]				;ES = Write seg
 	mov di, [bp + 06]				;DI = Write ofs
@@ -1660,19 +1655,19 @@ notVideoSeg:
 	add di, ax						;Add AX to write offset
 	and di, dx						;DI Buffer wrap
 		
-	mov ds, [bp + 16]				;DS = Text seg
+	mov ds, w40char					;DS = Text data seg
 	
-	mov bx, [bp + 14]				;BX = Glyph lookup ofs
+	mov bx, w40char+2				;BX = Text data ofs (Glyph lookup)
 	
 ;------------------------------------------------------------------------------	
 	push di							;Push DI, current write offset for next row
 	
-	mov si, [bp + 14]				;SI = Text ofs + 118 to read text string.
+	mov si, bx						;SI = Text ofs + 118 to read text string.
 	add si, 118						
 	
 	xor ax, ax						;AX = 0
 	
-	mov ch, [bp + 19] 				;CH = Color attribute 1
+	mov ch, [bp + 15] 				;CH = Color attribute 1
 	
 printLoop1:							;Print Glpyh row 1 ------------------------
 	lodsb							;AL = Character from text
@@ -1701,12 +1696,12 @@ printPrep2:
 	pop di							;Restore DI
 	add di, 80						;DI Next row.
 	
-	mov si, [bp + 14]				;SI = Text ofs + 118 to read text string.
+	mov si, bx						;SI = Text ofs + 118 to read text string.
 	add si, 118						
 	
 	add bx, 59						;BX = Glyph 2 lookUp offset
 		
-	mov ch, [bp + 18] 				;CH = Color attribute 2
+	mov ch, [bp + 14] 				;CH = Color attribute 2
 	
 printLoop2:							;Print Glpyh row 1 ------------------------
 	lodsb							;AL = Character from text
@@ -1739,7 +1734,7 @@ exit:
 	pop di
 	pop es
 	pop bp
-	retf 16
+	retf 12
 
 ;================================================================================	
 aPrint ENDP
@@ -1751,6 +1746,9 @@ aVideoDetect PROC
 ;	If MONO/OTHER is found, 0 is returned at ES:DI (and the game won't run).
 ;
 ;	VGA/EGA/CGA will initialize 40x50 text mode with 8x8 characters.
+;
+;	MCGA, PCJR and TANDY detection is based on PAKUPAKU source code
+;	by Jason M. Knight.
 ;
 ;============================================================================
 
@@ -1764,10 +1762,19 @@ aVideoDetect PROC
 ;06 Video adapter data offset	/	64 bytes of data to accommodate
 ;08 Video adapter data segment	/	VGA state check and adapter test result.
 ;
-; RETURNS AX = detected adapter
+;RETURNS AX = detected adapter
+; 7	vga
+; 6	ega
+; 5 mcga
+; 4	tandy 1000
+; 3 tandy SLTL
+; 2 pcjr
+; 1	cga
+; 0 mono
+;
 ;============================================================================
 	push bp
-	mov bp,sp
+	mov bp,sp	
 	
 	push es
 	push di
@@ -1795,7 +1802,7 @@ test_VGA:
 	int 10h
 		
 	cmp al, 01bh					;If AL=1Bh this is a VGA
-	je VGAdetected
+	je test_MCGA
 									;Check through data dump before
 									; giving up on VGA:
 	mov ds, [bp + 08]				;DS = seg (video adapter data)
@@ -1809,8 +1816,19 @@ loop VGAstatedatacheck				;If nothing's there, this isn't a VGA.
 	
 	cmp bx, 0
 	jz test_EGA
+
+test_MCGA:							;Test for MCGA to be sure.
+	xor  bl,bl        				;null BL so it's set up for non-PS/2 
+	mov  ax, 1A00h
+	int  10h
+	cmp  bl, 0Ah       				;MCGA returns $0A..$0C 
+	jb   VGAdetected
+	cmp  bl, 0Ch
+	jg   VGAdetected
+	mov  dx, 5
+	jmp exit
 VGAdetected:
-	mov dx, 3						;Save adapter # to DX
+	mov dx, 7						;Save adapter # to DX
 	jmp exit
 ;---------------------------------------------------------------------------
 test_EGA:
@@ -1821,17 +1839,44 @@ test_EGA:
 									
 	int 10h							
 									
-	cmp bl, 4						;BL =< 4 means we're EGA
+	cmp bl, 4						;BL < 5 means we're EGA
 	ja test_CGA						;compatible.
 	
+	mov dx, 6						;Save adapter # to DX
+	jmp exit
+;---------------------------------------------------------------------------
+test_PCJR:
+	mov ax, 0FFFFh
+	mov es, ax
+	mov di, 000Eh     				;second to last byte PCjr/Tandy BIOS info area
+	mov al, 0FDh      				;ends up 0xFD only on the Jr.
+	cmp es:[di], al
+	jne test_TANDY
 	mov dx, 2						;Save adapter # to DX
+	jmp exit
+;---------------------------------------------------------------------------
+test_TANDY:
+	mov al, 0FFh       				;all tandy's return 0xFF here
+	cmp es:[di], al
+	jne test_CGA
+	mov ax, 0FC00h
+	mov es, ax
+	xor di, di
+	mov al, 21h
+	cmp es:[di], al
+	jne test_CGA
+	mov ah, 0C0h       				;test for SL/TL
+	int 15h          				;Get System Environment
+	jnc detected_tandySLTL    		;early Tandy's leave the carry bit set, TL/SL does not
+	mov dx, 4						;Save adapter # to DX (tandy 1000)
+	jmp exit
+detected_tandySLTL:					
+	mov dx, 3						;Save adapter # to DX (tandy SLTL)
 	jmp exit
 ;---------------------------------------------------------------------------
 test_CGA:	
 	int 11h							;Interrupt call: Equipment check.
-	
 	and ax, 30h						;Check bits 4 & 5
-	
 	cmp ax, 30h						;If bits are on, this is a mono adapter.
 	jz detected_MONO
 	mov dx, 1						;Save adapter # to DX
@@ -1850,16 +1895,21 @@ exit:
 	pop es
 	pop bp
 	retf 4
-;================================================================================	
+;================================================================================
 aVideoDetect ENDP
 aVideoSet PROC
 ;============================================================================
 ;
 ; Sets video mode to 40x50 tweaked text mode with 8x8 characters
 ; for desired video adapter:
-;  1 = CGA
-;  2 = EGA
-;  3 = VGA
+; 7	vga
+; 6	ega
+; 5 mcga
+; 4	tandy 1000
+; 3 tandy SLTL
+; 2 pcjr
+; 1	cga
+; 0 mono
 ;
 ; Qbasic stack parameters:
 ;
@@ -1880,7 +1930,7 @@ aVideoSet PROC
 	
 	mov bx, [bp + 6]				;DX = desired video-adapter for setup
 
-	cmp bx, 4
+	cmp bx, 8
 	jb parameterOk					;Only accept unsigned values < 4.
 	jmp exit
 parameterOk:
@@ -1890,7 +1940,15 @@ parameterOk:
 	
 	shl bx, 1
 	jmp [jumpTableAdapter + bx]
-	jumpTableAdapter	dw	exit, set_CGA, set_EGA, set_VGA
+						
+	jumpTableAdapter	dw	exit	;mono
+	dw set_CGA						;CGA
+	dw set_CGA						;PCJR
+	dw set_CGA_32k					;Tandy SLTL
+	dw set_CGA_32k					;Tandy 1000
+	dw set_CGA_32k					;MCGA
+	dw set_EGA						;EGA
+	dw set_VGA						;VGA
 ;-----------------------------------------------------------------------------	
 set_VGA:
 	mov si, vVGAregs
@@ -1902,6 +1960,11 @@ set_EGA:
 	mov vWrap, 32767
 	jmp set_EGAVGA
 
+set_CGA_32k:
+	mov si, vCGAregs
+	mov vWrap, 32767
+	jmp startLoopVideoRegs
+	
 set_CGA:
 	mov si, vCGAregs
 	mov vWrap, 16383
@@ -1951,8 +2014,8 @@ loop loopRegs
 	out  70h, al
 	sti
 	
-	cmp vAdapter, 2					;Disable blink for EGA/VGA
-	jb clearScreen
+	cmp vAdapter, 5					;Disable blink for EGA/VGA/MCGA
+	jb tweakPCJR
 	mov ax, 1003h					;Select FG Blink / 16 bg colors (BL = 0)
 	xor bx, bx						;Clear whole BX to avoid problems on some adapters.
 	int 10h
@@ -1960,6 +2023,16 @@ loop loopRegs
 	xor bx, bx						
 	int 10h
 
+tweakPCJR:
+	cmp vAdapter, 2					;PCJR Blink disable
+	jne clearScreen
+	mov  dx, 3DAh
+	in   al, dx  					;reset flip-flop
+	mov  al, 03h 					;mode control 2 
+	out  dx, al
+	xor  al, al  					;bit 1 off == no blink! 
+	out  dx, al	
+	
 clearScreen:		
 	mov es, vSegment				;Clear video-memory with attribute 11
 	mov di, 0						; and ASCII 222
@@ -2022,12 +2095,6 @@ aVideoExit PROC
 ;	Sets video mode back to original state
 ;
 ;============================================================================
-
-	push bp
-	mov bp,sp
-
-;---------------------------------------------------------------------------
-	
 	mov al, vOldMode				;AX = old mode		
 	xor ah, ah						;
 	int 10h							;Set mode
@@ -2039,10 +2106,7 @@ aVideoExit PROC
 	xor bx, bx
 	mov bl, 30h
 	int 10h
-	
-;------------------------------------------------------------------------------
 exit:
-	pop bp
 	retf 0
 ;================================================================================
 aVideoExit ENDP
@@ -2183,6 +2247,11 @@ aSetup PROC
 	mov hudBuffer, ax
 	lodsw
 	mov hudBuffer+2, ax
+	
+	lodsw
+	mov w40char, ax
+	lodsw
+	mov w40char+2, ax
 	
 	pop si
 	pop ds
@@ -2547,6 +2616,7 @@ keyboardInterrupt:
 		gfxTileMap		dw	0000h
 		gfxTileBuffer	dw	0000h
 		hudBuffer		dw	0000h, 0000h
+		w40char			dw	0000h, 0000h
 		kbArray			dw 	0000h, 0000h
 		kbOld			dw  0000h, 0000h
 		kbFlags			db	00h

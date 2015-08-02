@@ -139,12 +139,6 @@ SUB damagePlayer
 	END IF
 END SUB
 
-SUB DEBUGOUT (s$)
-	OPEN "debug.txt" FOR APPEND AS #3
-		PRINT #3, s$
-	CLOSE #3
-END SUB
-
 SUB destroyObject (n)
 	actor(n).exist = 0
 	actor(n).collider = 0
@@ -255,7 +249,7 @@ CASE 262
           a$ = STR$(0& + player.scoreCounter)
           MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
           c = &H0A0A OR player.levelColor
-		  aPrint gfx.videoWrap, c, w40char.seg, w40char.ofs, 16, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
+		  aPrint gfx.videoWrap, c, 16, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
 
           IF player.scoreCounter >= player.scoreCounterTarget THEN
                player.scoreCounter = player.scoreCounterTarget
@@ -274,7 +268,7 @@ CASE 262
               MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
           END IF
           c = &H0E0F OR player.levelColor
-		  aPrint gfx.videoWrap, c, w40char.seg, w40char.ofs, 30, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
+		  aPrint gfx.videoWrap, c, 30, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
           actor(2).jump = actor(2).jump + 1
 
        CASE 17
@@ -391,14 +385,14 @@ CASE 258
 		handleScroll
 		menuLoad player.menuContext - 1
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
-		w40char.text = " ARROW KEYS TO MOVE .. ENTER TO SELECT |"
-		aPrint &HFFFF, &H0E0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		w40char.text = " ARROW KEYS TO MOVE ... ENTER TO SELECT |"
+		aPrint &HFFFF, &H0E0E, 0, 0, hudBufferSeg, hudBufferOfs
 		player.hudLock = 999
 		spriteList(0, 0).y = 255
 		spriteList(0, 1).y = 255
-		aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-		gfx.page = gfx.page XOR 1
-		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
+		'aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+		'gfx.page = gfx.page XOR 1
+		'aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		player.menuMode = 2
 		player.menuHLcolor = &HCECF
 		soundEvent = SndPause
@@ -727,7 +721,7 @@ CASE 255
 		player.score = 0
 		player.jumpRelease = -1
 		w40char.text = "         PRESS SPACE TO CONTINUE        |"
-		aPrint &HFFFF, &HD0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+		aPrint &HFFFF, &HD0C, 0, 0, hudBufferSeg, hudBufferOfs
 	END IF
 
 	IF player.vecX > 10 THEN player.vecX = 10
@@ -1312,7 +1306,7 @@ DO
         playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
 		
-		actor(n).jump = actor(n).jump + 1
+		'actor(n).jump = actor(n).jump + 1
          
          SELECT CASE actor(n).count
          CASE 0
@@ -1324,7 +1318,7 @@ DO
 
          CASE 1
             IF actor(n).y < actor(2).y THEN
-               actor(n).vecY = 5
+               actor(n).vecY = 12
                IF actor(n).x < actor(2).x THEN actor(n).vecX = actor(n).vecX + 1
                IF actor(n).x > actor(2).x THEN actor(n).vecX = actor(n).vecX - 1
             ELSE
@@ -1346,13 +1340,13 @@ DO
          CASE 3
           actor(n).jump = actor(n).jump + 1
           actor(n).vecY = mulTable(2, actor(n).vecY)
-          IF actor(n).jump > 16 THEN actor(n).count = 1
+          IF actor(n).jump > 20 THEN actor(n).count = 1
          END SELECT
 
          IF actor(n).vecY > 20 THEN actor(n).vecY = 20
          IF actor(n).vecY < -20 THEN actor(n).vecY = -20
-         IF actor(n).vecX > 10 THEN actor(n).vecX = 10
-         IF actor(n).vecX < -10 THEN actor(n).vecX = -10
+         IF actor(n).vecX > 6 THEN actor(n).vecX = 6
+         IF actor(n).vecX < -6 THEN actor(n).vecX = -6
        
 	'SKULL
 	CASE 6         
@@ -1369,6 +1363,9 @@ DO
 	'SPIKY
 	CASE 8 
 		IF actor(n).count = 0 THEN
+			playerDeltaX = ABS(actor(n).x - playerX)		
+			playerDeltaY = ABS(actor(n).y - playerY)
+			IF playerDeltaX < 10 AND playerDeltaY < 15 THEN soundEvent = 178
 			SELECT CASE actor(n).dir
 			CASE 0
 				frontX = 0
@@ -1397,14 +1394,16 @@ DO
 				'frontY = -frontY
 			END IF
 			c = tileRead(actor(n).x + frontX, actor(n).y + frontY)
-			c2 = tileRead(actor(n).x + leftX, actor(n).y + leftY)
+			c2 = tileRead(actor(n).x + leftX, actor(n).y + leftY)			
 			IF c > 29 THEN
 				actor(n).dir = (actor(n).dir + 1) AND 3
 				actor(n).count = 2
+				IF playerDeltaX < 30 AND playerDeltaY < 35 THEN soundEvent = 178
 			ELSE
 				IF c2 < 30 THEN
 					actor(n).dir = (actor(n).dir - 1) AND 3
 					actor(n).count = 2
+					IF playerDeltaX < 30 AND playerDeltaY < 35 THEN soundEvent = 178
 				END IF
 			END IF
 			SELECT CASE actor(n).dir
@@ -1432,20 +1431,23 @@ DO
 	'FIRE BREATH
 	CASE 11
 		'c = (dtMain1 + actor(n).y) AND 31
-		IF actor(n).jump < 36 THEN actor(n).jump = actor(n).jump + 1
-		IF actor(n).jump > 35 THEN
-			IF ABS(actor(n).y - playerY) < 25 THEN
-				IF actor(n).jump = 36 THEN
+		IF actor(n).jump < 24 THEN actor(n).jump = actor(n).jump + 1
+		IF actor(n).jump > 19 THEN
+			IF ABS(actor(n).y - playerY) < 45 THEN
+				IF actor(n).jump = 20 THEN
 					actor(n).frame = 48
 					soundEvent = 66
 				END IF
 				actor(n).jump = actor(n).jump + 1
 			END IF						
-			IF actor(n).jump > 40 THEN
+			IF actor(n).jump > 24 THEN
 				actor(n).jump = 0
-				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, -10
-				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, 0
-				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, 10
+				c = 0
+				IF actor(2).y > actor(n).y + 5 THEN c = 5
+				IF actor(2).y > actor(n).y + 20 THEN c = 10
+				IF actor(2).y < actor(n).y - 5 THEN c = -5
+				IF actor(2).y < actor(n).y - 20 THEN c = -10
+				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, c
 			END IF
 		ELSE
            actor(n).frame = 47
@@ -1454,9 +1456,9 @@ DO
     'SPIKE BALL BOUNCE
     CASE 15
         c = tileRead(actor(n).x, actor(n).y + 6)
-        IF c > 29 THEN
+        IF c > 29 AND actor(n).vecY > 10 THEN
           actor(n).y = actor(n).y AND &HFFF8 - 6
-          actor(n).vecY = -30
+          actor(n).vecY = -33
           aSoundNote 40
          ELSE
           actor(n).vecY = actor(n).vecY + 6
@@ -1535,12 +1537,15 @@ DO
 			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 60
 			playerDeltaY = actor(2).y - actor(n).y
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
-				IF actor(n).count = 0 AND player.levelScore(actor(n).jump) = 0 THEN
-					w40char.text = "         PRESS UP TO ENTER LEVEL        |"
-					aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
-				ELSE
-					w40char.text = "         LEVEL SCORE: " + STR$(player.levelScore(actor(n).jump)) + "|"
-					aPrint &HFFFF, &HE0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+				IF actor(n).count = 0 THEN 
+					IF player.levelScore(actor(n).jump) = 0 THEN
+						w40char.text = "         PRESS UP TO ENTER LEVEL        |"
+						aPrint &HFFFF, &HE0E, 0, 0, hudBufferSeg, hudBufferOfs
+					ELSE
+						w40char.text = " LEVEL SCORE: " + STR$(player.levelScore(actor(n).jump)) 
+						mid$(w40char.text, 41, 1) = "|"
+						aPrint &HFFFF, &HE0F, 0, 0, hudBufferSeg, hudBufferOfs
+					END IF
 				END IF
 				player.hudLock = 999
 				actor(n).count = 1
@@ -1724,32 +1729,32 @@ SUB hudUpdate (flags AS INTEGER)
 	IF player.level > 1 THEN
 		IF flags AND 1 THEN
 			w40char.text = " KEYS:    0000000              TIME:    |"
-			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HE0C, 0, 0, hudBufferSeg, hudBufferOfs
 		END IF
 		IF flags AND 8 THEN
 			a$ = STR$(player.time)
 			w40char.text = a$ + "|"
-			aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HF0E, 39 - LEN(a$), 0, hudBufferSeg, hudBufferOfs
 		END IF
 		IF flags AND 16 THEN
 			w40char.text = STR$(player.hasKey) + "|"
-			aPrint &HFFFF, &HF0E, w40char.seg, w40char.ofs, 6, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HF0E, 6, 0, hudBufferSeg, hudBufferOfs
 		END IF
 	ELSE
 		IF flags AND 1 THEN
 			w40char.text = "          0000000                       |"
-			aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HE0C, 0, 0, hudBufferSeg, hudBufferOfs
 		END IF
 	END IF
 	IF flags AND 2 THEN
 		IF player.hp < 4 THEN
 			w40char.text = "#$#$#$#$|"
-			aPrint &HFFFF, &H505, w40char.seg, w40char.ofs, 19, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &H505, 19, 0, hudBufferSeg, hudBufferOfs
 		END IF
 		a$ = "#$#$#$#$"
 		IF player.hp THEN
 			w40char.text = MID$(a$, 1, player.hp * 2) + "|"
-			aPrint &HFFFF, &HCECE, w40char.seg, w40char.ofs, 19, 0, hudBufferSeg, hudBufferOfs
+			aPrint &HFFFF, &HCECE, 19, 0, hudBufferSeg, hudBufferOfs
 		END IF
 	END IF
 	IF flags AND 4 THEN
@@ -1757,7 +1762,7 @@ SUB hudUpdate (flags AS INTEGER)
 		c = LEN(a$)
 		a$ = MID$(a$, 2, c)
 		w40char.text = a$ + "|"
-		aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 18 - c, 0, hudBufferSeg, hudBufferOfs
+		aPrint &HFFFF, &HC0E, 18 - c, 0, hudBufferSeg, hudBufferOfs
 	END IF
 END SUB
 
@@ -1803,8 +1808,8 @@ END SUB
 '==============================================================================
  SUB main
 	'hudTextLoad &HA0, 1
-	w40char.text = " LOADING, PLEASE WAIT...                |"
-	aPrint &HFFFF, &HE0C, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
+	w40char.text = " LOADING                               |"
+	aPrint &HFFFF, &HE0C, 0, 0, hudBufferSeg, hudBufferOfs
 	aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
 	
 	loadLevel
@@ -2085,7 +2090,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).vecX = 7 + (spawnerFlags <> 0) * 14
 		actor(n).vecY = spawner
 		actor(n).frame = 50
-		actor(n).visX = 40
+		actor(n).visX = 70
 		actor(n).visY = 40   
 	CASE 112	'FIRE BOMB
 		actorListNew n
@@ -2214,7 +2219,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).exist = 1
 			actor(n).spawner = spawner
 			actor(n).life = -999
-			actor(n).jump = 2 + p
+			actor(n).jump = 1 + p + p
 			actor(n).frame = 46
 			actor(n).anim = 148
 			actor(n).visX = 45
