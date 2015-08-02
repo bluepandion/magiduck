@@ -1,26 +1,25 @@
-16:10:28
+00:16:26
 lookups init
 timer init
 main loop call
 level loaded
 timerReset
-destroyed  41  ( 5 - 2C
+wave+  0-1 0
+wave+  1 0 1
+destroyed  2  ( 3 - 2
+destroyed  2  ( 4 - 2
+destroyed  4  ( 5 - 4
+destroyed  4  ( 6 - 4
 destroyed  1  ( 7 - 1
-destroyed  41  ( 8 - 2C
+destroyed  1  ( 8 - 1
 destroyed  1  ( 9 - 1
-destroyed  8  ( 10 - 8
-destroyed  8  ( 11 - 9
-destroyed  41  ( 12 - 2C
-destroyed  50  ( 13 - 33
+wave-  2 1 0
 destroyed  63  ( 33 - 3F
+destroyed  41  ( 34 - 2C
 destroyed  45  ( 35 - 2D
-destroyed  45  ( 37 - 2D
-destroyed  50  ( 38 - 32
-destroyed  15  ( 39 - F
-destroyed  41  ( 5 - 2C
-destroyed  41  ( 8 - 2C
-destroyed  1  ( 9 - 1
-destroyed  8  ( 10 - 8
-destroyed  8  ( 11 - 9
-destroyed  41  ( 12 - 2C
-destroyed  50  ( 13 - 33
+destroyed  18  ( 36 - 12
+destroyed  18  ( 36 - 12
+destroyed  18  ( 36 - 12
+destroyed  18  ( 37 - 12
+destroyed  18  ( 37 - 12
+destroyed  18  ( 37 - 12

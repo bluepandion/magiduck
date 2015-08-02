@@ -1479,35 +1479,37 @@ DO
         END IF
 
 	'CHECKPOINT
-	CASE 62
-        playerDeltaX = ABS(actor(n).x - playerX)
+	CASE 65
 		playerDeltaY = ABS(actor(n).y - playerY)
 		
 		IF playerDeltaY < 32 THEN
 			c = 0
 			IF player.wave = actor(n).flags THEN
-				IF player.wavePrev <> actor(n).flags THEN
+				IF player.wavePrev < actor(n).flags THEN
+					debugOut "wave+ " + str$(player.wave) + str$(player.wavePrev) + str$(actor(n).flags)
 					player.wavePrev = player.wave
 					player.wave = actor(n).flags + 1
 					c = 1
 				END IF
 			ELSE				
-				IF player.wavePrev <> actor(n).flags THEN
+				IF player.wavePrev > actor(n).flags THEN
+					debugOut "wave- " + str$(player.wave) + str$(player.wavePrev) + str$(actor(n).flags)
 					player.wavePrev = player.wave
 					player.wave = actor(n).flags
 					c = 1
 				END IF
 			END IF
 			IF c THEN
-				level.spawner(actor(n).spawner).object = 62
 				FOR nn = 4 TO 60
-					IF ABS(actor(nn).y - actor(2).y) > 240 THEN
+					IF ABS(actor(nn).y - actor(2).y) > 320 THEN
 						IF actor(nn).control > 0 AND actor(nn).control < 65 THEN
 							level.spawner(actor(nn).spawner).object = level.spawner(actor(nn).spawner).object AND &HFFF
-							'debugOut "destroyed " + str$(actor(nn).control) + "  (" + str$(actor(nn).spawner) + " - " + hex$(level.spawner(actor(nn).spawner).object)
+							debugOut "destroyed " + str$(actor(nn).control) + "  (" + str$(actor(nn).spawner) + " - " + hex$(level.spawner(actor(nn).spawner).object)
 						END IF
-						actor(nn).control = 0
-						actor(nn).life = 0
+						IF actor(nn).control <> 65 THEN 
+							actor(nn).control = 0
+							actor(nn).life = 0
+						END IF
 					END IF
 				NEXT nn
 				handleSpawn player.wave
@@ -2294,9 +2296,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).anim = 0
 		IF object = 50 THEN actor(n).vecX = 5
 		IF object = 53 THEN actor(n).anim = 1
-	CASE 62	   'Checkpoint / Spawner portal
+	CASE 65	   'Checkpoint / Spawner portal
 		actorListNew n
-		actor(n).control = 62
+		actor(n).control = 65
 		actor(n).spawner = spawner
 		actor(n).flags = spawnerFlags
 		actor(n).life = -3

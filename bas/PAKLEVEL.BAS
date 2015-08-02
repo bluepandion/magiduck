@@ -180,7 +180,7 @@ OPEN listFile$ FOR INPUT AS #1
 			 '  nWave = nWave + 1
 			 'END IF
 			 addActor tile, actorWave, x, y
-			 IF actorWave < 5 THEN addActor tile, actorWave + 1, x, y
+			 'IF actorWave < 5 THEN addActor tile, actorWave + 1, x, y
 			END IF
 
 			IF tile > 19 OR tile = 11 THEN
