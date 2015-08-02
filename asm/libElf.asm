@@ -533,7 +533,7 @@ aRectList PROC
 		mov es, vSegment		;ES = video memory write segment (0xB800)
 
 		push cx					;Check if video memory offset is
-		mov cx, vWrap		; safe for drawing without wrap check.
+		mov cx, vWrap			;safe for drawing without wrap check.
 		sub cx, 4000
 		cmp di, cx
 		pop cx
@@ -550,7 +550,7 @@ aRectList PROC
 		mov bx, cx			;Get value for jump.
 		xor bh, bh			;Clear height-value from jump.
 		
-		mov cx, vWrap	;...Store Wrap value to CX.
+		mov cx, vWrap		;...Store Wrap value to CX.
 		
 		shl bx, 1
 		jmp [rectWrap + bx]
