@@ -43,14 +43,14 @@
 087, "Level7", 64, 08, 12, 08
 088, "Level8", 64, 08, 12, 09
 089, "Level9", 64, 08, 12, 10
-091, "Star 1", 65, 00, 00, 01
-092, "Star 2", 65, 00, 00, 02
-093, "Star 3", 65, 00, 00, 03
-094, "Star 4", 65, 00, 00, 04
-095, "Star 5", 65, 00, 00, 05
-096, "Star 6", 65, 00, 00, 06
-097, "Star 7", 65, 00, 00, 07
-098, "Star 8", 65, 00, 00, 08
+091, "Star 1", 66, 00, 00, 01
+092, "Star 2", 66, 00, 00, 02
+093, "Star 3", 66, 00, 00, 03
+094, "Star 4", 66, 00, 00, 04
+095, "Star 5", 66, 00, 00, 05
+096, "Star 6", 66, 00, 00, 06
+097, "Star 7", 66, 00, 00, 07
+098, "Star 8", 66, 00, 00, 08
 099, "StDOOR", 66, 00, 00, 09
 "/actors"
 "pakfile", "levels", "/pakfile"
@@ -63,5 +63,6 @@
 "..\convert\level2.tmx", "tileset1", "sprites0", 5
 "..\convert\elevator.tmx", "tileset3", "sprites0", 6
 "..\convert\skulls.tmx", "tileset0", "sprites0", 7
+"..\convert\newlevel.tmx", "tileset1", "sprites0", 8
 "/maps"
 "/convert"

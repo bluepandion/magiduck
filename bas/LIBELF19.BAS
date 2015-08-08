@@ -236,7 +236,7 @@ SUB elfInit
 		gfx.pageOfs(0) = 0
 		gfx.pageOfs(1) = 4000
 		gfx.page = 0
-		IF gfx.adapter > 2 THEN
+		IF gfx.adapter > 4 THEN
 			gfx.pageWrap = 16383
 			gfx.videoWrap = 32767
 			gfx.pageOfs(0) = 3000
@@ -391,7 +391,7 @@ SUB handleScroll
 
 	aRectList gfx.windowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 	
-	IF gfx.adapter > 1 THEN
+	IF gfx.adapter > 4 THEN
 		IF gfx.pageOfs(0) < 500 OR gfx.pageOfs(1) > 13500 THEN
 			'debugOut str$(gfx.pageOfs(0)) + str$(gfx.pageOfs(1))
 			aCopyPage gfx.pageOfs(0), 3000

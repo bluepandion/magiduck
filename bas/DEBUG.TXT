@@ -1,25 +1,222 @@
-00:16:26
+00:26:01
 lookups init
 timer init
 main loop call
 level loaded
 timerReset
+main loop call
+level loaded
+timerReset
+main loop call
+level loaded
+timerReset
 wave+  0-1 0
 wave+  1 0 1
-destroyed  2  ( 3 - 2
-destroyed  2  ( 4 - 2
-destroyed  4  ( 5 - 4
-destroyed  4  ( 6 - 4
-destroyed  1  ( 7 - 1
-destroyed  1  ( 8 - 1
-destroyed  1  ( 9 - 1
+destroyed  41  ( 8 - 2C
 wave-  2 1 0
-destroyed  63  ( 33 - 3F
-destroyed  41  ( 34 - 2C
-destroyed  45  ( 35 - 2D
-destroyed  18  ( 36 - 12
-destroyed  18  ( 36 - 12
-destroyed  18  ( 36 - 12
-destroyed  18  ( 37 - 12
-destroyed  18  ( 37 - 12
-destroyed  18  ( 37 - 12
+destroyed  1  ( 34 - 1
+destroyed  63  ( 35 - 3F
+destroyed  45  ( 36 - 2D
+destroyed  1  ( 37 - 1
+wave-  0 2 1
+destroyed  41  ( 8 - 2C
+wave+  1 0 1
+wave+  2 1 2
+destroyed  50  ( 2 - 34
+destroyed  50  ( 3 - 34
+destroyed  1  ( 4 - 1
+destroyed  45  ( 5 - 2D
+destroyed  5  ( 6 - 5
+destroyed  41  ( 7 - 2C
+destroyed  1  ( 24 - 1
+destroyed  15  ( 25 - F
+wave-  3 2 1
+wave-  1 3 0
+destroyed  1  ( 34 - 1
+destroyed  63  ( 35 - 3F
+destroyed  45  ( 36 - 2D
+destroyed  1  ( 37 - 1
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init
+lookups init
+timer init

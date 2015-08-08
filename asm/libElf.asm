@@ -1944,8 +1944,8 @@ parameterOk:
 	jumpTableAdapter	dw	exit	;mono
 	dw set_CGA						;CGA
 	dw set_CGA						;PCJR
-	dw set_CGA_32k					;Tandy SLTL
-	dw set_CGA_32k					;Tandy 1000
+	dw set_CGA						;Tandy SLTL
+	dw set_CGA						;Tandy 1000
 	dw set_CGA_32k					;MCGA
 	dw set_EGA						;EGA
 	dw set_VGA						;VGA
