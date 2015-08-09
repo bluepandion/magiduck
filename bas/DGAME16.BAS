@@ -125,9 +125,11 @@ SUB damagePlayer
 END SUB
 
 SUB destroyObject (n)
-	FOR c = 4 TO 60
-		IF actor(c).exist = n THEN actor(c).exist = 1
-	NEXT c
+	IF actor(n).exist < 0 THEN
+		FOR c = 4 TO 60
+			IF actor(c).exist = n THEN actor(c).exist = 1
+		NEXT c
+	END IF
 	actor(n).exist = 0
 	actor(n).collider = 0
 	actor(n).anim = 0
@@ -542,6 +544,8 @@ CASE 258
 'Wait after death
 CASE 256
 	'actor(2).count = actor(2).count + 1	
+	actor(2).x = 0
+	actor(2).y = 0
 	IF kbArray(57) THEN 
 		actor(2).count = 0
 		player.menuContext = 3
@@ -572,7 +576,7 @@ CASE 255
 			actor(2).y = actor(2).y - 2
 			player.Bouncing = 30
 			collisionFloor = 0
-			maxY = 38
+			minY = -38
 			player.jumpRelease = 0
 			soundEvent = 98
 		END SELECT
@@ -595,11 +599,17 @@ CASE 255
 		ELSE
 			player.jumpRelease = -1
 			IF player.Bouncing > 0 THEN
-				maxY = 38
+				minY = -38
 				player.Bouncing = player.Bouncing - 1
-				player.vecY = player.vecY + 2
+				IF player.Bouncing > 6 THEN
+					player.vecY = player.vecY + fraction(14, fractionC)
+				ELSE
+					player.vecY = player.vecY + 5
+				END IF
+				'IF player.jumpPrev <> kbArray(44) THEN player.Bouncing = 0
+				'player.jumpPrev = kbArray(44)
 			ELSE
-				player.vecY = player.vecY + 5
+				player.vecY = player.vecY + 15
 			END IF
 		END IF
 	END IF
@@ -679,20 +689,20 @@ CASE 255
       END IF
    END IF
 
-   IF kbArray(80) THEN
-      screenTargetY = actor(2).y - 24
-   END IF
+	IF kbArray(80) THEN
+		screenTargetY = actor(2).y - 24
+	END IF
 
    player.ShootDelay = player.ShootDelay + (player.ShootDelay > 0)
 
-   IF kbArray(45) AND player.ShootDelay = 0 THEN
-      player.ShootDelay = 10
-      spawnObject actor(2).x, actor(2).y - 6, 100, actor(n).flags, 0
-      soundEvent = 55
-      actor(2).anim = 8
-	  actor(2).frame = 8
-	  actor(3).frame = 9
-   END IF
+	IF kbArray(45) AND player.ShootDelay = 0 THEN
+		player.ShootDelay = 10
+		spawnObject actor(2).x, actor(2).y - 6, 100, actor(n).flags, 0
+		soundEvent = 55
+		actor(2).anim = 8
+		actor(2).frame = 8
+		actor(3).frame = 9
+	END IF
 
 	IF player.hp = 0 THEN
 		actor(2).exist = 1
@@ -775,7 +785,7 @@ DO
 	 REM |     | |_____]   |   |______ |          |    |______
 	 REM |_____| |_____] __|   |______ |_____     |    ______|
 	'------------------------------------------------------------------------------
-	IF actor(n).exist > 0 THEN
+	IF actor(n).exist <> 0 THEN
 
 	'entityCounter = entityCounter + 1
 
@@ -1038,8 +1048,8 @@ DO
 		playerDeltaY = ABS(actor(n).y - 9 - playerY)
 		IF playerDeltaX < 4 AND playerDeltaY < 2 AND playerDeltaY > -3 AND player.vecY > -1 THEN
 			soundEvent = 115
-			player.vecY = -20
-			player.Bouncing = 10
+			player.vecY = -30
+			player.Bouncing = 20
 			player.jumpRelease = 0
 			soundEvent = 98
 			actor(n).life = -45
@@ -1391,7 +1401,8 @@ DO
               actor(n).vecX = mulTable(3, actor(n).vecX)
               actor(n).count = 2
               actor(n).jump = actor(2).y - 30
-              actor(n).dir = actor(2).x
+              IF actor(n).jump < 20 THEN actor(n).jump = 20
+			  actor(n).dir = actor(2).x
             END IF
          
          CASE 2
@@ -1415,7 +1426,7 @@ DO
          IF actor(n).vecX < -7 THEN actor(n).vecX = -7
        
 	'SKULL
-	CASE 6         
+	CASE 6         		
 		IF actor(n).flags THEN
 			actor(n).vecX = -8
 			IF actor(n).x < screenX - 4 THEN actor(n).flags = 0 ' soundEvent = 151
@@ -1512,7 +1523,7 @@ DO
 				IF actor(2).y > actor(n).y + 20 THEN c = 10
 				IF actor(2).y < actor(n).y - 5 THEN c = -5
 				IF actor(2).y < actor(n).y - 20 THEN c = -10
-				spawnObject actor(n).x + actor(n).dir, actor(n).y + 2, 111, actor(n).flags, c
+				spawnObject actor(n).x + actor(n).dir, actor(n).y + 4, 111, actor(n).flags, c
 			END IF
 		ELSE
            actor(n).frame = 47
@@ -1577,11 +1588,11 @@ DO
 	CASE 63
 		actor(n).frame = 60
 		
-		IF (dtMain1 AND 3) = 2 THEN
-			x = actor(n).x - 4 + INT(RND * 10)
-			y = actor(n).y - 12 + INT(RND * 12)
-			spawnObject x, y, 93, 0, 3
-		END IF
+		'IF (dtMain1 AND 3) = 2 THEN
+		'	x = actor(n).x - 4 + INT(RND * 10)
+		'	y = actor(n).y - 12 + INT(RND * 12)
+		'	spawnObject x, y, 93, 0, 3
+		'END IF
 		
 		c = actor(n).spawner
 		actor(n).y = level.spawner(c).y + mulTable(2, angle.x(dtMain0))
@@ -1907,7 +1918,7 @@ END SUB
 	player.gotKeys = 0
 	player.gotChests = 0	
 	player.parent = 0
-	actor(2).flash = 0
+	actor(2).flash = 20
 	actor(2).lPrev = 1
 	actor(2).lNext = 3
 	actor(2).exist = 1
@@ -1931,6 +1942,7 @@ END SUB
 	playerOldX = -999
 	playerOldY = -999
 	
+	actor(3).flash = 20
 	actor(3).control = 0
 	actor(3).frame = 11
 	actor(3).flags = 0
@@ -2168,7 +2180,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).flash = 50	
 	CASE 1	'Eggy
 		actorListNew n
-		actor(n).flags = spawnerFlags
+		c = spawnerFlags > 1
+		actor(n).exist = 1 + c + c
+		actor(n).flags = spawnerFlags AND 1
 		actor(n).control = 1   
 		actor(n).life = -2
 		actor(n).collider = 1
@@ -2179,26 +2193,28 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).visY = 40
 		actor(n).spawner = spawner
 	'---------------------
-		c = n
-		n = getSpawnSlot
-		actorListNew n
-		actor(n).exist = c
-		actor(n).X = x
-		actor(n).Y = y - 11
-		actor(n).vecX = 0
-		actor(n).vecY = 0
-		actor(n).parentDX = x
-		actor(n).parentDY = y
-		actor(n).control = 201
-		actor(n).life = -80
-		actor(n).collider = 3
-		actor(n).spawner = 0
-		actor(n).visX = 35
-		actor(n).visY = 60
-		actor(n).frame = 19
-		actor(n).count = 0
-		actor(n).dir = -5
-		actor(n).flags = 0
+		IF spawnerFlags > 1 THEN
+			c = n
+			n = getSpawnSlot
+			actorListNew n
+			actor(n).exist = c
+			actor(n).X = x
+			actor(n).Y = y - 11
+			actor(n).vecX = 0
+			actor(n).vecY = 0
+			actor(n).parentDX = x
+			actor(n).parentDY = y
+			actor(n).control = 201
+			actor(n).life = -80
+			actor(n).collider = 3
+			actor(n).spawner = 0
+			actor(n).visX = 35
+			actor(n).visY = 60
+			actor(n).frame = 19
+			actor(n).count = 0
+			actor(n).dir = -5
+			actor(n).flags = 0
+		END IF
 		
 	CASE 2	'HELMET
 		actorListNew n

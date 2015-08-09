@@ -165,6 +165,7 @@ TYPE playerType
 	targetX AS INTEGER
 	targetY AS INTEGER
 	jumpRelease AS INTEGER
+	jumpPrev AS INTEGER
 	bouncing AS INTEGER
 	vecX AS INTEGER
 	vecY AS INTEGER
