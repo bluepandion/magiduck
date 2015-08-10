@@ -21,7 +21,7 @@ END TYPE
 'DIM w40Char AS charPair
 DIM convChar AS convCharType
 
-OPEN "w40char.def" FOR BINARY AS #1
+OPEN "w40char.clu" FOR BINARY AS #1
  IF LOF(1) < 2 THEN
   FOR n = 32 TO 90
 	w40Char.glyph1(n) = CHR$(n)

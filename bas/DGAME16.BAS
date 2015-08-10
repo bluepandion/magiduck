@@ -80,6 +80,8 @@ CONST ItemKey = 21
 CONST ItemGemSmall = 22
 CONST ItemGemBig = 23
 CONST ItemHeart = 25
+CONST SndButton = 184
+CONST SndTileGrow = 193
 
 '===============================================================================
 
@@ -119,8 +121,11 @@ SUB damagePlayer
     IF actor(2).flash = 0 THEN
 		player.hp = player.hp + (player.hp > 0)
 		actor(2).flash = 40
-		aSoundFX 0, 4
-		hudUpdate 2
+		aSoundFX 0, SndDamage
+		'hudUpdate 2
+		w40char.text = SPACE$(40) + "|"
+		aPrint &HFFFF, &HC040, 0, 0, hudBufferSeg, hudBufferOfs
+		player.hudLock = 4
 	END IF
 END SUB
 
@@ -223,6 +228,12 @@ CASE 262
 		  IF player.gotChests = level.keys THEN player.score = player.score + 1000: myPrint 33, 34, a$, c
 		  IF player.gotCoins = level.coins THEN player.score = player.score + 1000: myPrint 33, 38, a$, c
 		  
+		  player.scoreCounter = level.keys + level.keys + level.coins
+		  player.scoreCounterInc = player.gotKeys + player.gotChests + player.gotCoins
+		  player.scoreCounterTarget = (player.scoreCounterInc / player.scoreCounter) * 100
+		  
+		  IF player.levelCompletion(player.level) < player.scoreCounterTarget THEN player.levelCompletion(player.level) = player.scoreCounterTarget
+		  
 		  actor(2).jump = actor(2).jump + 1
 
        CASE 2 TO 3
@@ -241,7 +252,7 @@ CASE 262
           c = &H0A0A OR player.levelColor
 		  aPrint gfx.videoWrap, c, 16, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
 
-          IF player.scoreCounter >= player.scoreCounterTarget THEN
+          IF player.scoreCounter + player.scoreCounterInc >= player.scoreCounterTarget THEN
                player.scoreCounter = player.scoreCounterTarget
                actor(2).jump = actor(2).jump + 1
           ELSE
@@ -703,7 +714,16 @@ CASE 255
 		actor(2).frame = 8
 		actor(3).frame = 9
 	END IF
-
+	
+	'CHEATS
+	IF kbArray(16) THEN player.hp = 4
+	IF kbArray(17) THEN
+		FOR c = 1 TO 9
+			player.levelScore(c) = 1
+		NEXT c
+	END IF
+	IF kbArray(18) THEN maxY = 1
+	
 	IF player.hp = 0 THEN
 		actor(2).exist = 1
 		actor(2).parentDX = 0
@@ -1018,7 +1038,6 @@ DO
 			IF actor(n).count > 71 THEN
 				actor(n).life = 5
 				actor(n).control = 0
-				actor(n).frame = 34
 				actor(n).collider = 0
 				actor(n).vecY = -6
 			END IF
@@ -1545,7 +1564,58 @@ DO
 	CASE 20
 		c = INT(RND * actor(n).jump)
 		spawnObject actor(n).x + c, actor(n).y, 0, 0, 113
+		
+	'BUTTON
+	CASE 30
+		playerDeltaX = ABS(actor(n).x - playerX)
+		playerDeltaY = ABS(actor(n).y - playerY)
+		IF playerDeltaX < 3 AND playerDeltaY < 4 AND player.vecY > -1 THEN
+			actor(n).control = 0
+			actor(n).spawner = 0
+			actor(n).frame = 27
+			soundEvent = SndButton
+			FOR c = 4 TO 60
+				IF actor(c).control = 31 THEN
+					IF actor(n).jump = actor(c).jump THEN 
+						actor(c).anim = 1
+						actor(c).count = 4
+						actor(c).frame = 38
+						actor(c).y = actor(c).y + 8
+					END IF
+				END IF
+			NEXT c
+		END IF
 	
+	'DOOR OPEN or TILE GROW
+	CASE 31 
+		IF actor(n).anim THEN
+			actor(n).count = actor(n).count + 1
+			IF actor(n).count > 4 THEN
+				actor(n).count = 0
+				actor(n).y = actor(n).y - 8
+				c = tileRead(actor(n).x, actor(n).y)				
+				IF actor(n).dir = 31 THEN
+					IF c < 40 THEN 
+						actor(n).life = 0
+						actor(n).control = 0
+					ELSE
+						tileWrite actor(n).x, actor(n).y, 0
+						aUpdateTile actor(n).x, actor(n).y
+						soundEvent = SndTileGrow
+					END IF
+				ELSE
+					IF c > 0 THEN
+						actor(n).life = 0
+						actor(n).control = 0
+					ELSE
+						tileWrite actor(n).x, actor(n).y, 49
+						aUpdateTile actor(n).x, actor(n).y
+						soundEvent = SndTileGrow
+					END IF
+				END IF
+			END IF
+		END IF
+		
 	'CHECKPOINT
 	CASE 65
 		playerDeltaY = ABS(actor(n).y - playerY)
@@ -1623,7 +1693,13 @@ DO
 						w40char.text = "         PRESS UP TO ENTER LEVEL        |"
 						aPrint &HFFFF, &HE0E, 0, 0, hudBufferSeg, hudBufferOfs
 					ELSE
-						w40char.text = " LEVEL SCORE: " + STR$(player.levelScore(actor(n).jump)) 
+						w40char.text = " LEVEL SCORE:         COMPLETED: " 
+						a$ = STR$(player.levelScore(actor(n).jump))
+						mid$(w40char.text, 14, len(a$)) = a$
+						
+						a$ = STR$(player.levelCompletion(actor(n).jump)) + "%"
+						mid$(w40char.text, 33, 5) = a$
+						
 						mid$(w40char.text, 41, 1) = "|"
 						aPrint &HFFFF, &HE0F, 0, 0, hudBufferSeg, hudBufferOfs
 					END IF
@@ -1918,7 +1994,7 @@ END SUB
 	player.gotKeys = 0
 	player.gotChests = 0	
 	player.parent = 0
-	actor(2).flash = 20
+	actor(2).flash = 0
 	actor(2).lPrev = 1
 	actor(2).lNext = 3
 	actor(2).exist = 1
@@ -1942,7 +2018,7 @@ END SUB
 	playerOldX = -999
 	playerOldY = -999
 	
-	actor(3).flash = 20
+	actor(3).flash = 0
 	actor(3).control = 0
 	actor(3).frame = 11
 	actor(3).flags = 0
@@ -2360,7 +2436,23 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 20
 		actor(n).frame = 0
 		actor(n).spawner = spawner
-		
+	
+	CASE 30		'Button
+		actorListNew n
+		actor(n).jump = spawnerFlags
+		actor(n).control = 30
+		actor(n).spawner = spawner
+		actor(n).frame = 26
+	CASE 31 TO 32		'Door opener or Tile Grow
+		actorListNew n
+		actor(n).jump = spawnerFlags
+		actor(n).frame = 30
+		actor(n).control = 31
+		actor(n).anim = 0
+		actor(n).spawner = spawner
+		actor(n).dir = object
+		actor(n).visY = 40
+	
 	CASE 41	   'PICKUP GEM/KEY/ETC...
 		actorListNew n
 		actor(n).control = 41
@@ -2428,6 +2520,25 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		IF player.levelPrev = spawnerFlags THEN
 			actor(2).x = x
 			actor(2).y = y + 26
+		END IF
+	CASE 66
+		IF player.levelScore(spawnerFlags) THEN 
+			tileWrite x, y, 27
+		END IF
+	CASE 67
+		FOR c = 2 TO 9
+			IF player.levelScore(c) = 0 THEN level.spawner(spawner).object = 0
+		NEXT c
+		IF level.spawner(spawner).object THEN
+			actorListNew n
+			actor(n).jump = spawnerFlags
+			actor(n).frame = 38
+			actor(n).control = 31
+			actor(n).anim = 1
+			actor(n).spawner = spawner
+			actor(n).dir = 31
+			actor(n).visY = 50
+			actor(n).y = actor(n).y + 8
 		END IF
 	END SELECT
 END SUB
