@@ -19,6 +19,8 @@ DECLARE FUNCTION tileRead% (x%, y%)
 DECLARE FUNCTION menuGetByte% ()
 DECLARE FUNCTION menuGetWord% ()
 DECLARE SUB ProgressBar (progress%)
+DECLARE SUB SaveGame ()
+DECLARE SUB LoadGame ()
 
 DEFINT A-Z
 
@@ -198,7 +200,7 @@ SUB elfInit
 	'myPrint 2, 1, a$, &H20E0
 	'aPageFlip gfx.videoWrap, hudBufferSeg, hudBufferOfs, gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page XOR 1)
 	'myPrint 2, 4, "LOOKUPS...", &H7070
-	debugOut "lookups init"
+	'debugOut "lookups init"
 	initLookUps
 	w40char.seg = VARSEG(w40char.glyph1(32))
 	w40char.ofs = VARPTR(w40char.glyph1(32))
@@ -252,7 +254,7 @@ SUB elfInit
 	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
 	 MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
 	'------------------------------------------------------
-	debugOut "timer init"
+	'debugOut "timer init"
 	CALL aTimerStart
 	'-----------------------------------------------------------------------
 	' Setup keyboard
@@ -268,7 +270,7 @@ FUNCTION getSpawnSlot
 		IF actor(n).exist = 0 THEN getSpawnSlot = n: EXIT FUNCTION
 	NEXT n
 	getSpawnSlot = 60
-	debugOut "WARNING: All spawn slots occupied!"
+	'debugOut "WARNING: All spawn slots occupied!"
 END FUNCTION
 
 SUB handleCamera
@@ -906,7 +908,10 @@ SUB menuClear
 		actor(nn).lNext = 0
 		actor(nn).lPrev = 0
 		menuItem(n) = 0
-	NEXT n	
+	NEXT n
+	FOR n = 1 TO 60
+		IF actor(n).control = -16001 THEN actor(n).exist = 0
+	NEXT n
 END SUB
 
 '
@@ -943,4 +948,49 @@ END SUB
 SUB ProgressBar(progress%)
 	w40char.text = ".|"
 	aPrint gfx.videoWrap, &H0C0C, 8 + progress%, 0, &HB800, gfx.pageOfs(gfx.page)
+END SUB
+
+SUB LoadGame
+	fileOfs = 1 + player.saveSlot * 96
+	OPEN "savegame.sav" FOR BINARY AS #1
+		FOR n = 1 to 12
+			GET #1, fileOfs, player.levelScore(n)
+			fileOfs = fileOfs + 4
+			GET #1, fileOfs, player.levelCompletion(n)
+			fileOfs = fileOfs + 2
+			GET #1, fileOfs, player.levelTime(n)
+			fileOfs = fileOfs + 2
+		NEXT n
+	CLOSE #1
+END SUB
+
+SUB SaveGame
+	fileOfs = 1 + player.saveSlot * 96
+	OPEN "savegame.sav" FOR BINARY AS #1		
+		FOR n = 1 to 12
+			PUT #1, fileOfs, player.levelScore(n)
+			fileOfs = fileOfs + 4
+			PUT #1, fileOfs, player.levelCompletion(n)
+			fileOfs = fileOfs + 2
+			PUT #1, fileOfs, player.levelTime(n)
+			fileOfs = fileOfs + 2
+		NEXT n
+	CLOSE #1
+	fileOfs = 408 + player.saveSlot * 105
+	OPEN "menu.cmm" FOR BINARY AS #1
+		a$ = DATE$
+		PUT #1, fileOfs, a$
+		fileOfs = fileOfs + 35
+		a$ = "SCORE:          |"
+		PUT #1, fileOfs, a$
+		a$ = STR$(player.score)
+		fileOfs = fileOfs + 8
+		PUT #1, fileOfs, a$
+		fileOfs = fileOfs + 27
+		a$ = "COMPLETE:      %|"
+		PUT #1, fileOfs, a$
+		fileOfs = fileOfs + 12
+		a$ = STR$(player.scoreCounter)
+		PUT #1, fileOfs, a$
+	CLOSE #1
 END SUB

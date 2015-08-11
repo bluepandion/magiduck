@@ -113,7 +113,7 @@ TYPE spawnerType
 END TYPE
 
 TYPE levelType
-	spawner(0 TO 80) as spawnerType
+	spawner(0 TO 64) as spawnerType
 	playerX AS INTEGER
 	playerY AS INTEGER
 	tileSet AS STRING * 8
@@ -165,7 +165,6 @@ TYPE playerType
 	targetX AS INTEGER
 	targetY AS INTEGER
 	jumpRelease AS INTEGER
-	jumpPrev AS INTEGER
 	bouncing AS INTEGER
 	vecX AS INTEGER
 	vecY AS INTEGER
@@ -182,6 +181,8 @@ TYPE playerType
 	episode AS STRING * 8
 	levelScore(1 TO 12) AS LONG
 	levelCompletion(1 TO 12) AS INTEGER
+	levelTime(1 to 12) AS INTEGER
+	saveSlot AS INTEGER
 	gotKeys AS INTEGER
 	gotCoins AS INTEGER
 	gotChests AS INTEGER

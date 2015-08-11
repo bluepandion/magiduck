@@ -39,6 +39,8 @@ DECLARE SUB handleBehaviors ()
 DECLARE SUB main ()
 DECLARE SUB quit ()
 DECLARE FUNCTION getSpawnSlot% ()
+DECLARE SUB SaveGame
+DECLARE SUB LoadGame
 
 'DECLARE SUB oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo ()
 
@@ -122,10 +124,10 @@ SUB damagePlayer
 		player.hp = player.hp + (player.hp > 0)
 		actor(2).flash = 40
 		aSoundFX 0, SndDamage
-		'hudUpdate 2
-		w40char.text = SPACE$(40) + "|"
-		aPrint &HFFFF, &HC040, 0, 0, hudBufferSeg, hudBufferOfs
-		player.hudLock = 4
+		hudUpdate 2
+		'w40char.text = SPACE$(40) + "|"
+		'aPrint &HFFFF, &HC040, 0, 0, hudBufferSeg, hudBufferOfs
+		'player.hudLock = 4
 	END IF
 END SUB
 
@@ -232,7 +234,12 @@ CASE 262
 		  player.scoreCounterInc = player.gotKeys + player.gotChests + player.gotCoins
 		  player.scoreCounterTarget = (player.scoreCounterInc / player.scoreCounter) * 100
 		  
-		  IF player.levelCompletion(player.level) < player.scoreCounterTarget THEN player.levelCompletion(player.level) = player.scoreCounterTarget
+		  IF player.levelCompletion(player.level) < player.scoreCounterTarget THEN 
+			player.levelCompletion(player.level) = player.scoreCounterTarget
+		  END IF
+		  IF player.time > player.levelTime(player.level) THEN
+			player.levelTime(player.level) = player.time
+		  END IF
 		  
 		  actor(2).jump = actor(2).jump + 1
 
@@ -284,21 +291,24 @@ CASE 262
                actor(2).jump = 4
 			   hudUpdate 4
           CASE 2
-               actor(2).jump = 99
-               soundEvent = 92
-			   hudUpdate 4
+				actor(2).jump = 99
+				hudUpdate 4
+				IF player.score > player.levelScore(player.level) THEN
+					player.levelScore(player.level) = player.score
+				END IF				
+				player.levelScore(1) = 0
+				for c = 2 to 12
+					player.levelScore(1) = player.levelScore(1) + player.levelScore(c)
+				next c
+				SaveGame
+				soundEvent = 92
           END SELECT
 
         CASE 99 TO 100
-            actor(2).jump = actor(2).jump + 1
-			IF player.score > player.levelScore(player.level) THEN
-				IF player.levelscore(player.level) > 0 THEN 
-					c = &H0E0E OR player.levelColor
-					myPrint 8, 43, "YOU IMPROVED YOUR SCORE", c
-				END IF
-				player.levelScore(player.level) = player.score
-			END IF
-            c = &H0707 OR player.levelColor
+            actor(2).jump = actor(2).jump + 1			
+			c = &H0E0E OR player.levelColor
+			myPrint 12, 43, "GAME SAVED", c
+			c = &H0707 OR player.levelColor
 			myPrint 8, 46, "PRESS SPACE TO CONTINUE", c
         
 		CASE 101
@@ -450,11 +460,11 @@ CASE 258
 				CASE 1
 					player.menuMode = 999
 					player.menuContext = 0
-				CASE 4	'quit to main menu
+				CASE 2	'quit to main menu
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 5
 					player.menuMode = 999
-				CASE 5	'quit to dos
+				CASE 3	'quit to dos
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
 					player.menuMode = 999
@@ -502,8 +512,12 @@ CASE 258
 		CASE 10 'Main menu
 				SELECT CASE player.menuItem
 				CASE 1	'new game
-					player.level = 1
-					player.menuContext = -1
+					player.menuContext = 12
+					player.menuContextPrev = 1
+					player.menuMode = 999
+				CASE 2
+					player.menuContext = 12
+					player.menuContextPrev = 2
 					player.menuMode = 999
 				CASE 3
 					player.menuContextPrev = player.menuContext
@@ -521,6 +535,43 @@ CASE 258
 					player.menuContextPrev = 0
 					player.menuMode = 999
 				END SELECT
+		CASE 12	'Load Game
+			IF player.menuItem < 4 THEN
+				player.saveSlot = player.menuItem - 1
+				loadGame
+				IF player.menuContextPrev = 1 THEN
+					IF player.levelScore(1) = 0 THEN
+						player.level = 1
+						player.menuContext = -1
+						player.menuMode = 999
+					ELSE
+						player.menuContext = 13
+						player.menuMode = 999
+					END IF
+				ELSE
+					player.level = 1
+					player.menuContext = -1
+					player.menuMode = 999
+				END IF
+			ELSE
+				player.menuContext = 10
+				player.menuMode = 999
+			END IF
+		CASE 13	'Clear save data?
+			IF player.menuItem = 2 THEN
+				player.level = 1
+				FOR c = 1 to 12
+					player.levelScore(c) = 0
+					player.levelCompletion(c) = 0
+					player.levelTime(c) = 300
+				NEXT c
+				player.menuContext = -1
+				player.menuContextPrev = 1
+				player.menuMode = 999
+			ELSE
+				player.menuContext = 12
+				player.menuMode = 999
+			END IF
 		END SELECT
 	'--------------------------------------------------------------------------
 	CASE 999 to 1000		' Exit menu: clear screen
@@ -2041,9 +2092,7 @@ END SUB
 	updateText = 1
 	
 	IF player.level = 1 THEN
-		for n = 1 to 10
-			player.score = player.score + player.levelScore(n)
-		next n
+		player.score = player.levelScore(1)
 	END IF
 	
 	IF player.level = 0 THEN
