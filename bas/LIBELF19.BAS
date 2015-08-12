@@ -92,11 +92,11 @@ SUB elfInit
 	COLOR 7, 0
 	PRINT 
 	PRINT "  Alpha 2 (2015-08-02)"
-	PRINT "  This version of MagiDuck has never been 
-	PRINT "  tested on real hardware."
+	PRINT "  This version of MagiDuck has never"
+	PRINT "  been tested on real hardware."
 	COLOR 12, 0
 	PRINT
-	PRINT "  You are running this software at your 
+	PRINT "  You are running this software at your"
 	PRINT "  own risk!"
 	PRINT	
 	COLOR 7, 0
@@ -640,7 +640,7 @@ SUB quit
 	 PRINT gfx.pageOfs(0), gfx.pageOfs(1)
 	 C = 1
 
-	 FOR n = 1 TO 80
+	 FOR n = 1 TO 64
 	  C = C + 4
 	  COLOR (n AND 1) + 7
 	  PRINT HEX$(level.spawner(n).object); TAB(C);
@@ -659,21 +659,11 @@ SUB quit
 	 PRINT
 	 COLOR 7
 	 PRINT " Thanks for playing!"
-	 PRINT " If you found bugs or things to improve, please send your feedback to"
-	 PRINT "  toni.svenstrom @ hotmail.com"
+	 PRINT " If you found bugs or things to improve,"
+	 PRINT " please send your feedback to"
+	 PRINT " toni.svenstrom @ hotmail.com"
 	 PRINT
 	 END
-	 for n = 1 to 60
-	  print n;
-	  print animation(n).offset(0);
-	  print animation(n).offset(1);
-	  print animation(n).x;
-	  print animation(n).y;
-	  print animation(n).w;
-	  print animation(n).h;
-	  print animation(n).jump
-	 next n
-	END
 END SUB
 
 SUB screenFakePos (y)
@@ -976,21 +966,29 @@ SUB SaveGame
 			fileOfs = fileOfs + 2
 		NEXT n
 	CLOSE #1
+	
+	player.levelCompletion(1) = 0
+	FOR n = 2 TO 12
+		player.levelCompletion(1) = player.levelCompletion(1) + player.levelCompletion(n)
+	NEXT n
+	player.levelCompletion(1) = player.levelCompletion(1) / 11
+	
 	fileOfs = 408 + player.saveSlot * 105
 	OPEN "menu.cmm" FOR BINARY AS #1
 		a$ = DATE$
 		PUT #1, fileOfs, a$
 		fileOfs = fileOfs + 35
-		a$ = "SCORE:          |"
+		a$ = "SCORE:         |"
 		PUT #1, fileOfs, a$
-		a$ = STR$(player.score)
-		fileOfs = fileOfs + 8
+		a$ = STR$(player.levelScore(1))
+		n = fileOfs
+		fileOfs = fileOfs + 15 - LEN(a$)
 		PUT #1, fileOfs, a$
-		fileOfs = fileOfs + 27
-		a$ = "COMPLETE:      %|"
+		fileOfs = n + 35
+		a$ = "COMPLETE:     %|"
 		PUT #1, fileOfs, a$
-		fileOfs = fileOfs + 12
-		a$ = STR$(player.scoreCounter)
+		a$ = STR$(player.levelCompletion(1))
+		fileOfs = fileOfs + 14 - LEN(a$)
 		PUT #1, fileOfs, a$
 	CLOSE #1
 END SUB

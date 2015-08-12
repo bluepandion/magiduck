@@ -515,10 +515,12 @@ CASE 258
 					player.menuContext = 12
 					player.menuContextPrev = 1
 					player.menuMode = 999
+					screenResetPos actor(2).x - 20, actor(2).y + 84
 				CASE 2
 					player.menuContext = 12
 					player.menuContextPrev = 2
 					player.menuMode = 999
+					screenResetPos actor(2).x - 20, actor(2).y + 20
 				CASE 3
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 11
@@ -556,6 +558,7 @@ CASE 258
 			ELSE
 				player.menuContext = 10
 				player.menuMode = 999
+				screenResetPos actor(2).x - 20, actor(2).y - 52
 			END IF
 		CASE 13	'Clear save data?
 			IF player.menuItem = 2 THEN
@@ -563,7 +566,7 @@ CASE 258
 				FOR c = 1 to 12
 					player.levelScore(c) = 0
 					player.levelCompletion(c) = 0
-					player.levelTime(c) = 300
+					player.levelTime(c) = 0
 				NEXT c
 				player.menuContext = -1
 				player.menuContextPrev = 1
@@ -1095,7 +1098,7 @@ DO
 		ELSE
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF playerDeltaX < 4 AND playerDeltaY < 3 AND playerDeltaY > -3 AND player.vecY > -1 THEN
+			IF playerDeltaX < 3 AND playerDeltaY < 4 AND playerDeltaY > -3 AND player.vecY > -1 THEN
 				soundEvent = 115
 				actor(2).y = actor(n).y
 				player.vecY = -30
@@ -1116,7 +1119,7 @@ DO
 	CASE 2
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - 9 - playerY)
-		IF playerDeltaX < 4 AND playerDeltaY < 2 AND playerDeltaY > -3 AND player.vecY > -1 THEN
+		IF playerDeltaX < 3 AND playerDeltaY < 2 AND playerDeltaY > -3 AND player.vecY > -1 THEN
 			soundEvent = 115
 			player.vecY = -30
 			player.Bouncing = 20
@@ -1394,31 +1397,37 @@ DO
        		
 	'Dragon
 	CASE 3
-		actor(n).count = actor(n).count + 1
-		IF actor(n).count < 32 THEN
-			c = actor(2).x - 15
+		IF actor(n).dir = 0 THEN
+			playerDeltaX = ABS(actor(n).x - playerX)
+			playerDeltaY = ABS(actor(n).y - playerY)
+			IF playerDeltaX < 15 AND playerDeltaY < 35 THEN actor(n).dir = 1 
 		ELSE
-			c = actor(2).x + 15
-			actor(n).count = actor(n).count AND 63
-		END IF
-		IF actor(n).x < c THEN actor(n).vecX = actor(n).vecX + 2
-        IF actor(n).x > c THEN actor(n).vecX = actor(n).vecX - 2
-        
-        IF actor(n).y < actor(2).y - 24 THEN actor(n).vecY = actor(n).vecY + 2
-        IF actor(n).y > actor(2).y - 19 THEN actor(n).vecY = actor(n).vecY - 3
-        IF actor(n).vecY < -10 THEN actor(n).vecY = -10
-        IF actor(n).vecY > 10 THEN actor(n).vecY = 10
-        IF actor(n).vecX < -5 THEN actor(n).vecX = -5
-        IF actor(n).vecX > 5 THEN actor(n).vecX = 5
-        IF playerDeltaX < 6 THEN
-			IF actor(n).jump < 1 THEN
-				spawnObject actor(n).x, actor(n).y + 1, 112, 0, 0
-				actor(n).jump = 24
-				soundEvent = 173
+			actor(n).count = actor(n).count + 1
+			IF actor(n).count < 32 THEN
+				c = actor(2).x - 15
+			ELSE
+				c = actor(2).x + 15
+				actor(n).count = actor(n).count AND 63
 			END IF
+			IF actor(n).x < c THEN actor(n).vecX = actor(n).vecX + 2
+			IF actor(n).x > c THEN actor(n).vecX = actor(n).vecX - 2
+			
+			IF actor(n).y < actor(2).y - 24 THEN actor(n).vecY = actor(n).vecY + 2
+			IF actor(n).y > actor(2).y - 19 THEN actor(n).vecY = actor(n).vecY - 3
+			IF actor(n).vecY < -10 THEN actor(n).vecY = -10
+			IF actor(n).vecY > 10 THEN actor(n).vecY = 10
+			IF actor(n).vecX < -5 THEN actor(n).vecX = -5
+			IF actor(n).vecX > 5 THEN actor(n).vecX = 5
+			IF playerDeltaX < 6 THEN
+				IF actor(n).jump < 1 THEN
+					spawnObject actor(n).x, actor(n).y + 1, 112, 0, 0
+					actor(n).jump = 24
+					soundEvent = 173
+				END IF
+			END IF
+			actor(n).jump = actor(n).jump + (actor(n).jump > 0)
 		END IF
-		actor(n).jump = actor(n).jump + (actor(n).jump > 0)
-
+		
 	'Drooly
 	CASE 4
 		IF actor(n).vecX THEN
@@ -1744,12 +1753,15 @@ DO
 						w40char.text = "         PRESS UP TO ENTER LEVEL        |"
 						aPrint &HFFFF, &HE0E, 0, 0, hudBufferSeg, hudBufferOfs
 					ELSE
-						w40char.text = " LEVEL SCORE:         COMPLETED: " 
+						w40char.text = " SCORE         TIME       COMPLETE     " 
 						a$ = STR$(player.levelScore(actor(n).jump))
-						mid$(w40char.text, 14, len(a$)) = a$
+						mid$(w40char.text, 7, len(a$)) = a$
+						
+						a$ = STR$(player.levelTime(actor(n).jump))
+						mid$(w40char.text, 20, 5) = a$
 						
 						a$ = STR$(player.levelCompletion(actor(n).jump)) + "%"
-						mid$(w40char.text, 33, 5) = a$
+						mid$(w40char.text, 35, 5) = a$
 						
 						mid$(w40char.text, 41, 1) = "|"
 						aPrint &HFFFF, &HE0F, 0, 0, hudBufferSeg, hudBufferOfs
@@ -2099,13 +2111,9 @@ END SUB
 		'hudTextLoad &H6E0, 0
 		player.hudLock = 999
 		actor(2).control = 258
-		actor(2).frame = 1
+		actor(2).frame = 0
 		player.menuContext = 10
 		screenResetPos actor(2).x - 20, actor(2).y - 52
-		for n = 1 to 16
-			player.levelScore(n) = 0
-		next n
-		player.score = 0
 	ELSE
 		'hudTextLoad &H1E0 + player.level * 160, 0
 		player.hudLock = 0
@@ -2360,6 +2368,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).count = 0
 		actor(n).visY = 55
 		actor(n).visX = 55
+		actor(n).dir = 0
 		actor(n).spawner = spawner
 	CASE 4	   'DROOLY
 		actorListNew n
