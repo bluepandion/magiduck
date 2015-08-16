@@ -955,9 +955,9 @@ SUB LoadGame
 END SUB
 
 SUB SaveGame
-	fileOfs = 1 + player.saveSlot * 96
+	fileOfs = 1 + player.saveSlot * 128
 	OPEN "savegame.sav" FOR BINARY AS #1		
-		FOR n = 1 to 12
+		FOR n = 1 to 16
 			PUT #1, fileOfs, player.levelScore(n)
 			fileOfs = fileOfs + 4
 			PUT #1, fileOfs, player.levelCompletion(n)
@@ -968,27 +968,28 @@ SUB SaveGame
 	CLOSE #1
 	
 	player.levelCompletion(1) = 0
-	FOR n = 2 TO 12
+	FOR n = 2 TO 16
 		player.levelCompletion(1) = player.levelCompletion(1) + player.levelCompletion(n)
 	NEXT n
-	player.levelCompletion(1) = player.levelCompletion(1) / 11
+	player.levelCompletion(1) = player.levelCompletion(1) / 15
 	
-	fileOfs = 408 + player.saveSlot * 105
+	fileOfs = 408 + player.saveSlot * 90
 	OPEN "menu.cmm" FOR BINARY AS #1
 		a$ = DATE$
 		PUT #1, fileOfs, a$
-		fileOfs = fileOfs + 35
-		a$ = "SCORE:         |"
+		fileOfs = fileOfs + 30
+		'a$ = "SCORE:         |"
+		'PUT #1, fileOfs, a$
+		a$ = STR$(player.levelScore(1)) + " P|"
+		'n = fileOfs
+		'fileOfs = fileOfs + 15 - LEN(a$)
 		PUT #1, fileOfs, a$
-		a$ = STR$(player.levelScore(1))
-		n = fileOfs
-		fileOfs = fileOfs + 15 - LEN(a$)
-		PUT #1, fileOfs, a$
-		fileOfs = n + 35
-		a$ = "COMPLETE:     %|"
-		PUT #1, fileOfs, a$
-		a$ = STR$(player.levelCompletion(1))
-		fileOfs = fileOfs + 14 - LEN(a$)
+		'fileOfs = n + 30
+		'a$ = "COMPLETE:     %|"
+		'PUT #1, fileOfs, a$
+		fileOfs = fileOfs + 30
+		a$ = STR$(player.levelCompletion(1)) + " %|"
+		'fileOfs = fileOfs + 14 - LEN(a$)
 		PUT #1, fileOfs, a$
 	CLOSE #1
 END SUB

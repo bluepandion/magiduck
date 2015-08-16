@@ -1,4 +1,4 @@
-a$ = STRING$(96 * 3, 0)
+a$ = STRING$(128 * 3, 0)
 OPEN "savegame.sav" FOR OUTPUT AS #1
  PRINT #1, a$
 CLOSE #1

@@ -179,9 +179,9 @@ TYPE playerType
 	tileSet AS STRING * 8
 	spriteSet AS STRING * 8
 	episode AS STRING * 8
-	levelScore(1 TO 12) AS LONG
-	levelCompletion(1 TO 12) AS INTEGER
-	levelTime(1 to 12) AS INTEGER
+	levelScore(1 TO 16) AS LONG
+	levelCompletion(1 TO 16) AS INTEGER
+	levelTime(1 to 16) AS INTEGER
 	saveSlot AS INTEGER
 	gotKeys AS INTEGER
 	gotCoins AS INTEGER

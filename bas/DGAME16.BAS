@@ -232,7 +232,7 @@ CASE 262
 		  
 		  player.scoreCounter = level.keys + level.keys + level.coins
 		  player.scoreCounterInc = player.gotKeys + player.gotChests + player.gotCoins
-		  player.scoreCounterTarget = (player.scoreCounterInc / player.scoreCounter) * 100
+		  player.scoreCounterTarget = (player.scoreCounterInc / player.scoreCounter) * 50 + 50
 		  
 		  IF player.levelCompletion(player.level) < player.scoreCounterTarget THEN 
 			player.levelCompletion(player.level) = player.scoreCounterTarget
@@ -297,7 +297,7 @@ CASE 262
 					player.levelScore(player.level) = player.score
 				END IF				
 				player.levelScore(1) = 0
-				for c = 2 to 12
+				for c = 2 to 16
 					player.levelScore(1) = player.levelScore(1) + player.levelScore(c)
 				next c
 				SaveGame
@@ -563,7 +563,7 @@ CASE 258
 		CASE 13	'Clear save data?
 			IF player.menuItem = 2 THEN
 				player.level = 1
-				FOR c = 1 to 12
+				FOR c = 1 to 16
 					player.levelScore(c) = 0
 					player.levelCompletion(c) = 0
 					player.levelTime(c) = 0
@@ -1119,7 +1119,7 @@ DO
 	CASE 2
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - 9 - playerY)
-		IF playerDeltaX < 3 AND playerDeltaY < 2 AND playerDeltaY > -3 AND player.vecY > -1 THEN
+		IF playerDeltaX < 4 AND playerDeltaY < 2 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 			soundEvent = 115
 			player.vecY = -30
 			player.Bouncing = 20
@@ -1247,8 +1247,8 @@ DO
 	'Enemy bullet
 	CASE 102
 		playerDeltaX = ABS(actor(n).x - playerX)
-		playerDeltaY = ABS(actor(n).y - playerY)
-		IF playerDeltaX < 3 AND playerDeltaY < 10 THEN
+		playerDeltaY = actor(n).y - playerY
+		IF playerDeltaX < 3 AND playerDeltaY < 7 AND playerDeltaY > -6 THEN
 			damagePlayer
 			actor(n).life = 0
 		END IF
@@ -1734,6 +1734,9 @@ DO
 			actor(2).count = 0
 			actor(n).control = 0
 			actor(n).exist = 0
+			FOR b = 4 to 60
+				actor(b).exist = 0
+			NEXT b
 			FOR b = 0 TO 63 STEP 8
 				xs = angle.x(b) \ 2
 				ys = angle.y(b) \ 2
