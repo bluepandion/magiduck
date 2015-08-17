@@ -53,8 +53,8 @@ aPageFlip PROC
 	loop copyHud
 	
 		;lodsb							;CL = Video adapter (stored at the
-		cmp vAdapter, 1
-		jne egaVgaPageflip
+		cmp vAdapter, 5
+		ja egaVgaPageflip
 	
 	;---------------------------------------------------------------------------
 	; CGA Wait for vertical overscan and retrace.
@@ -1821,7 +1821,7 @@ test_MCGA:							;Test for MCGA to be sure.
 	xor  bl,bl        				;null BL so it's set up for non-PS/2 
 	mov  ax, 1A00h
 	int  10h
-	cmp  bl, 0Ah       				;MCGA returns $0A..$0C 
+	cmp  bl, 0Ah       				;MCGA returns 0x0A..0x0C 
 	jb   VGAdetected
 	cmp  bl, 0Ch
 	jg   VGAdetected
@@ -1963,7 +1963,7 @@ set_EGA:
 set_CGA_32k:
 	mov si, vCGAregs
 	mov vWrap, 32767
-	jmp startLoopVideoRegs
+	jmp set_EGAVGA
 	
 set_CGA:
 	mov si, vCGAregs

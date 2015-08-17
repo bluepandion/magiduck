@@ -307,7 +307,7 @@ CASE 262
         CASE 99 TO 100
             actor(2).jump = actor(2).jump + 1			
 			c = &H0E0E OR player.levelColor
-			myPrint 12, 43, "GAME SAVED", c
+			myPrint 15, 43, "GAME SAVED", c
 			c = &H0707 OR player.levelColor
 			myPrint 8, 46, "PRESS SPACE TO CONTINUE", c
         
@@ -395,6 +395,7 @@ CASE 258
 		aSoundStop
 		handleScroll
 		menuLoad player.menuContext - 1
+		
 		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		w40char.text = " ARROW KEYS TO MOVE ... ENTER TO SELECT |"
 		aPrint &HFFFF, &H0E0E, 0, 0, hudBufferSeg, hudBufferOfs
@@ -407,6 +408,7 @@ CASE 258
 		player.menuMode = 2
 		player.menuHLcolor = &HCECF
 		soundEvent = SndPause
+		
 	CASE 2		'Item highlight and wait for input
 		IF actor(2).count > 0 THEN
 			IF actor(2).count > 3 THEN
@@ -468,7 +470,7 @@ CASE 258
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
 					player.menuMode = 999
-				CASE 7	'forfeit
+				CASE 7	'forfeit
 					player.menuMode = 999
 					player.menuContext = -1
 					player.level = 1
@@ -1079,7 +1081,9 @@ DO
 			IF actor(n).dir < actor(n).life THEN
 				spawnObject actor(n).x, actor(n).y - 2, 41, 22, 0
 				soundEvent = SndEnemyDrop
-				IF actor(n).life > -48 THEN actor(n).count = 72
+				actor(n).vecY = -10
+				actor(n).y = actor(n).y - 2
+				IF actor(n).life > -48 THEN actor(n).count = 72				
 			END IF
 			c = tileRead(actor(n).x, actor(n).y + 5)
 			IF c < 30 THEN 
@@ -1093,7 +1097,6 @@ DO
 				actor(n).life = 5
 				actor(n).control = 0
 				actor(n).collider = 0
-				actor(n).vecY = -6
 			END IF
 		ELSE
 			playerDeltaX = ABS(actor(n).x - playerX)
@@ -1278,12 +1281,12 @@ DO
 		IF actor(n).life < 15 THEN
 			c = tileRead(actor(n).x, actor(n).y)
 			IF c > 29 THEN
-				actor(n).life = 12
+				actor(n).life = 8
 				actor(n).count = 10
 				actor(n).control = 0
 				actor(n).vecY = -5
 				actor(n).y = actor(n).y AND &HFFF8
-				actor(n).flash = 12
+				actor(n).flash = 24
 				soundEvent = 44
 			END IF
 		END IF
@@ -1400,7 +1403,7 @@ DO
 		IF actor(n).dir = 0 THEN
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF playerDeltaX < 15 AND playerDeltaY < 35 THEN actor(n).dir = 1 
+			IF playerDeltaX < 25 AND playerDeltaY < 40 THEN actor(n).dir = 1 
 		ELSE
 			actor(n).count = actor(n).count + 1
 			IF actor(n).count < 32 THEN
@@ -2512,7 +2515,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).anim = 0
 		actor(n).spawner = spawner
 		actor(n).dir = object
-		actor(n).visY = 40
+		actor(n).visY = 40		
 	
 	CASE 41	   'PICKUP GEM/KEY/ETC...
 		actorListNew n

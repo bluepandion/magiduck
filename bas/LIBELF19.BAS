@@ -810,15 +810,13 @@ END SUB
 
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
-		
 	menuClear
-	
 	IF menuNo% > 9 THEN
 		OPEN "menu.cmm" FOR BINARY AS #1
 		menuLoadSrc = 1
 	ELSE
 		menuLoadSrc = 0
-	END IF
+	END IF	
 	
 	menuLoadPos = menuNo% * 6 + 1
 	fileOfs = menuGetWord%
@@ -833,6 +831,7 @@ SUB menuLoad (menuNo%)
 	tileCopyList(1, gfx.page).y = 255
 	aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), loadInt
 	prevGfxItem = 1
+	
 	for item = 1 to itemCount
 		itemIDX = menuGetWord%
 		n = getSpawnSlot
@@ -893,10 +892,12 @@ END SUB
 SUB menuClear
 	FOR n = 1 to 16
 		nn = menuItem(n)
-		actor(nn).exist = 0
-		actor(nn).frame = 0
-		actor(nn).lNext = 0
-		actor(nn).lPrev = 0
+		IF nn > 0 THEN
+			actor(nn).exist = 0
+			actor(nn).frame = 0
+			actor(nn).lNext = 0
+			actor(nn).lPrev = 0
+		END IF
 		menuItem(n) = 0
 	NEXT n
 	FOR n = 1 TO 60
