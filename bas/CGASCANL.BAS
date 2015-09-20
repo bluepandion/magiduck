@@ -1,0 +1,22 @@
+'128   8
+'10 00 10 00
+
+'   32    2
+'00 10 00 10
+
+'128 64 32 4
+'11 10 01 00
+
+DEF SEG = &HB800
+SCREEN 1
+POKE 288, 228
+n = 300
+n = n XOR 8192
+PRINT n
+POKE n, 136
+n = n XOR 8192
+PRINT n
+POKE n, 34
+
+PRINT 128 OR 8
+

@@ -16,7 +16,9 @@ TYPE actorConv
  flags AS INTEGER
 END TYPE
 
-DIM SHARED actorConvert(1 TO 160) AS actorConv
+DIM SHARED actorConvert(1 TO 210) AS actorConv
+
+DIM SHARED levelMenuRef(0 TO 15) AS INTEGER
 
 DIM strGet AS STRING * 1
 
@@ -46,7 +48,7 @@ listFile$ = "lvlconv.txt" 'COMMAND$
 OPEN listFile$ FOR BINARY AS #1
  PRINT LOF(1)
  IF LOF(1) < 1 THEN
-  PRINT "File does not exist."
+  PRINT "File does not exist "; listFile$
   CLOSE #1
   END
  END IF
@@ -116,6 +118,11 @@ OPEN listFile$ FOR INPUT AS #1
 	INPUT #1, level.tileSet
 	INPUT #1, level.spriteSet
 	INPUT #1, levelNo
+	n = -1
+	DO
+		n = n + 1
+		INPUT #1, levelMenuRef(n)
+	LOOP WHILE levelMenuRef(n) > -1
 	level.playerX = 0
 	level.playerY = 0
 	token$ = ""
@@ -252,12 +259,13 @@ OPEN listFile$ FOR INPUT AS #1
  LOOP WHILE NOT EOF(1)
 CLOSE #1
 
+'-------------------------------------------------------------------------
+'-------------------------------------------------------------------------
+'-------------------------------------------------------------------------
+
 SUB addActor (actor, wave, x, y)
-
  STATIC aRow
-
  IF aRow = 0 THEN aRow = 8
-
  pRow = CSRLIN
 
  VIEW PRINT 8 TO 25
@@ -268,11 +276,14 @@ SUB addActor (actor, wave, x, y)
 	nn = 16 * wave + spawner
 	IF level.spawner(nn).object = 0 THEN
 	 COLOR 7
-	 IF actorConvert(actor).id = 44 THEN level.keys = level.keys + 1
+	 IF actorConvert(actor).id = 44 THEN level.keys = level.keys + 1	 
 	 level.spawner(nn).object = actorConvert(actor).id
 	 level.spawner(nn).x = actorConvert(actor).xOfs + x
 	 level.spawner(nn).y = actorConvert(actor).yOfs + y
 	 level.spawner(nn).flags = actorConvert(actor).flags
+	 IF actorConvert(actor).id = 33 THEN 
+		level.spawner(nn).flags = levelMenuRef(actorConvert(actor).flags)
+	 END IF
 	 PRINT "   Wave:"; wave; " Spawner:"; spawner, "Actor: "; actor,
 	 PRINT actorConvert(actor).name, x; ","; y
 	 spawner = 999: GOTO exitWindow
@@ -295,64 +306,59 @@ SUB addActor (actor, wave, x, y)
 	pause
 	COLOR 7
  END IF
-
 exitWindow:
  aRow = CSRLIN
  VIEW PRINT 1 TO 7
  LOCATE pRow, , 1
-
 END SUB
 
 SUB clearLevel
- FOR n = 0 TO 80
-  level.spawner(n).object = 0
-  level.spawner(n).x = 0
-  level.spawner(n).y = 0
-  level.spawner(n).flags = 0
- NEXT n
+	FOR n = 0 TO 80
+		level.spawner(n).object = 0
+		level.spawner(n).x = 0
+		level.spawner(n).y = 0
+		level.spawner(n).flags = 0
+	NEXT n
 END SUB
 
 SUB exitCode (code)
- SELECT CASE code
-  CASE 1
-	PRINT "Too many actors per wave."
- END SELECT
- END
+	SELECT CASE code
+		CASE 1
+			PRINT "Too many actors per wave."
+		END SELECT
+	END
 END SUB
 
 SUB killOldPak (file$)
- OPEN file$ + ".clp" FOR BINARY AS #2
-  n = LOF(1)
- CLOSE #2
- IF n THEN KILL file$ + ".clp"
- BEEP
+	OPEN file$ + ".clp" FOR BINARY AS #2
+		n = LOF(1)
+	CLOSE #2
+	IF n THEN KILL file$ + ".clp"
+	BEEP
 END SUB
 
 SUB pause
-
-r = CSRLIN
-c = POS(0)
-cc = 0
-COLOR 14
-LOCATE 25, 65, 1: PRINT "continue y/n";
-DO
-d$ = INKEY$
-LOOP WHILE d$ = ""
-IF LCASE$(d$) = "n" THEN END
-COLOR 7
-LOCATE 25, 65, 0: PRINT "            "
-LOCATE r, c, 0
+	r = CSRLIN
+	c = POS(0)
+	cc = 0
+	COLOR 14
+	LOCATE 25, 65, 1: PRINT "continue y/n";
+	DO
+		d$ = INKEY$
+		LOOP WHILE d$ = ""
+	IF LCASE$(d$) = "n" THEN END
+	COLOR 7
+	LOCATE 25, 65, 0: PRINT "            "
+	LOCATE r, c, 0
 END SUB
 
 SUB saveLevel (file$, No)
-
 	STATIC tile AS STRING * 1
 	STATIC prevTile AS STRING * 1
 	STATIC rleCount AS INTEGER
 	STATIC byte AS STRING * 1
 
 	OPEN file$ + ".clp" FOR BINARY AS #2
-
 		PUT #2, No * 2 + 1, ofsDATA
 
 		PUT #2, ofsDATA, level.playerX
@@ -399,7 +405,6 @@ SUB saveLevel (file$, No)
 				ofsDATA = ofsDATA + 9
 			END IF
 		NEXT n
-		
 	CLOSE #2
 END SUB
 
