@@ -1440,6 +1440,17 @@ shl ax, 1
 shl ax, 1
 add di, ax						
 
+cmp	di, gfxTileBuffer			;Is the draw offset inside the buffer?
+jae	offsetInAbove
+jmp	exit
+offsetInAbove:
+mov ax, 7121
+add	ax, di
+cmp	di, ax
+jb	offsetInBelow
+jmp	exit
+offsetInBelow:
+
 ;---------------------------------------------------------------------------
 
 xor ax, ax						;AX = 0
