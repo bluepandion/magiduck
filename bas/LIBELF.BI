@@ -141,7 +141,7 @@ TYPE collisionType
 	y1 AS INTEGER
 END TYPE
 
-TYPE playerType
+TYPE playerType	
 	score AS LONG
 	secrets AS INTEGER
 	lives AS INTEGER
@@ -164,11 +164,14 @@ TYPE playerType
 	menuHLcolor AS INTEGER
 	targetX AS INTEGER
 	targetY AS INTEGER
+	onFloor AS INTEGER
 	jumpRelease AS INTEGER
-	bouncing AS INTEGER
+	bouncing AS INTEGER	
+	inWater AS INTEGER
+	supaFly AS INTEGER
+	canJump AS INTEGER
 	vecX AS INTEGER
-	vecY AS INTEGER
-	walkCounter AS INTEGER
+	vecY AS INTEGER	
 	scoreCounter AS LONG
 	scoreDelta AS LONG
 	scoreCounterTarget AS LONG
