@@ -163,13 +163,11 @@ TYPE playerType
 	menuPrev AS INTEGER
 	menuHLcolor AS INTEGER
 	targetX AS INTEGER
-	targetY AS INTEGER
-	onFloor AS INTEGER
+	targetY AS INTEGER	
 	jumpRelease AS INTEGER
 	bouncing AS INTEGER	
 	inWater AS INTEGER
-	supaFly AS INTEGER
-	canJump AS INTEGER
+	supaFly AS INTEGER	
 	vecX AS INTEGER
 	vecY AS INTEGER	
 	scoreCounter AS LONG

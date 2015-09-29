@@ -8,6 +8,13 @@ DECLARE SUB exitCode (code%)
 
 '$INCLUDE: 'libelf.bi'
 
+CONST CScoreDiamond = 50
+CONST CScoreDiamondBig = 50
+CONST CScoreChest = 50
+CONST CScoreKey = 50
+CONST CScoreCoin = 50
+CONST CScorePowerOrb = 50
+
 TYPE actorConv
  name AS STRING * 6
  id AS INTEGER
@@ -28,6 +35,9 @@ DIM SHARED rowDebug
 DIM SHARED levelStr$
 
 DIM SHARED ofsDATA AS INTEGER
+
+DIM SHARED maxScore AS LONG
+
 ofsDATA = 32
 
 rowDebug = 8
