@@ -112,10 +112,11 @@
 "maps"
 "..\convert\logo.tmx", "logotile, "sprites0", 0, -1
 "..\convert\hubworld.tmx", "tileset2", "sprites0", 1, -1
+"..\convert\court1.tmx", "tileset0", "sprites0", 2, -1
 "..\convert\mazetowr.tmx", "tileset0", "sprites0", 2, -1
-"..\convert\chntower.tmx", "tileset0", "sprites0", 3, -1
-"..\convert\hicoin.tmx", "tileset0", "sprites0", 4, -1
-"..\convert\level2.tmx", "tileset1", "sprites0", 5, -1
+"..\convert\hicoin.tmx", "tileset0", "sprites0", 3, -1
+"..\convert\chntower.tmx", "tileset0", "sprites0", 4, -1
+"..\convert\foresta.tmx", "tileset1", "sprites0", 5, -1
 "..\convert\elevator.tmx", "tileset3", "sprites0", 6, -1
 "..\convert\skulls.tmx", "tileset0", "sprites0", 7, -1
 "..\convert\pearltwr.tmx", "tileset1", "sprites0", 8, -1

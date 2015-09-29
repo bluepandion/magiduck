@@ -1075,7 +1075,7 @@ DO
 	CASE 201
 		IF actor(n).exist = 1 THEN
 			IF actor(n).dir < actor(n).life THEN
-				spawnObject actor(n).x, actor(n).y - 2, 41, 22, 0
+				spawnObject actor(n).x, actor(n).y - 2, 41, ItemGemSmall, 0
 				soundEvent = SndEnemyDrop
 				actor(n).vecY = -10
 				actor(n).y = actor(n).y - 2
