@@ -2567,9 +2567,19 @@ keyboardInterrupt:
 											;Key released.
 		and al, 7Fh							;Remove higheset bit of AL
 		shl al, 1							;AL * 2
+		cmp al, 88							;Special handling for player jump toggle
+		je keyJump		
 		add bx, ax							;BX = Keyboard array offset + Key offset (AX)
-		mov al, 0
-		mov ds:[bx], al						;Write a zero to disable key
+		xor al, al
+		mov ds:[bx], al						;Write a zero to disable key			
+		jmp keyExit
+	keyJump:		
+		add bx, ax							;BX = Keyboard array offset + Key offset (AX)
+		xor al, al
+		mov ds:[bx], al						;Write a zero to disable key			
+		add bx, 170
+		mov al, 1
+		mov ds:[bx], al
 		
 	keyExit:
 

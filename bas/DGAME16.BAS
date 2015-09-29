@@ -271,7 +271,7 @@ CASE 262	'Level Clear - Score Count
           a$ = STR$(0& + player.scoreCounter)
           MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$
           c = &H0A0A OR player.levelColor
-		  aPrint gfx.videoWrap, c, 16, 20 + player.scoreCounterMode * 4, &HB800, pageOfs
+		  aPrint gfx.videoWrap, c, 16, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
           IF player.scoreCounter + player.scoreCounterInc >= player.scoreCounterTarget THEN
                player.scoreCounter = player.scoreCounterTarget
                actor(2).jump = actor(2).jump + 1
@@ -290,7 +290,7 @@ CASE 262	'Level Clear - Score Count
           a$ = STR$(player.scoreDelta)
           MID$(w40char.text, 8 - LEN(a$), LEN(a$)) = a$		  
 		  c = &H0E0F OR player.levelColor		  
-		  aPrint gfx.videoWrap, c, 32, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
+		  aPrint gfx.videoWrap, c, 30, 22 + player.scoreCounterMode * 4, &HB800, pageOfs
           actor(2).jump = actor(2).jump + 1
 
        CASE 17
@@ -635,11 +635,9 @@ CASE 255	'Normal player
 
 	c = tileRead(actor(2).x, actor(2).y)
 
-	IF c > 29 THEN		
-		'friction = 5
+	IF c > 29 THEN				
 		actor(2).y = (actor(2).y AND &HFFF8)
-		screenTargetYlock = actor(2).y - 46
-		IF kbArray(44) = 0 THEN player.jumpRelease = -1
+		screenTargetYlock = actor(2).y - 46		
 		collisionFloor = 1		
 		IF c = 52 THEN 
 			spawnObject actor(2).x AND &HFFFC, actor(2).y AND &HFFF8, 99, 2, -5
@@ -647,8 +645,8 @@ CASE 255	'Normal player
 			actor(2).y = actor(2).y - 2
 			player.Bouncing = 30
 			collisionFloor = 0
-			minY = -38
-			player.jumpRelease = 0
+			minY = -38			
+			kbArray(129) = 0
 			soundEvent = 98
 		END IF
 		IF player.vecY > 0 THEN soundEvent = 16: player.vecY = 0
@@ -662,8 +660,7 @@ CASE 255	'Normal player
 		IF kbArray(44) THEN
 			player.vecY = player.vecY + 2
 			maxY = 10			
-		ELSE
-			player.jumpRelease = -1
+		ELSE			
 			IF player.Bouncing > 0 THEN
 				screenTargetYlock = -1
 				minY = -38
@@ -680,8 +677,7 @@ CASE 255	'Normal player
 		IF actor(2).y - screenTargetYlock > 50 THEN screenTargetYlock = -1
 	END IF	
 
-    IF player.parent > 0 THEN
-		IF kbArray(44) = 0 THEN player.jumpRelease = -1
+    IF player.parent > 0 THEN		
 		screenTargetYlock = -1
 		collisionFloor = 1
 		player.vecY = 0
@@ -699,8 +695,8 @@ CASE 255	'Normal player
 		minY = -20						
 	END IF	
 	
-	IF (collisionFloor OR player.inWater OR player.supaFly) AND player.jumpRelease AND kbArray(44) THEN
-		player.jumpRelease = 0
+	IF (collisionFloor OR player.inWater OR player.supaFly) AND kbArray(129) AND kbArray(44) THEN		
+		kbArray(129) = 0
 		player.vecY = -35
 		actor(n).Y = actor(n).Y - 2
 		soundEvent = 0
@@ -744,14 +740,16 @@ CASE 255	'Normal player
    player.vecX = 0
 
 	IF kbArray(75) THEN
-      player.vecX = -10 'player.vecX - speedMod
-      actor(n).flags = 1
+      'player.vecX = -10 'player.vecX - speedMod
+      IF actor(n).flags THEN player.vecX = -10
+	  actor(n).flags = 1
       IF collisionFloor THEN
          switchAnim n, 2
       END IF
 	END IF
 	IF kbArray(77) THEN
-      player.vecX = 10 ' player.vecX + speedMod
+      IF actor(n).flags = 0 THEN player.vecX = 10
+	  'player.vecX = 10 ' player.vecX + speedMod
       actor(n).flags = 0
       IF collisionFloor THEN
          switchAnim n, 2         
@@ -799,7 +797,7 @@ CASE 255	'Normal player
 		aSoundFX 14, 23
 		player.hudLock = 999
 		player.score = 0
-		player.jumpRelease = -1
+		kbArray(129) = 0
 		w40char.text = "         PRESS SPACE TO CONTINUE        |"
 		aPrint &HFFFF, &HD0C, 0, 0, hudBufferSeg, hudBufferOfs
 	END IF
@@ -1104,7 +1102,7 @@ DO
 				actor(2).y = actor(n).y
 				player.vecY = -30
 				player.Bouncing = 20
-				player.jumpRelease = 0
+				kbArray(129) = 0
 				soundEvent = 98
 			END IF
 			IF actor(actor(n).exist).life > -2 THEN
@@ -1124,7 +1122,7 @@ DO
 			soundEvent = 115
 			player.vecY = -30
 			player.Bouncing = 20
-			player.jumpRelease = 0
+			kbArray(129) = 0
 			soundEvent = 98
 			actor(n).life = -45
 		END IF
@@ -1133,8 +1131,7 @@ DO
         IF c THEN
 			actor(n).y = actor(n).y AND &HFFF8
 			actor(n).vecY = 0
-        ELSE
-			'actor(n).vecX = 0
+        ELSE			
 			actor(n).vecY = 20
         END IF
 
@@ -1391,8 +1388,7 @@ DO
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
 		IF actor(n).jump > 0 THEN 
-			actor(n).jump = actor(n).jump + 1
-			soundEvent = SndGetChest
+			actor(n).jump = actor(n).jump + 1			
 		END IF
 		SELECT CASE actor(n).jump
 		CASE 0
@@ -1402,22 +1398,23 @@ DO
 			player.gotChests = player.gotChests + 1
 			player.hasKey = player.hasKey - 1									
 			actor(n).life = 10
-			actor(n).flash = 10			
+			actor(n).frame = 0
 			'actor(n).vecY = -5			
 			level.spawner(actor(n).spawner).object = 0
 			hudUpdate 16
-		END IF		
+			soundEvent = SndGetChest
+			spawnObject actor(n).x - 2, actor(n).y - 14, 41, ItemGemSmall, 0
+		END IF				
 		CASE 1
-		spawnObject actor(n).x - 2, actor(n).y - 14, 41, ItemGemSmall, 0				
-		CASE 2
 		spawnObject actor(n).x + 2, actor(n).y - 15, 41, ItemGemSmall, 0
-		CASE 3
+		CASE 2
 		spawnObject actor(n).x - 3, actor(n).y - 12, 41, ItemGemSmall, 0
-		CASE 4
+		soundEvent = SndGetChest
+		CASE 3
 		spawnObject actor(n).x + 3, actor(n).y - 14, 41, ItemGemSmall, 0			
-		CASE 5
+		CASE 4
 		spawnObject actor(n).x, actor(n).y - 16, 41, ItemGemBig, 0	
-		CASE 6
+		CASE 5
 		actor(n).control = 0
        	END SELECT
 	'Dragon
@@ -2071,7 +2068,7 @@ END SUB
 	player.hp = 4
 	player.time = 300
 	player.hasKey = 0
-	player.jumpRelease = -1
+	kbArray(129) = 1
 	player.inWater = 0
 	player.bouncing = 0
 	player.supaFly = 0
@@ -2556,6 +2553,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 21		
 	CASE 45   'CHEST
 		actorListNew n
+		actor(n).jump = 0
 		actor(n).control = 45
 		actor(n).spawner = spawner		
 		actor(n).frame = 20
