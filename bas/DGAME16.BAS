@@ -92,11 +92,16 @@ SUB actorListNew (index)
 	'debugOut "actorListNew"
 	actor(index).exist = 1
 	
-	actor(index).lNext = 2
-	actor(index).lPrev = actor(2).lPrev
+	actor(index).lNext = 1 '2
+	actor(index).lPrev = actor(1).lPrev 'actor(2).lPrev
 	
-	actor(actor(2).lPrev).lNext = index
-	actor(2).lPrev = index
+	'Using actor 2 here will keep player on top of the linked list
+	'
+	'actor(actor(2).lPrev).lNext = index
+	'actor(2).lPrev = index
+	
+	actor(actor(1).lPrev).lNext = index
+	actor(1).lPrev = index
 	
 	'actor(actor(1).lPrev).lNext = index
 	'actor(index).lPrev = actor(1).lPrev
@@ -588,6 +593,9 @@ CASE 258	'Menu
 				player.menuContext = 12
 				player.menuMode = 999
 			END IF
+		CASE 21 TO 23	'Secret level unlocked message
+				player.menuContext = 0
+				player.menuMode = 999
 		END SELECT
 	'--------------------------------------------------------------------------
 	CASE 999 to 1000		' Exit menu: clear screen
@@ -645,8 +653,7 @@ CASE 255	'Normal player
 			actor(2).y = actor(2).y - 2
 			player.Bouncing = 30
 			collisionFloor = 0
-			minY = -38			
-			kbArray(129) = 0
+			minY = -38						
 			soundEvent = 98
 		END IF
 		IF player.vecY > 0 THEN soundEvent = 16: player.vecY = 0
@@ -657,9 +664,10 @@ CASE 255	'Normal player
 		maxY = 30		
 		'friction = 5
 		IF player.ShootDelay < 6 THEN switchAnim n, 5		
-		IF kbArray(44) THEN
+		IF kbArray(44) THEN		
 			player.vecY = player.vecY + 2
 			maxY = 10			
+			'IF player.parent = 0 THEN kbArray(129) = 0
 		ELSE			
 			IF player.Bouncing > 0 THEN
 				screenTargetYlock = -1
@@ -756,7 +764,7 @@ CASE 255	'Normal player
       END IF
 	END IF
 
-	IF kbArray(80) THEN	screenTargetY = actor(2).y - 24
+	IF kbArray(80) THEN	screenTargetY = actor(2).y - 24	
 
 	player.ShootDelay = player.ShootDelay + (player.ShootDelay > 0)
 	IF kbArray(45) AND player.ShootDelay = 0 THEN
@@ -914,7 +922,7 @@ DO
         actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(c))
 	
 	'Platform / elevator
-    CASE 50 TO 52
+    CASE 50 TO 53
 		
 	IF ABS(level.spawner(actor(n).spawner).y - playerY) < 200 THEN
 		
@@ -923,7 +931,7 @@ DO
 		
 		IF player.parent = 0 THEN
 			playerDeltaY = actor(n).y - playerY
-			IF playerDeltaX < 6 AND playerDeltaY < 1 AND playerDeltaY > -4 AND player.vecY > -1 THEN
+			IF playerDeltaX < 5 AND playerDeltaY < 1 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 				actor(n).jump = 1
 				soundEvent = 115
 				actor(2).y = actor(n).y
@@ -933,7 +941,7 @@ DO
 				actor(2).exist = 1
 			END IF
 		ELSEIF player.parent = n THEN
-			IF playerDeltaX > 5 OR playerDeltaY > 2 OR player.vecY < -5 THEN
+			IF playerDeltaX > 4 OR playerDeltaY > 2 OR player.vecY < -5 THEN
 				unParent 2
 				player.parent = 0
 				actor(n).jump = 0
@@ -1101,8 +1109,7 @@ DO
 				soundEvent = 115
 				actor(2).y = actor(n).y
 				player.vecY = -30
-				player.Bouncing = 20
-				kbArray(129) = 0
+				player.Bouncing = 20				
 				soundEvent = 98
 			END IF
 			IF actor(actor(n).exist).life > -2 THEN
@@ -1121,8 +1128,7 @@ DO
 		IF playerDeltaX < 4 AND playerDeltaY < 2 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 			soundEvent = 115
 			player.vecY = -30
-			player.Bouncing = 20
-			kbArray(129) = 0
+			player.Bouncing = 20			
 			soundEvent = 98
 			actor(n).life = -45
 		END IF
@@ -1359,7 +1365,11 @@ DO
 		IF playerDeltaX < 5 AND ABS(actor(2).y - actor(n).y) < 8 THEN
             level.spawner(actor(n).spawner).object = 0
             soundEvent = 110            		
-			IF actor(n).frame = ItemSuperOrb THEN soundEvent = 132: player.supaFly = 1
+			IF actor(n).frame = ItemSuperOrb THEN 
+				soundEvent = 132
+				player.supaFly = 1
+				hudUpdate 2
+			END IF
 			IF actor(n).frame = ItemKey THEN
 				player.score = player.score + 500
 				player.hasKey = player.hasKey + 1
@@ -1694,6 +1704,7 @@ DO
 			END IF
 		END IF
 		
+		
 	'CHECKPOINT
 	CASE 65
 		playerDeltaY = ABS(actor(n).y - playerY)
@@ -1732,28 +1743,40 @@ DO
 			END IF
 		END IF
 
-	'EXIT
-	CASE 63
-		actor(n).frame = 60
-		
+	'EXIT / SECRET LEVEL UNLOCK
+	CASE 63				
 		c = actor(n).spawner
 		actor(n).y = level.spawner(c).y + mulTable(2, angle.x(dtMain0))
 		
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
-		IF playerDeltaX < 6 AND playerDeltaY < 10 THEN
-			actor(2).control = 260
-			actor(2).count = 0
-			actor(n).control = 0
-			actor(n).exist = 0
-			FOR b = 4 to 60
-				actor(b).exist = 0
-			NEXT b
-			FOR b = 0 TO 63 STEP 8
-				xs = angle.x(b) \ 2
-				ys = angle.y(b) \ 2
-				spawnObject actor(n).x, actor(n).y, 93, xs, ys
-			NEXT b
+		IF actor(n).frame = 60 THEN
+			IF playerDeltaX < 6 AND playerDeltaY < 10 THEN
+				actor(2).control = 260
+				actor(2).count = 0
+				actor(n).control = 0
+				actor(n).exist = 0
+				FOR b = 4 to 60
+					actor(b).exist = 0
+				NEXT b
+				actor(3).lNext = 1
+				actor(1).lNext = 2
+				actor(1).lPrev = 3
+				FOR b = 0 TO 63 STEP 8
+					xs = angle.x(b) \ 2
+					ys = angle.y(b) \ 2
+					spawnObject actor(n).x, actor(n).y, 93, xs, ys
+				NEXT b
+			END IF
+		ELSE
+			IF playerDeltaX < 5 AND playerDeltaY < 8 THEN
+				actor(n).life = 8
+				actor(n).frame = 30
+				actor(n).control = 0
+				actor(2).control = 263
+				player.levelCompletion(actor(n).jump + 12) = 1
+				player.menuContext = 20 + actor(n).jump
+			END IF
 		END IF
 
 		'LEVEL DOOR
@@ -1818,7 +1841,7 @@ DO
 				spriteList(spriteListIndex, gfx.page).h = animation(frame).h
 				spriteListIndex = spriteListIndex + 1
 			END IF
-			ctype = actor(n).collider 
+			ctype = actor(n).collider
 			colCount(ctype) = colCount(ctype) + 1
 			colList(ctype, colCount(ctype)).index = n
 			colList(ctype, colCount(ctype)).x0 = x
@@ -1926,7 +1949,7 @@ SUB handleCollision
 					END IF
 					IF actor(n2).life > -999 THEN
 						actor(n2).flash = 10
-						actor(n2).life = actor(n2).life + 1
+						actor(n2).life = actor(n2).life + 1 + player.supaFly
 					END IF
 					IF actor(n).control = 100 THEN
 						actor(n).collider = 0
@@ -1992,6 +2015,7 @@ SUB hudUpdate (flags AS INTEGER)
 		a$ = "#$#$#$#$"
 		IF player.hp THEN
 			w40char.text = MID$(a$, 1, player.hp * 2) + "|"
+			IF player.supaFly THEN w40char.text = "--POW!--|"
 			aPrint &HFFFF, &HCECE, 19, 0, hudBufferSeg, hudBufferOfs
 		END IF
 	END IF
@@ -2131,6 +2155,8 @@ END SUB
 	
 	IF player.level = 1 THEN
 		player.score = player.levelScore(1)
+		handleSpawn 1
+		player.wave = 1
 	END IF
 	
 	IF player.level = 0 THEN
@@ -2587,23 +2613,38 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		END IF
 	CASE 63		'EXIT
 		actorListNew n
-		actor(n).spawner = spawner
-		actor(n).frame = 0
+		actor(n).spawner = spawner		
+		actor(n).frame = 60
 		actor(n).control = 63
-	CASE 64		'LEVEL
+	CASE 64		'LEVEL ENTRANCE
 		actorListNew n
-		actor(n).spawner = spawner
-		actor(n).jump = spawnerFlags
-		IF player.levelScore(spawnerFlags) THEN
-			actor(n).frame = 53
-		ELSE
-			actor(n).frame = 0
-		END IF
-		actor(n).control = 64
+		'teleport player at door if s/he was just there
 		IF player.levelPrev = spawnerFlags THEN
 			actor(2).x = x
 			actor(2).y = y + 26
 		END IF
+		actor(n).spawner = spawner
+		'secret level
+		IF spawnerFlags > 12 AND spawnerFlags < 16 THEN				
+			IF player.levelCompletion(spawnerFlags) = 1 THEN 
+				actor(n).control = 64
+				tileWrite x, y, 24				
+			ELSEIF player.levelCompletion(spawnerFlags) > 50 THEN 
+				actor(n).control = 64
+				tileWrite x, y, 25
+			END IF
+			'actor(n).y = y + 20
+			actor(n).frame = 0			
+		'normal level
+		ELSE		
+			actor(n).jump = spawnerFlags
+			IF player.levelScore(spawnerFlags) THEN
+				actor(n).frame = 53
+			ELSE
+				actor(n).frame = 0
+			END IF
+			actor(n).control = 64			
+		END IF						
 	CASE 65	   'Checkpoint / Spawner portal
 		actorListNew n
 		actor(n).control = 65
@@ -2612,7 +2653,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -3
 		actor(n).frame = 0
 		actor(n).anim = 0
-		actor(n).visX = 999
+		actor(n).visX = 999		
 	CASE 66		'Hub-level mini star slot
 		IF player.levelScore(spawnerFlags) THEN 
 			tileWrite x, y, 27
@@ -2631,6 +2672,14 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).dir = 31
 			actor(n).visY = 50
 			actor(n).y = actor(n).y + 8
+		END IF
+	CASE 68		'Secret level unlock
+		IF NOT player.levelCompletion(spawnerFlags) THEN
+			actorListNew n			
+			actor(n).spawner = spawner		
+			actor(n).control = 63
+			actor(n).frame = 67
+			actor(n).jump = spawnerFlags - 12
 		END IF
 	END SELECT
 END SUB

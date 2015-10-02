@@ -1,6 +1,6 @@
 Duck Castle Court:
 	1	Level 1				court1.tmx
-	2	Level 2				mazetowr.tmx
+	2	Level 2				court2.tmx
 	
 Dreadful Dungeon:
 	3	Dungeon 1			hicoin.tmx
@@ -11,12 +11,12 @@ Dreadful Dungeon:
 	6	Garden 2			elevator.tmx
 
 Aqua Tower:
-	7	Tower 1			
+	7	Tower 1				aqua1.tmx		
 	8	Tower 2
 
 Scary Spire:	
-	9	Scary Spire 1		?? skulls.tmx
-	10	Scary Spire 2
+	9	Scary Spire 1		spire1.tmx
+	10	Scary Spire 2		spire2.tmx
 	
 	11	Boss
 	

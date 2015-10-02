@@ -73,3 +73,21 @@
 00, 00, 00, "good luck!",  1, 42, 30, 4, &H1D, &H1D
 01, 01, 01, " ok! ", 28, 48, 30, 4, &H0E, &H0C
 -1
+0021, 01, 0, 5, 8, 10, 27, 15, " ", &H00
+00, 00, 00, " unlocked secret level 1 ", 9, 10, 14, 4, &H2F, &H2E
+00, 00, 00, " you can now access this ", 9, 14, 14, 4, &H02, &H02
+00, 00, 00, " level from the main map ", 9, 17, 14, 4, &H02, &H02
+01, 01, 02, " ok! ", 18, 21, 15, 4, &H0E, &H0C
+-1
+0022, 01, 0, 5, 8, 10, 27, 15, " ", &H00
+00, 00, 00, " unlocked secret level 2 ", 9, 10, 14, 4, &H5F, &H5E
+00, 00, 00, " you can now access this ", 9, 14, 14, 4, &H02, &H02
+00, 00, 00, " level from the main map ", 9, 17, 14, 4, &H02, &H02
+01, 01, 02, " ok! ", 18, 21, 15, 4, &H0E, &H0C
+-1
+0023, 01, 0, 5, 8, 10, 27, 15, " ", &H00
+00, 00, 00, " unlocked secret level 3 ", 9, 10, 14, 4, &H4F, &H4E
+00, 00, 00, " you can now access this ", 9, 14, 14, 4, &H02, &H02
+00, 00, 00, " level from the main map ", 9, 17, 14, 4, &H02, &H02
+01, 01, 02, " ok! ", 18, 21, 15, 4, &H0E, &H0C
+-1

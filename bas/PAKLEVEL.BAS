@@ -311,10 +311,12 @@ SUB addActor (actor, wave, x, y)
 		END
 	END IF
   ELSE
-	COLOR 4
-	PRINT "     Actor not found: "; actor
-	pause
-	COLOR 7
+	IF actorConvert(actor).id = 0 THEN
+		COLOR 4
+		PRINT "     Actor not found: "; actor
+		pause
+		COLOR 7
+	END IF
  END IF
 exitWindow:
  aRow = CSRLIN
