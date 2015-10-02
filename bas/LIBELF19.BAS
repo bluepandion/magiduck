@@ -944,7 +944,7 @@ END SUB
 SUB LoadGame
 	fileOfs = 1 + player.saveSlot * 96
 	OPEN "savegame.sav" FOR BINARY AS #1
-		FOR n = 1 to 12
+		FOR n = 1 to 16
 			GET #1, fileOfs, player.levelScore(n)
 			fileOfs = fileOfs + 4
 			GET #1, fileOfs, player.levelCompletion(n)

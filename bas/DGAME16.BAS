@@ -1773,9 +1773,9 @@ DO
 				actor(n).life = 8
 				actor(n).frame = 30
 				actor(n).control = 0
-				actor(2).control = 263
-				player.levelCompletion(actor(n).jump + 12) = 1
+				actor(2).control = 263				
 				player.menuContext = 20 + actor(n).jump
+				player.levelCompletion(actor(n).jump + 12) = 1
 			END IF
 		END IF
 
@@ -2626,10 +2626,12 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		'secret level
 		IF spawnerFlags > 12 AND spawnerFlags < 16 THEN				
+			actor(n).control = 0
+			actor(n).jump = spawnerFlags
 			IF player.levelCompletion(spawnerFlags) = 1 THEN 
 				actor(n).control = 64
 				tileWrite x, y, 24				
-			ELSEIF player.levelCompletion(spawnerFlags) > 50 THEN 
+			ELSEIF player.levelCompletion(spawnerFlags) > 49 THEN 				
 				actor(n).control = 64
 				tileWrite x, y, 25
 			END IF
