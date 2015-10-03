@@ -670,6 +670,7 @@ CASE 255	'Normal player
 			'IF player.parent = 0 THEN kbArray(129) = 0
 		ELSE			
 			IF player.Bouncing > 0 THEN
+				kbArray(129) = 1
 				screenTargetYlock = -1
 				minY = -38
 				player.Bouncing = player.Bouncing - 1
@@ -699,6 +700,7 @@ CASE 255	'Normal player
 	END IF
 	
 	IF player.inWater THEN 		
+		screenTargetYlock = -1
 		maxY = 15
 		minY = -20						
 	END IF	
@@ -1105,7 +1107,7 @@ DO
 		ELSE
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF playerDeltaX < 3 AND playerDeltaY < 4 AND playerDeltaY > -3 AND player.vecY > -1 THEN
+			IF playerDeltaX < 3 AND playerDeltaY < 4 AND playerDeltaY > -3 AND player.vecY > -8 THEN
 				soundEvent = 115
 				actor(2).y = actor(n).y
 				player.vecY = -30
@@ -1125,7 +1127,7 @@ DO
 	CASE 2
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - 9 - playerY)
-		IF playerDeltaX < 4 AND playerDeltaY < 2 AND playerDeltaY > -4 AND player.vecY > -1 THEN
+		IF playerDeltaX < 4 AND playerDeltaY < 3 AND playerDeltaY > -4 AND player.vecY > -1 THEN
 			soundEvent = 115
 			player.vecY = -30
 			player.Bouncing = 20			
@@ -1145,8 +1147,7 @@ DO
 			IF actor(n).life = -49 THEN actor(n).y = actor(n).y - 6
 			actor(n).life = -50
 			actor(n).count = 16
-			actor(n).collider = 0
-			actor(n).visY = 50
+			actor(n).collider = 0			
         END IF
         
 		IF actor(n).count = 0 THEN 
@@ -1158,8 +1159,7 @@ DO
 			actor(n).frame = 75
 			IF actor(n).count = 0 THEN
 				actor(n).frame = 72
-				actor(n).collider = 1
-				actor(n).visY = 35
+				actor(n).collider = 1				
 				'actor(n).vecX = actor(n).dir
 			END IF
 		END IF
@@ -1781,9 +1781,7 @@ DO
 
 		'LEVEL DOOR
         CASE 64
-			playerDeltaX = ABS(actor(n).x - playerX)
-			playerDeltaY = ABS(actor(n).y - playerY)
-			IF player.levelScore(actor(n).jump) > 0 THEN actor(n).frame = 60
+			playerDeltaX = ABS(actor(n).x - playerX)			
 			playerDeltaY = actor(2).y - actor(n).y
 			IF playerDeltaX < 4 AND playerDeltaY > 4 AND playerDeltaY < 32 THEN
 				IF actor(n).count = 0 THEN 
@@ -2411,9 +2409,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -50
 		actor(n).collider = 1
 		actor(n).frame = 72
-		actor(n).count = 0
-		actor(n).visY = 35
+		actor(n).count = 0		
 		actor(n).visX = 60
+		actor(n).visY = 50
 		actor(n).spawner = spawner
 	CASE 3	'DRAGON
 		actorListNew n
@@ -2422,7 +2420,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).collider = 1
 		actor(n).frame = 89
 		actor(n).count = 0
-		actor(n).visY = 55
+		actor(n).visY = 60
 		actor(n).visX = 55
 		actor(n).dir = 0
 		actor(n).spawner = spawner
@@ -2641,7 +2639,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		ELSE		
 			actor(n).jump = spawnerFlags
 			IF player.levelScore(spawnerFlags) THEN
-				actor(n).frame = 53
+				actor(n).frame = 60
 			ELSE
 				actor(n).frame = 0
 			END IF
@@ -2676,7 +2674,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).y = actor(n).y + 8
 		END IF
 	CASE 68		'Secret level unlock
-		IF NOT player.levelCompletion(spawnerFlags) THEN
+		IF player.levelCompletion(spawnerFlags) = 0 THEN
 			actorListNew n			
 			actor(n).spawner = spawner		
 			actor(n).control = 63
