@@ -57,11 +57,26 @@ CLS
                PRINT itemIDX;
                INPUT #1, itemPrev
                INPUT #1, itemNext
-               INPUT #1, itemText$
-               itemText$ = itemText$ + "|"
-               itemLen = LEN(itemText$)
+               
+			   xSpace = 0
+			   xAdd = 1
+			   itemText$ = ""
+			   INPUT #1, a$
+               
+			   FOR i = 1 TO LEN(itemText$)
+				IF MID$(a$, i, 1) <> "_" THEN 
+					itemText$ = itemText$ + MID$(a$, i, 1)
+					xAdd = 0
+				ELSE
+					xSpace = xSpace + xAdd
+				END IF
+			   NEXT i
+			   
+			   itemText$ = itemText$ + "|"
+               
+			   itemLen = LEN(itemText$)
                INPUT #1, itemX
-               itemX = itemX + fineTuneX
+               itemX = itemX + fineTuneX + xSpace
                INPUT #1, itemY
                itemY = itemY + fineTuneY
                INPUT #1, itemW

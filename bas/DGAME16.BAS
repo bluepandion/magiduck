@@ -179,7 +179,7 @@ END SUB
 	STATIC scoreDelta AS LONG
 	STATIC parent
 	STATIC advanceAnims
-	STATIC dtAnims
+	STATIC tickAnim
 	
 	entityCounter = 0
 	scoreDelta = player.score
@@ -192,9 +192,9 @@ END SUB
 	colCount(2) = -1
 	colCount(3) = -1
 	
-	dtAnims = dtAnims + 1
-	IF dtAnims > 2 THEN
-		dtAnims = 0
+	tickAnim = tickAnim + 1
+	IF tickAnim > 2 THEN
+		tickAnim = 0
 		advanceAnims = -1
 	ELSE
 		advanceAnims = 0
@@ -646,7 +646,9 @@ CASE 255	'Normal player
 	IF c > 29 THEN				
 		actor(2).y = (actor(2).y AND &HFFF8)
 		screenTargetYlock = actor(2).y - 46		
-		collisionFloor = 1		
+		
+		collisionFloor = 1
+		player.bouncing = 0
 		IF c = 52 THEN 
 			spawnObject actor(2).x AND &HFFFC, actor(2).y AND &HFFF8, 99, 2, -5
 			player.vecY = -38
@@ -658,19 +660,17 @@ CASE 255	'Normal player
 		END IF
 		IF player.vecY > 0 THEN soundEvent = 16: player.vecY = 0
 		screenTargetY = screenTargetYlock
-	ELSE
-		'collisionFloor = collisionFloor + (collisionFloor > 0)
+	ELSE		
 		collisionFloor = 0
 		maxY = 30		
 		'friction = 5
 		IF player.ShootDelay < 6 THEN switchAnim n, 5		
 		IF kbArray(44) THEN		
-			player.vecY = player.vecY + 2
+			player.vecY = player.vecY + 2			
 			maxY = 10			
 			'IF player.parent = 0 THEN kbArray(129) = 0
 		ELSE			
-			IF player.Bouncing > 0 THEN
-				kbArray(129) = 1
+			IF player.Bouncing > 0 THEN				
 				screenTargetYlock = -1
 				minY = -38
 				player.Bouncing = player.Bouncing - 1
@@ -693,15 +693,15 @@ CASE 255	'Normal player
 		screenTargetY = actor(2).y - 30
     END IF	
 	
-	IF player.supaFly THEN 
+	IF player.supaFly THEN 		
 		screenTargetYlock = -1
 		minY = -30
 		maxY = 20
 	END IF
 	
-	IF player.inWater THEN 		
+	IF player.inWater THEN 				
 		screenTargetYlock = -1
-		maxY = 15
+		maxY = 10
 		minY = -20						
 	END IF	
 	
@@ -736,17 +736,6 @@ CASE 255	'Normal player
       spawnObject x, y, 99, 0, 0
    END IF
 
-'   d = player.vecX
-'   IF d > 0 THEN
-'      IF friction > d THEN friction = d
-'      friction = -friction
-'      player.vecX = player.vecX + friction
-'   END IF
-'   IF d < 0 THEN
-'      IF -friction < d THEN friction = -d
-'      player.vecX = player.vecX + friction
-'   END IF
-   
    player.vecX = 0
 
 	IF kbArray(75) THEN
@@ -839,6 +828,27 @@ CASE 255	'Normal player
 	IF screenTargetYlock = -1 THEN
 		screenTargetY = actor(2).y - 28
 	END IF
+	
+	IF kbArray(1) THEN
+		actor(2).control = 258
+		player.menuContext = 2
+		IF player.level = 1 THEN player.menuContext = 1
+		player.menuMode = 0		
+	END IF
+	
+	tickSec = tickSec + 1
+	IF tickSec > 23 THEN
+		tickSec = 0
+		IF player.level > 1 THEN 
+			IF player.time > 0 THEN
+				player.time = player.time - 1
+			ELSE
+				player.hp = 0
+			END IF
+		END IF		
+		hudUpdate &H8
+	END IF			
+	
 END SELECT
 
 playerX = actor(2).x
@@ -897,6 +907,18 @@ DO
     IF actor(n).y > 630 THEN actor(n).y = 630
     IF actor(n).x < -7 THEN actor(n).x = -7
     IF actor(n).x > 85 THEN actor(n).x = 85
+	
+	'IF actor(n).collider AND 16 THEN
+	'	playerDeltaX = ABS(actor(n).x - playerX)
+	'	playerDeltaY = actor(n).y - playerY
+	'	IF playerDeltaX < 3 AND playerDeltaY < 4 AND playerDeltaY > -3 AND player.vecY > -2 THEN
+	'		soundEvent = 115
+	'		actor(2).y = actor(n).y
+	'		player.vecY = -30
+	'		player.Bouncing = 20				
+	'		soundEvent = 98
+	'	END IF
+	'END IF
 
 	'------------------------------------------------------------------------------
 	'
@@ -904,25 +926,7 @@ DO
 	'
 	'------------------------------------------------------------------------------
 	SELECT CASE actor(n).control
-	
-	'SPIKE BALL U, O-, O+
-	CASE 17 TO 19
-        SELECT CASE actor(n).control
-		CASE 17
-			c = angle.y(dtMain0) + 32
-			IF c < 14 THEN 
-				c = 14
-			ELSEIF c > 50 THEN 
-				c = 50
-			END IF
-		CASE 18	
-			c = 63 - dtMain0
-		CASE 19
-			c = dtMain0
-		END SELECT
-		actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(c))
-        actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(c))
-	
+		
 	'Platform / elevator
     CASE 50 TO 53
 		
@@ -1016,6 +1020,7 @@ DO
 			END IF
 		END SELECT
 	ELSE
+		actor(n).count = level.spawner(actor(n).spawner).flags
 		actor(n).dir = 0
 		actor(n).vecX = 0
 		actor(n).vecY = 0
@@ -1107,7 +1112,7 @@ DO
 		ELSE
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF playerDeltaX < 3 AND playerDeltaY < 4 AND playerDeltaY > -3 AND player.vecY > -8 THEN
+			IF playerDeltaX < 3 AND playerDeltaY < 4 AND playerDeltaY > -3 AND player.vecY > -2 THEN
 				soundEvent = 115
 				actor(2).y = actor(n).y
 				player.vecY = -30
@@ -1127,7 +1132,7 @@ DO
 	CASE 2
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - 9 - playerY)
-		IF playerDeltaX < 4 AND playerDeltaY < 3 AND playerDeltaY > -4 AND player.vecY > -1 THEN
+		IF playerDeltaX < 4 AND playerDeltaY < 3 AND playerDeltaY > -3 AND player.vecY > -1 THEN
 			soundEvent = 115
 			player.vecY = -30
 			player.Bouncing = 20			
@@ -1184,6 +1189,18 @@ DO
 			actor(n).vecX = -speed
 			actor(n).x = actor(n).x AND &HFFFC + 2
 		END IF		
+	
+	CASE 20	'Water / Lava
+	playerDeltaX = ABS(actor(n).x - playerX)
+	playerDeltaY = actor(n).y - playerY
+	IF playerDeltaX < 9 THEN
+		IF playerDeltaY < 1 AND playerDeltaY > -8 THEN
+			player.inWater = 1
+			IF actor(n).anim = 64 THEN player.hp = 0
+		ELSEIF playerDeltaY > 1 AND playerDeltaY < 8 THEN
+			player.inWater = 0
+		END IF			
+	END IF
 	
 	'Player Bullet
 	CASE 100
@@ -1329,19 +1346,7 @@ DO
 	'Dropping particle
 	CASE 200
 		IF actor(n).vecY < 20 THEN actor(n).vecY = actor(n).vecY + 4
-	
-	CASE 20	'Water / Lava
-		playerDeltaX = ABS(actor(n).x - playerX)
-		playerDeltaY = actor(n).y - playerY
-		IF playerDeltaX < 9 THEN
-			IF playerDeltaY < 1 AND playerDeltaY > -8 THEN
-				player.inWater = 1
-				IF actor(n).anim = 64 THEN player.hp = 0
-			ELSEIF playerDeltaY > 1 AND playerDeltaY < 8 THEN
-				player.inWater = 0
-			END IF			
-		END IF
-       
+	       
 	'Pickup
 	CASE 41
 		playerDeltaX = ABS(actor(n).x - playerX)
@@ -1545,7 +1550,7 @@ DO
 			actor(n).vecX = 8
 			IF actor(n).x > screenX + 44 THEN actor(n).flags = 1 ' soundEvent = 151
 		END IF
-		c = (dtMain0 + actor(n).count) AND 63
+		c = (tick24 + actor(n).count) AND 63
 		actor(n).y = actor(n).count + mulTable(1, angle.y(c))
 		
 	CASE 8 'SPIKY
@@ -1615,7 +1620,7 @@ DO
 		END IF
 			
 	CASE 11 'FIRE BREATH
-		'c = (dtMain1 + actor(n).y) AND 31
+		'c = (tick12 + actor(n).y) AND 31
 		IF actor(n).jump < 24 THEN actor(n).jump = actor(n).jump + 1
 		IF actor(n).jump > 19 THEN
 			IF ABS(actor(n).y - playerY) < 45 THEN
@@ -1649,30 +1654,36 @@ DO
 			IF actor(n).vecY > 20 THEN actor(n).vecY = 20
         END IF
 	
-	CASE 20 'FIRE PIT
-		c = INT(RND * actor(n).jump)
-		spawnObject actor(n).x + c, actor(n).y, 0, 0, 113
+	'SPIKE BALL U, O-, O+
+	CASE 17 TO 19
+        actor(n).count = actor(n).count + 1
+		IF actor(n).count > 2 THEN
+			actor(n).dir = (actor(n).dir + 5) AND 63
+			spawnObject actor(n).x, actor(n).y, 114, actor(n).dir, 1
+			actor(n).count = 0
+		END IF		
 	
 	CASE 30	'BUTTON
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
 		IF playerDeltaX < 3 AND playerDeltaY < 4 AND player.vecY > -1 THEN
+			player.buttonFlags = player.buttonFlags OR actor(n).jump
 			actor(n).control = 0
 			actor(n).spawner = 0
 			actor(n).frame = 27
 			actor(2).y = actor(n).y - 5
 			player.vecY = -15
 			soundEvent = SndButton
-			FOR c = 4 TO 60
-				IF actor(c).control = 31 THEN
-					IF actor(n).jump = actor(c).jump THEN 
-						actor(c).anim = 1
-						actor(c).count = 4
-						actor(c).frame = 38
-						actor(c).y = actor(c).y + 8
-					END IF
-				END IF
-			NEXT c
+			'FOR c = 4 TO 60
+			'	IF actor(c).control = 31 THEN
+			'		IF actor(n).jump = actor(c).jump THEN 
+			'			actor(c).anim = 1
+			'			actor(c).count = 4
+			'			actor(c).frame = 38
+			'			actor(c).y = actor(c).y + 8
+			'		END IF
+			'	END IF
+			'NEXT c
 		END IF
 	
 	CASE 31 'DOOR OPEN or TILE GROW
@@ -1701,6 +1712,13 @@ DO
 						soundEvent = SndTileGrow
 					END IF
 				END IF
+			END IF
+		ELSE
+			IF player.buttonFlags AND actor(n).jump THEN 
+				actor(n).anim = 1
+				actor(n).count = 4
+				actor(n).frame = 38
+				actor(n).y = actor(n).y + 8
 			END IF
 		END IF
 		
@@ -1746,7 +1764,7 @@ DO
 	'EXIT / SECRET LEVEL UNLOCK
 	CASE 63				
 		c = actor(n).spawner
-		actor(n).y = level.spawner(c).y + mulTable(2, angle.x(dtMain0))
+		actor(n).y = level.spawner(c).y + mulTable(2, angle.x(tick24))
 		
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
@@ -1760,6 +1778,9 @@ DO
 					actor(b).exist = 0
 				NEXT b
 				actor(3).lNext = 1
+				actor(3).lPrev = 2
+				actor(2).lPrev = 1				
+				actor(2).lNext = 3
 				actor(1).lNext = 2
 				actor(1).lPrev = 3
 				FOR b = 0 TO 63 STEP 8
@@ -1886,7 +1907,7 @@ DO
 						actor(n).count = actor(n).y
 					END IF
 				ELSE
-					destroyObject n    ' getObject
+					destroyObject n
 				END IF
 			END IF
 			actor(n).life = actor(n).life - 1
@@ -1894,17 +1915,17 @@ DO
 	END IF 'Actor-exists check
 LOOP WHILE actor(n).lNext > 1
  
- IF gfx.page THEN dtMain1 = (dtMain1 + 1) AND 63
+ IF gfx.page THEN tick12 = (tick12 + 1) AND 63
 
  spriteList(spriteListIndex, gfx.page).y = 255
 
  IF soundEvent > -1 THEN aSoundFX 0, soundEvent
 
  IF player.score > scoreDelta THEN
-  hudUpdate 4
+	hudUpdate 4
  END IF
 
- dtMain0 = (dtMain0 + 1) AND 63
+ tick24 = (tick24 + 1) AND 63
 
 END SUB
 
@@ -2103,6 +2124,7 @@ END SUB
 	player.gotCoins = 0
 	player.gotKeys = 0
 	player.gotChests = 0		
+	player.buttonFlags = 0
 	
 	'Player body.
 	actor(2).flash = 0
@@ -2147,6 +2169,8 @@ END SUB
 	actor(3).visX = 999
 	actor(3).visY = 999
 	
+	tick24 = 0
+	
 	handleSpawn 0
 	
 	updateText = 1
@@ -2155,6 +2179,7 @@ END SUB
 		player.score = player.levelScore(1)
 		handleSpawn 1
 		player.wave = 1
+		player.wavePrev = 0
 	END IF
 	
 	IF player.level = 0 THEN
@@ -2182,30 +2207,10 @@ END SUB
 		CALL aSoundPlay
 		handleScroll
 		aSpriteList gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)		
-		IF actor(2).control = 259 THEN aSoundStop: EXIT SUB				
-		IF actor(2).control = 255 THEN
-			IF kbArray(1) THEN
-				actor(2).control = 258
-				player.menuContext = 2
-				IF player.level = 1 THEN player.menuContext = 1
-				player.menuMode = 0		
-			END IF
-			updateText = updateText + 1
-			IF updateText = 24 THEN
-				IF actor(2).control = 255 AND player.level > 1 THEN 
-					IF player.time > 0 THEN
-						player.time = player.time - 1
-					ELSE
-						player.hp = 0
-					END IF
-				END IF
-				updateText = 0
-				hudUpdate &H8
-			END IF
-			END IF
-	  aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-      gfx.page = gfx.page XOR 1
-	  aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
+		IF actor(2).control = 259 THEN aSoundStop: EXIT SUB						
+		aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
+		gfx.page = gfx.page XOR 1
+		aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(spriteList(0, gfx.page).offset), VARPTR(spriteList(0, gfx.page).offset)
 	LOOP
 END SUB
 
@@ -2364,7 +2369,16 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 50
 		actor(n).visX = 25
 		actor(n).visY = 40
-		actor(n).flash = 50	
+		actor(n).flash = 50
+	CASE 114	'FIRE, arbitrary angle
+		actorListNew n
+		actor(n).control = 102
+		actor(n).life = 5
+		actor(n).vecX = angle.x(spawnerFlags)
+		actor(n).vecY = angle.y(spawnerFlags)
+		actor(n).frame = 50
+		actor(n).visX = 70
+		actor(n).visY = 40   
 	CASE 1	'Eggy
 		actorListNew n
 		c = spawnerFlags > 1
@@ -2506,41 +2520,23 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).jump = spawnerFlags
 		actor(n).spawner = spawner
 	CASE 17 TO 19	'SPIKE BALL U, O+, O-
-		c = object
-		FOR p = 0 TO 1
-			actorListNew n
-			actor(n).x = x
-			actor(n).y = y
-			actor(n).count = x
-			actor(n).dir = y
-			actor(n).control = c
-			actor(n).exist = 1
-			actor(n).spawner = spawner
-			actor(n).life = -999
-			actor(n).jump = 1 + p + p
-			actor(n).frame = 46
-			actor(n).anim = 148
-			actor(n).visX = 45
-			actor(n).visY = 50
-			actor(n).flags = 0
-			n = getSpawnslot
-		NEXT p
 		actorListNew n
 		actor(n).collider = 1
 		actor(n).x = x
 		actor(n).y = y
-		actor(n).count = x
-		actor(n).dir = y
-		actor(n).control = c
+		actor(n).count = 0
+		c = (object > 17)
+		actor(n).dir = 1 - c - c
+		actor(n).anim = 0
+		actor(n).control = object
 		actor(n).flags = 0
 		actor(n).exist = 1
 		actor(n).spawner = spawner
-		actor(n).life = -999
-		actor(n).jump = 5
-		actor(n).frame = 45
-		actor(n).anim = 146
+		actor(n).life = -50
+		actor(n).jump = 0
+		actor(n).frame = 0		
 		actor(n).visX = 50
-		actor(n).visY = 56
+		actor(n).visY = 50
 	CASE 20		'Water / Lava
 		actorListNew n
 		actor(n).anim = 61 + spawnerFlags
