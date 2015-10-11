@@ -2,7 +2,7 @@ DECLARE SUB DEBUGOUT (s$)
 DECLARE SUB actorListNew (index%)
 DECLARE SUB unParent (object%)
 DECLARE SUB makeParent (child%, parent%)
-DECLARE SUB linkedListArrange(parent%)
+DECLARE SUB getChildrenFor(parent%)
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB screenFakePos (y%)
 DECLARE SUB initTestGame ()
@@ -434,14 +434,12 @@ CASE 258	'Menu
 				y = actor(nn).y
 				w = actor(nn).vecX
 				h = actor(nn).vecY
-				aMenuHiLite x, y, w, h, actor(nn).frame, gfx.pageOfs(gfx.page)
-				player.menuHLcolor = &H6E6E
+				aMenuHiLite x, y, w, h, actor(nn).frame, gfx.pageOfs(gfx.page)				
 			END IF
 			IF actor(2).count < 5 THEN
 				IF kbArray(80) = 0 AND kbArray(72) = 0 AND kbArray(75) = 0 AND kbArray(77) = 0 THEN actor(2).count = 1
 			END IF
-			actor(2).count = actor(2).count - 1
-			player.menuHLcolor = &HCECF
+			actor(2).count = actor(2).count - 1			
 		ELSE
 			player.menuPrev = player.menuItem
 			nn = menuItem(player.menuItem)
@@ -449,16 +447,14 @@ CASE 258	'Menu
 				IF player.menuItem <> actor(nn).lNext THEN
 					player.menuItem = actor(nn).lNext
 					soundEvent = sndMenuNext
-					actor(2).count = 5
-					player.menuHLcolor = &H4747
+					actor(2).count = 5					
 				END IF
 			END IF
 			IF kbArray(72) OR kbArray(75) THEN 
 				IF player.menuItem <> actor(nn).lPrev THEN
 					player.menuItem = actor(nn).lPrev
 					soundEvent = sndMenuPrev
-					actor(2).count = 5
-					player.menuHLcolor = &H4747
+					actor(2).count = 5					
 				END IF
 			END IF
 			IF kbArray(28) THEN player.menuMode = 5
@@ -536,12 +532,12 @@ CASE 258	'Menu
 					player.menuContextPrev = 1
 					player.menuMode = 999
 					screenResetPos actor(2).x - 20, actor(2).y + 84
-				CASE 2
+				CASE 2 'continue
 					player.menuContext = 12
 					player.menuContextPrev = 2
 					player.menuMode = 999
 					screenResetPos actor(2).x - 20, actor(2).y + 20
-				CASE 3
+				CASE 3 'help
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 11
 					player.menuMode = 999
@@ -549,14 +545,19 @@ CASE 258	'Menu
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
 					player.menuMode = 999
-				END SELECT
-		CASE 11	'Help
-			SELECT CASE player.menuItem
-				CASE 1	'back
-					player.menuContext = player.menuContextPrev
-					player.menuContextPrev = 0
-					player.menuMode = 999
-				END SELECT
+				END SELECT		
+		CASE 11 'Help contents
+			player.menuMode = 999
+			SELECT CASE player.menuItem			
+			CASE 1								
+				player.menuContext = 40
+			CASE 3				
+				player.menuContext = 30
+				screenResetPos actor(2).x - 20, actor(2).y + 316
+			CASE 12
+				player.menuContext = player.menuContextPrev
+				screenResetPos actor(2).x - 20, actor(2).y - 52
+			END SELECT
 		CASE 12	'Load Game
 			IF player.menuItem < 4 THEN
 				player.saveSlot = player.menuItem - 1
@@ -598,6 +599,18 @@ CASE 258	'Menu
 		CASE 21 TO 23	'Secret level unlocked message
 				player.menuContext = 0
 				player.menuMode = 999
+		CASE 30 TO 50	'Help flippable pages
+			SELECT CASE player.menuItem
+			CASE 1
+				player.menuContext = 11
+				player.menuMode = 999
+			CASE 2
+				player.menuContext = player.menuContext - 1				
+				player.menuMode = 999
+			CASE 3
+				player.menuContext = player.menuContext + 1				
+				player.menuMode = 999
+			END SELECT
 		END SELECT
 	'--------------------------------------------------------------------------
 	CASE 999 to 1000		' Exit menu: clear screen
@@ -2731,16 +2744,19 @@ SUB makeParent (child, parent)
 	actor(child).lNext = pNext
 	actor(parent).lNext = child
 	actor(pNext).lPrev = child
-	debugOut str$(child) + ":" + str$(actor(child).exist) + " moved in list after " + str$(parent)
+	'debugOut str$(child) + ":" + str$(actor(child).exist) + " moved in list after " + str$(parent)
 	'
 	' Check if child has any children and arrange them after it
 	' in the linked-list to maintain draw order.
 	'	
-	IF actor(child).exist < 0 THEN linkedListArrange child		
+	IF actor(child).exist < 0 THEN getChildrenFor child		
 END SUB
 
-SUB linkedListArrange(parent)	
-	debugOut " Looking for children..."
+SUB getChildrenFor(parent)	
+	'
+	'Finds children of an actor and arranges them after the parent in the linked list
+	'
+	'debugOut " Looking for children..."
 	FOR child = 2 TO 60
 		IF ABS(actor(child).exist) = parent THEN
 			cNext = actor(child).lNext
@@ -2752,8 +2768,8 @@ SUB linkedListArrange(parent)
 			actor(child).lNext = pNext
 			actor(parent).lNext = child
 			actor(pNext).lPrev = child
-			debugOut "Child " + str$(child) + " rearranged."
-			IF actor(child).exist < 0 THEN linkedListArrange child
+			'debugOut "Child " + str$(child) + " rearranged."
+			IF actor(child).exist < 0 THEN getChildrenFor child
 		END IF
 	NEXT child
 END SUB
@@ -2762,6 +2778,9 @@ SUB unParent (index)
 	'debugOut "unParent"
 	actor(index).parentDX = 0
 	actor(index).parentDY = 0
-	c = actor(index).exist < 0
-	actor(index).exist = 1 - c - c
+	IF actor(index).exist > 1 THEN
+		actor(index).exist = 1
+	ELSE
+		actor(index).exist = -1
+	END IF
 END SUB

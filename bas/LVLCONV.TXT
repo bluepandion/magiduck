@@ -123,7 +123,7 @@
 "..\convert\foresta.tmx", "tileset3", "sprites0", 6, -1
 "..\convert\elevator.tmx", "tileset3", "sprites0", 7, -1
 "..\convert\aqua1.tmx", "tileset4", "sprites0", 8, -1
-"..\convert\aqua1.tmx", "tileset4", "sprites0", 9, -1
+"..\convert\aqua2.tmx", "tileset4", "sprites0", 9, -1
 "..\convert\scarys1.tmx", "tileset5", "sprites0", 10, -1
 "..\convert\scarys2.tmx", "tileset5", "sprites0", 11, -1
 "..\convert\boss.tmx", "tileset6", "sprites0", 12, -1
