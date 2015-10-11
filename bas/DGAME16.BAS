@@ -2,6 +2,7 @@ DECLARE SUB DEBUGOUT (s$)
 DECLARE SUB actorListNew (index%)
 DECLARE SUB unParent (object%)
 DECLARE SUB makeParent (child%, parent%)
+DECLARE SUB linkedListArrange(parent%)
 DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB screenFakePos (y%)
 DECLARE SUB initTestGame ()
@@ -143,7 +144,7 @@ END SUB
 SUB destroyObject (n)
 	IF actor(n).exist < 0 THEN
 		FOR c = 4 TO 60
-			IF actor(c).exist = n THEN actor(c).exist = 1
+			IF ABS(actor(c).exist) = n THEN actor(c).exist = 1
 		NEXT c
 	END IF
 	actor(n).exist = 0
@@ -486,7 +487,7 @@ CASE 258	'Menu
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
 					player.menuMode = 999
-				CASE 7	'forfeit
+				CASE 7	'forfeit
 					player.menuMode = 999
 					player.menuContext = -1
 					player.level = 1
@@ -511,6 +512,7 @@ CASE 258	'Menu
 					player.menuContextPrev = 0
 					player.menuMode = 999
 				CASE 2	'yes
+					actor(1).lNext = actor(2).jump
 					actor(2).control = 259
 					player.level = -1
 				END SELECT
@@ -776,8 +778,7 @@ CASE 255	'Normal player
 	END IF
 	IF kbArray(18) THEN maxY = 1
 	
-	IF player.hp = 0 THEN
-		actor(2).exist = 1
+	IF player.hp = 0 THEN		
 		actor(2).parentDX = 0
 		actor(2).parentDY = 0
 		actor(2).collider = 0
@@ -886,8 +887,8 @@ DO
 	'visDeltaY = 
 
 	IF ABS(screenX + 20 - actor(n).x) < actor(n).visX AND ABS(screenY + 24 - actor(n).y) < actor(n).visY THEN
-		IF actor(n).exist > 1 THEN
-			parent = actor(n).exist
+		parent = ABS(actor(n).exist)
+		IF parent > 1 THEN			
 			'
 			'Add parent delta transform.
 			' and store current parent transform for next delta.
@@ -942,13 +943,13 @@ DO
 				soundEvent = 115
 				actor(2).y = actor(n).y
 				player.vecY = 0
-				makeParent 2, n
+				makeParent 2, n				
 				player.parent = n
-				actor(2).exist = 1
+				actor(2).exist = -1				
 			END IF
 		ELSEIF player.parent = n THEN
 			IF playerDeltaX > 4 OR playerDeltaY > 2 OR player.vecY < -5 THEN
-				unParent 2
+				unParent 2				
 				player.parent = 0
 				actor(n).jump = 0
 			END IF
@@ -2130,7 +2131,7 @@ END SUB
 	actor(2).flash = 0
 	actor(2).lPrev = 1
 	actor(2).lNext = 3
-	actor(2).exist = 1
+	actor(2).exist = -1
 	actor(2).control = 255
 	actor(2).life = -3
 	actor(2).x = level.playerX
@@ -2397,7 +2398,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		IF spawnerFlags > 1 THEN
 			c = n
 			n = getSpawnSlot
-			actorListNew n
+			actorListNew n			
 			actor(n).exist = c
 			actor(n).X = x
 			actor(n).Y = y - 11
@@ -2416,7 +2417,6 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).dir = -5
 			actor(n).flags = 0
 		END IF
-		
 	CASE 2	'HELMET
 		actorListNew n
 		actor(n).control = 2   
@@ -2696,16 +2696,31 @@ END FUNCTION
 
 '==============================================================================
 SUB makeParent (child, parent)	
-	actor(child).exist = parent
+	'
+	' Set transformation parent
+	' Negative exist(=parent) value means the actor has children, so
+	' maintain such a value as negative after changing the parent.
+	'
+	IF actor(child).exist > 0 THEN
+		actor(child).exist = parent
+	ELSE
+		actor(child).exist = -parent
+	END IF
+		
 	actor(child).parentDX = actor(parent).X
 	actor(child).parentDY = actor(parent).Y
-	
+	'
+	' Check if linked-list rearrange is nescessary for
+	' consistent transformation inheritance.
+	'	
 	n = child
 	do
 		n = actor(n).lPrev
 		if n = parent then EXIT SUB
 	loop while n>1
-	
+	'
+	' Rearrange linked list so child is handled after the parent.
+	'
 	cNext = actor(child).lNext
 	cPrev = actor(child).lPrev
 	pNext = actor(parent).lNext
@@ -2715,12 +2730,38 @@ SUB makeParent (child, parent)
 	actor(child).lPrev = parent
 	actor(child).lNext = pNext
 	actor(parent).lNext = child
-	actor(pNext).lPrev = child	
+	actor(pNext).lPrev = child
+	debugOut str$(child) + ":" + str$(actor(child).exist) + " moved in list after " + str$(parent)
+	'
+	' Check if child has any children and arrange them after it
+	' in the linked-list to maintain draw order.
+	'	
+	IF actor(child).exist < 0 THEN linkedListArrange child		
+END SUB
+
+SUB linkedListArrange(parent)	
+	debugOut " Looking for children..."
+	FOR child = 2 TO 60
+		IF ABS(actor(child).exist) = parent THEN
+			cNext = actor(child).lNext
+			cPrev = actor(child).lPrev
+			pNext = actor(parent).lNext
+			actor(cPrev).lNext = actor(child).lNext
+			actor(cNext).lPrev = actor(child).lPrev
+			actor(child).lPrev = parent
+			actor(child).lNext = pNext
+			actor(parent).lNext = child
+			actor(pNext).lPrev = child
+			debugOut "Child " + str$(child) + " rearranged."
+			IF actor(child).exist < 0 THEN linkedListArrange child
+		END IF
+	NEXT child
 END SUB
 
 SUB unParent (index)
 	'debugOut "unParent"
 	actor(index).parentDX = 0
 	actor(index).parentDY = 0
-	actor(index).exist = 1
+	c = actor(index).exist < 0
+	actor(index).exist = 1 - c - c
 END SUB

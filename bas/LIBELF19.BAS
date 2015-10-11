@@ -646,15 +646,11 @@ SUB quit
 	  PRINT HEX$(level.spawner(n).object); TAB(C);
 	  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
 	 NEXT n
-
-		FOR n = 1 TO 60
-			IF actor(n).exist THEN
-				COLOR 7
-				PRINT n; "("; actor(n).control; "):"; actor(n).lPrev; actor(n).lNext,
-			ELSE
-				COLOR 8
-		END IF
-		NEXT n
+	n = 1
+	DO				
+		n = actor(n).lNext
+		PRINT n; actor(n).control,		
+	LOOP WHILE n > 1	
 	 PRINT
 	 PRINT
 	 COLOR 7
