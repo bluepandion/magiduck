@@ -530,7 +530,10 @@ SUB loadLevel
 		ProgressBar 6
 	CLOSE #1
 	
-	IF player.spriteSet <> level.spriteSet THEN loadSprites level.spriteSet, spriteBankAuxOfs
+	IF player.spriteSet <> level.spriteSet THEN 
+		loadSprites level.spriteSet, spriteBankAuxOfs
+		player.spriteSet = file$
+	END IF
 	
 	ProgressBar 7
 	
@@ -546,12 +549,11 @@ SUB loadSounds (file$)
 	CLOSE #1
 END SUB
 
-SUB loadSprites (file$, offset)
+SUB loadSprites (file$, offset)	
 	IF offset = 0 THEN
 		offset = spriteBankOfs
 	ELSE
-		offset = spriteBankAuxOfs
-		player.spriteSet = file$
+		offset = spriteBankAuxOfs		
 	END IF
 
 	DEF SEG = spriteBankSeg
@@ -649,7 +651,7 @@ SUB quit
 	n = 1
 	DO				
 		n = actor(n).lNext
-		PRINT n; actor(n).control,		
+		PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
 	LOOP WHILE n > 1	
 	 PRINT
 	 PRINT

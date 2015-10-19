@@ -554,6 +554,8 @@ CASE 258	'Menu
 			CASE 3				
 				player.menuContext = 30
 				screenResetPos actor(2).x - 20, actor(2).y + 316
+			CASE 7			
+				player.menuContext = 41				
 			CASE 12
 				player.menuContext = player.menuContextPrev
 				screenResetPos actor(2).x - 20, actor(2).y - 52
@@ -785,7 +787,7 @@ CASE 255	'Normal player
 	'CHEATS
 	IF kbArray(16) THEN player.hp = 4
 	IF kbArray(17) THEN
-		FOR c = 1 TO 9
+		FOR c = 1 TO 16
 			player.levelScore(c) = 1
 		NEXT c
 	END IF
@@ -1204,6 +1206,9 @@ DO
 			actor(n).x = actor(n).x AND &HFFFC + 2
 		END IF		
 	
+	CASE 10 'Boss Magpie
+	
+	
 	CASE 20	'Water / Lava
 	playerDeltaX = ABS(actor(n).x - playerX)
 	playerDeltaY = actor(n).y - playerY
@@ -1239,6 +1244,7 @@ DO
 					actor(n).frame = 39
 				'hits mover block
 				CASE 56					
+					t = 0
 					soundEvent = 115
 					IF actor(n).vecX < 0 THEN
 						s = -10
@@ -1701,7 +1707,7 @@ DO
 		END IF
 	
 	CASE 31 'DOOR OPEN or TILE GROW
-		IF actor(n).anim THEN
+		IF actor(n).anim THEN			
 			actor(n).count = actor(n).count + 1
 			IF actor(n).count > 4 THEN
 				actor(n).count = 0
@@ -2192,6 +2198,8 @@ END SUB
 	IF player.level = 1 THEN
 		player.score = player.levelScore(1)
 		handleSpawn 1
+		handleSpawn 2
+		handleSpawn 3
 		player.wave = 1
 		player.wavePrev = 0
 	END IF
@@ -2498,6 +2506,77 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		ELSE
 			actor(n).jump = 1
 		END IF
+	CASE 10	'BOSS
+		'head
+		actorListNew n		
+		actor(n).exist = -1
+		actor(n).control = 10
+		actor(n).visX = 80
+		actor(n).visY = 512
+		actor(n).frame = 80
+		actor(n).collider = 1
+		actor(n).life = -50
+		c = n
+		'wing r
+		n = getSpawnSlot
+		actorListNew n				
+		actor(n).exist = 1
+		actor(n).flags = 0		
+		actor(n).frame = 70
+		actor(n).x = x + 6
+		actor(n).y = y
+		actor(n).life = -999
+		actor(n).collider = 1
+		actor(n).vecX = 0
+		actor(n).vecY = 0
+		actor(n).visX = 80
+		actor(n).visY = 512
+		makeParent n, c
+		'wing l
+		n = getSpawnSlot		
+		actorListNew n
+		actor(n).exist = 1		
+		actor(n).flags = 1
+		actor(n).frame = 70
+		actor(n).x = x - 6
+		actor(n).y = y
+		actor(n).life = -999
+		actor(n).collider = 1
+		actor(n).vecX = 0
+		actor(n).vecY = 0
+		actor(n).visX = 80
+		actor(n).visY = 512
+		makeParent n, c
+		'body
+		n = getSpawnSlot
+		actorListNew n		
+		actor(n).exist = 1
+		actor(n).flags = 0		
+		actor(n).frame = 90
+		actor(n).x = x
+		actor(n).y = y
+		actor(n).life = -999
+		actor(n).collider = 0
+		actor(n).vecX = 0
+		actor(n).vecY = 0
+		actor(n).visX = 80
+		actor(n).visY = 512
+		makeParent n, c
+		'tail
+		n = getSpawnSlot
+		actorListNew n		
+		actor(n).exist = 1
+		actor(n).flags = 0		
+		actor(n).frame = 95
+		actor(n).x = x
+		actor(n).y = y
+		actor(n).life = -999
+		actor(n).collider = 0
+		actor(n).vecX = 0
+		actor(n).vecY = 0
+		actor(n).visX = 80
+		actor(n).visY = 512
+		makeParent n, c		
 	CASE 11 TO 12	'FIRE BREATH R / L
 	   actorListNew n
 	   actor(n).control = 11   
@@ -2668,19 +2747,23 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			tileWrite x, y, 27
 		END IF
 	CASE 67		'Hub-level Star Door
+		debugOut "star door found"
 		FOR c = 2 TO 11
-			IF player.levelScore(c) = 0 THEN level.spawner(spawner).object = 0
+			IF player.levelScore(c) = 0 THEN n = 0
 		NEXT c
-		IF level.spawner(spawner).object THEN
+		IF n THEN
+			debugOut "star door open"
 			actorListNew n
-			actor(n).jump = spawnerFlags
+			actor(n).jump = spawnerFlags			
 			actor(n).frame = 38
 			actor(n).control = 31
+			actor(n).life = -999
 			actor(n).anim = 1
 			actor(n).spawner = spawner
 			actor(n).dir = 31
 			actor(n).visY = 50
-			actor(n).y = actor(n).y + 8
+			'actor(n).y = actor(n).y + 8
+			actor(n).count = 4			
 		END IF
 	CASE 68		'Secret level unlock
 		IF player.levelCompletion(spawnerFlags) = 0 THEN

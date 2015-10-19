@@ -1445,7 +1445,7 @@ jae	offsetInAbove
 jmp	exit
 offsetInAbove:
 mov ax, 7121
-add	ax, di
+add	ax, gfxTileBuffer
 cmp	di, ax
 jb	offsetInBelow
 jmp	exit

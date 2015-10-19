@@ -173,6 +173,7 @@ PRINT "Converting defintions/animations to binary...";
 			saveThisAnim(n) = 1
 		 INPUT #1, x
 			INPUT #1, y
+			y = y + isAuxBank * 64
 			animation(n).offset(0) = y * 80 + x
 			animation(n).offset(1) = y * 80 + x + 40
 			INPUT #1, animation(n).w
