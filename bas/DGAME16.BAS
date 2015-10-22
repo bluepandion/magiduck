@@ -2516,37 +2516,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 80
 		actor(n).collider = 1
 		actor(n).life = -50
-		c = n
-		'wing r
-		n = getSpawnSlot
-		actorListNew n				
-		actor(n).exist = 1
-		actor(n).flags = 0		
-		actor(n).frame = 70
-		actor(n).x = x + 6
-		actor(n).y = y
-		actor(n).life = -999
-		actor(n).collider = 1
-		actor(n).vecX = 0
-		actor(n).vecY = 0
-		actor(n).visX = 80
-		actor(n).visY = 512
-		makeParent n, c
-		'wing l
-		n = getSpawnSlot		
-		actorListNew n
-		actor(n).exist = 1		
-		actor(n).flags = 1
-		actor(n).frame = 70
-		actor(n).x = x - 6
-		actor(n).y = y
-		actor(n).life = -999
-		actor(n).collider = 1
-		actor(n).vecX = 0
-		actor(n).vecY = 0
-		actor(n).visX = 80
-		actor(n).visY = 512
-		makeParent n, c
+		c = n		
 		'body
 		n = getSpawnSlot
 		actorListNew n		

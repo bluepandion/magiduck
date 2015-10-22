@@ -38,7 +38,7 @@ aPageFlip PROC
 		mov es, vSegment				;ES:DI = Page offset * 2
 		mov di, [bp + 06]
 		shl di, 1
-	mov cx, 16							;Hud string = 160 bytes
+	mov cx, gfxHudSize					;Hud string = 160 bytes
 	copyHud:		
 		movsw							;Copy character and attribute
 		and di, dx						;Wrap DI with video wrap offset		
@@ -151,7 +151,7 @@ aPageFlip PROC
 		mov di, [bp + 08]				;DI = previous page offset * 2
 		shl di, 1
 		mov ax, 00DEh					;Clear attribute = 00, character = 222
-	mov cx, 16
+	mov cx, gfxHudSize
 	clearHud:		
 		stosw							;Copy character and attribute
 		and di, dx						;Wrap DI with video wrap offset		
@@ -2417,6 +2417,21 @@ loop fadeOutLoop
 
 ;==============================================================================
 aFadeOut ENDP
+aSetHudRows PROC
+	;Set hud row count
+	;Used by aPageFlip
+	push bp
+	mov bp, sp
+	mov ax, [bp + 6]
+	shl ax, 1
+	shl ax, 1
+	shl ax, 1
+	shl ax, 1
+	mov gfxHudSize, al
+	pop bp
+	retf 2
+
+aSetHudSize ENDP
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2635,12 +2650,13 @@ keyboardInterrupt:
 		gfxTileSeg		dw	0000h
 		gfxTileBank		dw	0000h
 		gfxTileMap		dw	0000h
-		gfxTileBuffer	dw	0000h
+		gfxTileBuffer	dw	0000h		
 		hudBuffer		dw	0000h, 0000h
 		w40char			dw	0000h, 0000h
 		kbArray			dw 	0000h, 0000h
 		kbOld			dw  0000h, 0000h
 		kbFlags			db	00h
+		gfxHudSize		db	01h
 		
 		vSegment		dw	0b800h
 		vOldMode		db	0
