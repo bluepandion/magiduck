@@ -1823,7 +1823,7 @@ DO
 			'END IF
 			IF c THEN
 				FOR nn = 4 TO 60
-					IF ABS(actor(nn).y - actor(2).y) > 320 THEN
+					IF ABS(actor(nn).y - actor(2).y) > 240 THEN
 						IF actor(nn).control > 0 AND actor(nn).control < 65 THEN
 							level.spawner(actor(nn).spawner).object = level.spawner(actor(nn).spawner).object AND &HFFF
 							'debugOut "destroyed " + str$(actor(nn).control) + "  (" + str$(actor(nn).spawner) + " - " + hex$(level.spawner(actor(nn).spawner).object)

@@ -649,12 +649,14 @@ SUB quit
 	  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
 	 NEXT n
 	n = 1
+	nn = 1
 	DO				
 		n = actor(n).lNext
 		PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
+		nn = nn + 1
 	LOOP WHILE n > 1	
-	 PRINT
-	 PRINT
+	 PRINT 
+	 PRINT "n = "; nn
 	 COLOR 7
 	 PRINT " Thanks for playing!"
 	 PRINT " If you found bugs or things to improve,"
