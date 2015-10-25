@@ -38,7 +38,8 @@ aPageFlip PROC
 		mov es, vSegment				;ES:DI = Page offset * 2
 		mov di, [bp + 06]
 		shl di, 1
-	mov cx, gfxHudSize					;Hud string = 160 bytes
+	xor	ch, ch
+	mov cl, gfxHudRows					;Hud string = 160 bytes
 	copyHud:		
 		movsw							;Copy character and attribute
 		and di, dx						;Wrap DI with video wrap offset		
@@ -151,7 +152,8 @@ aPageFlip PROC
 		mov di, [bp + 08]				;DI = previous page offset * 2
 		shl di, 1
 		mov ax, 00DEh					;Clear attribute = 00, character = 222
-	mov cx, gfxHudSize
+	xor ch, ch
+	mov cl, gfxHudRows
 	clearHud:		
 		stosw							;Copy character and attribute
 		and di, dx						;Wrap DI with video wrap offset		
@@ -965,7 +967,7 @@ testWidthLess:				;IF Width < 0, skip this sprite.
 	JG testWidthOver
 	JMP skipSprite
 testWidthOver:
-cmp cl, 16
+cmp cl, 17
 JL widthOK
 JMP skipSprite
 widthOK:
@@ -1080,10 +1082,51 @@ loopYwrap:					;Sprite requires Wrap check.
 	xor bh, bh
 	shl bx, 1	
 	jmp [spriteWrap + bx]
-spriteWrap	dw	swi00, swi01, swi02, swi03, swi04, swi05, swi06, swi07, swi08, swi09, swi10								
+spriteWrap	dw	swi00, swi01, swi02, swi03, swi04, swi05, swi06, swi07, swi08, swi09, swi10, swi11, swi12, swi13, swi14, swi15, swi16, swi16, swi16
 ;-----------------------------------------------------------------------------
+swi16:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi15:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi14:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi13:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi12:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
+swi11:
+				lodsw				
+				and ah, es:[di]		
+				or al, ah			
+				stosb				
+				inc di				
+				and di, dx			
 swi10:
-
 				lodsw					;5		AX = DS:[SI], [SI] + 2
 				and ah, es:[di]			;2		AND canvas with mask
 				or al, ah				;2		OR canvas with sprite colour
@@ -1178,8 +1221,44 @@ loopYsafe:
 	mov bx, cx
 	xor bh, bh
 	shl bx, 1	
-	jmp [spriteSafe + bx]
-spriteSafe	dw	si00, si01, si02, si03, si04, si05, si06, si07, si08, si09, si10								
+	jmp [spriteSafe + bx]	
+spriteSafe	dw	si00, si01, si02, si03, si04, si05, si06, si07, si08, si09, si10, si11, si12, si13, si14, si15, si16, si16, si16
+si16:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si15:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si14:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si13:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si12:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
+si11:
+				 lodsw					
+				 and ah, es:[di]			
+				 or al, ah				
+				 stosb					
+				 inc di					
 si10:
 				 lodsw					;5		AX = DS:[SI], [SI] + 2
 				 and ah, es:[di]		;2		AND canvas with mask
@@ -2389,21 +2468,23 @@ aFadeOut PROC
 	mov ds, [bp + 06]
 	mov si, di
 	
-	xor bx, bx
+	mov	bx, offset lupFadeOutLo
+	mov dx, offset lupFadeOutHi
 	mov cx, 3840
 fadeOutLoop:
 	lodsb					;Load byte from video memory
+	inc si
 	mov ah, al				
-	and al, 00Fh			;Mask AL for lookup value 0-15
-	mov bl, al
-	mov al, lupFadeOutLo[bx]
+	and al, 00Fh			;Mask AL for lookup value 0-15	
+	xlat
+	xchg bx, dx
 	xchg ah, al				;Shift hi-nybble of byte for
 	shr al, 1				;lookup value 0-15
 	shr al, 1
 	shr al, 1
 	shr al, 1
-	mov bl, al
-	mov ah, lupFadeOutLo[bx]
+	xlat
+	xchg bx, dx
 	or al, ah				;Combine nybbles and store back.
 	stosb
 loop fadeOutLoop
@@ -2427,11 +2508,10 @@ aSetHudRows PROC
 	shl ax, 1
 	shl ax, 1
 	shl ax, 1
-	mov gfxHudSize, al
+	mov gfxHudRows, al
 	pop bp
 	retf 2
-
-aSetHudSize ENDP
+aSetHudRows ENDP
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2656,7 +2736,7 @@ keyboardInterrupt:
 		kbArray			dw 	0000h, 0000h
 		kbOld			dw  0000h, 0000h
 		kbFlags			db	00h
-		gfxHudSize		db	01h
+		gfxHudRows		db	10h
 		
 		vSegment		dw	0b800h
 		vOldMode		db	0
