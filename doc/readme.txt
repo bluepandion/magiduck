@@ -19,8 +19,8 @@ Minimum system requirements
 	IBM Compatible PC with:
 	- Intel 8088, 8086 or higher. 286 recommended.
 	- CGA compatible graphics adapter.
-	- 128 KB of free memory.
-	- 200 KB or free disk space.
+	- 256 KB of free memory.
+	- 160 KB or free disk space.
 	- MS-DOS 3.0 or higher.
 
 DosBox
