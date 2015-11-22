@@ -65,7 +65,7 @@ LOCATE 11, 1: PRINT TIMER
 row = 1
 col = 1
 COLOR 8
-FOR n = 32 TO 90
+FOR n = editc TO 90
  LOCATE row, col: PRINT w40Char.glyph1(n)
  LOCATE row + 1, col: PRINT w40Char.glyph2(n)
  IF editc = n THEN
@@ -75,7 +75,7 @@ FOR n = 32 TO 90
   COLOR 8
  END IF
  col = col + 1
- IF col = 41 THEN col = 1: row = row + 4
+ IF col = 41 THEN col = 1: row = row + 2
 NEXT n
 GET (0, 8)-(319, 11), tBox
 PUT (0, 4), tBox, PSET
@@ -83,7 +83,7 @@ LINE (0, 8)-(319, 15), 0, BF
 LOCATE 12, 1: PRINT TIMER
 
 DO
- LOCATE 3, 1: PRINT CHR$(editc)
+ LOCATE 8, 1: PRINT CHR$(editc)
  d$ = INKEY$
 
  IF d$ = CHR$(13) THEN

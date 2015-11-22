@@ -38,7 +38,7 @@ DIM SHARED ofsDATA AS INTEGER
 
 DIM SHARED maxScore AS LONG
 
-ofsDATA = 32
+ofsDATA = 64
 
 rowDebug = 8
 rowInfo = 1
@@ -124,10 +124,10 @@ OPEN listFile$ FOR INPUT AS #1
   IF listMode = 2 THEN
 	IF a$ <> "/maps" THEN
 	clearLevel
-	inFile$ = a$
+	levelNo = val(a$)
+	INPUT #1, inFile$
 	INPUT #1, level.tileSet
-	INPUT #1, level.spriteSet
-	INPUT #1, levelNo
+	INPUT #1, level.spriteSet	
 	n = -1
 	DO
 		n = n + 1

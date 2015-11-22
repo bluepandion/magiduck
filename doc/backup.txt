@@ -1,0 +1,54 @@
+SELECT CASE actor(n).control
+		CASE 17
+			c = angle.y(dtMain0) + 32
+			IF c < 14 THEN 
+				c = 14
+			ELSEIF c > 50 THEN 
+				c = 50
+			END IF
+		CASE 18	
+			c = (63 - dtMain0 + actor(n).jump) AND 63
+		CASE 19
+			c = (dtMain0 - actor(n).jump) AND 63
+		END SELECT
+		'actor(n).x = actor(n).count + mulTable(actor(n).jump, angle.x(c))
+        'actor(n).y = actor(n).dir + mulTable(actor(n).jump, angle.y(c))
+		actor(n).x = actor(n).count + mulTable(3, angle.x(c))
+        actor(n).y = actor(n).dir + mulTable(5, angle.y(c))
+
+			CASE 17 TO 19	'SPIKE BALL U, O+, O-
+		c = object
+		FOR p = 0 TO 1
+			actorListNew n
+			actor(n).x = x
+			actor(n).y = y
+			actor(n).count = x
+			actor(n).dir = y
+			actor(n).control = c
+			actor(n).exist = 1
+			actor(n).spawner = spawner
+			actor(n).life = -999
+			actor(n).jump = 24 + p * 12
+			actor(n).frame = 46
+			actor(n).anim = 148
+			actor(n).visX = 45
+			actor(n).visY = 50
+			actor(n).flags = 0
+			n = getSpawnslot
+		NEXT p
+		actorListNew n
+		actor(n).collider = 1
+		actor(n).x = x
+		actor(n).y = y
+		actor(n).count = x
+		actor(n).dir = y
+		actor(n).control = c
+		actor(n).flags = 0
+		actor(n).exist = 1
+		actor(n).spawner = spawner
+		actor(n).life = -999
+		actor(n).jump = 5
+		actor(n).frame = 45
+		actor(n).anim = 146
+		actor(n).visX = 50
+		actor(n).visY = 56

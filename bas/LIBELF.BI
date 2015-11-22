@@ -161,6 +161,8 @@ TYPE playerType
 	menuMode AS INTEGER
 	menuContext AS INTEGER
 	menuContextPrev AS INTEGER
+	menuExitCtrl AS INTEGER
+	menuSound AS INTEGER
 	menuItem AS INTEGER
 	menuPrev AS INTEGER
 	menuHLcolor AS INTEGER
@@ -182,9 +184,9 @@ TYPE playerType
 	tileSet AS STRING * 8
 	spriteSet AS STRING * 8
 	episode AS STRING * 8
-	levelScore(1 TO 16) AS LONG
-	levelCompletion(1 TO 16) AS INTEGER
-	levelTime(1 to 16) AS INTEGER
+	levelScore(0 TO 15) AS LONG
+	levelCompletion(0 TO 15) AS INTEGER
+	levelTime(0 to 15) AS INTEGER
 	saveSlot AS INTEGER
 	gotKeys AS INTEGER
 	gotCoins AS INTEGER

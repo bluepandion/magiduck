@@ -1,0 +1,40 @@
+ MagiDuck Alpha TO-DO
+----------------------------------
+
+X- 2/2 tilesets			
+ 
+X- 6/8 levels				
+
+X- Path platforms
+ 
+ - Swing platforms
+ 
+ - Cannons
+ 
+X- Preloaded menu pages
+ 
+X- Keyboard routine included in the library.
+ 
+ - Test EGA/VGA versions for 15 minutes.
+ 
+ - Scroll bug. (tilecopy?)
+ 
+X- Warning screen, when starting up.
+ 
+X- Time = 0 kills player
+ 
+X- BUG??? Player death may cause freeze (before menu pops up).
+
+X- Horizontal platform/elevator fix.
+
+X- "Forfeit" option in pause menu.
+ 
+X- Remove bouncing state from Helmets.
+ 
+X- Bounce blocks should move camera up more.
+ 
+X- Bounce blocks highlight should last half as long.
+ 
+X- Platform parenting.
+ 
+X- Assembly-procedures should use code-segment variables to store basic memory locations.

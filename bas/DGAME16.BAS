@@ -42,6 +42,7 @@ DECLARE SUB quit ()
 DECLARE FUNCTION getSpawnSlot% ()
 DECLARE SUB SaveGame
 DECLARE SUB LoadGame
+DECLARE FUNCTION GetKeyCode% ()
 
 'DECLARE SUB oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo ()
 
@@ -218,6 +219,8 @@ CASE 263	'Main menu pan
 	actor(2).count = actor(2).count + 1
 	IF actor(2).count > 2 THEN actor(2).control = 258
 '------------------------------------------------------------------------------
+CASE 265	'High score - get user input
+	c = GetKeyCode
 CASE 262	'Level Clear - Score Count
       pageOfs = gfx.pageOfs(gfx.page)
 
@@ -320,9 +323,9 @@ CASE 262	'Level Clear - Score Count
 				IF player.score > player.levelScore(player.level) THEN
 					player.levelScore(player.level) = player.score
 				END IF				
-				player.levelScore(1) = 0
-				for c = 2 to 12
-					player.levelScore(1) = player.levelScore(1) + player.levelScore(c)
+				player.levelScore(0) = 0
+				for c = 1 to 15
+					player.levelScore(0) = player.levelScore(0) + player.levelScore(c)
 				next c
 				SaveGame
 				soundEvent = 92
@@ -351,7 +354,11 @@ CASE 262	'Level Clear - Score Count
 
         CASE 25
 			CALL aSoundStop
-			player.level = 1
+			IF player.level = 11 THEN 
+				player.level = 25
+			ELSE
+				player.level = 0
+			END IF
 			actor(n).control = 259
       END SELECT
  '------------------------------------------------------------------------------              
@@ -404,10 +411,11 @@ CASE 260	'Level Clear - sync video pages
 		actor(2).control = 261
 	END IF
 '------------------------------------------------------------------------------			   
-CASE 258	'Menu
+CASE 258	'Menu	
 	SELECT CASE player.menuMode
-	CASE 0		'Display menu load message
+	CASE 0		'Display menu load message		
 		'w40char.text = " LOADING PAGE ...                      |"
+		player.menuExitCtrl = 255
 		player.hudLock = 999
 		'aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
 		'player.menuMode = 1
@@ -428,7 +436,7 @@ CASE 258	'Menu
 		'aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		player.menuMode = 2
 		player.menuHLcolor = &HCECF
-		soundEvent = SndPause
+		soundEvent = player.menuSound
 		
 	CASE 2		'Item highlight and wait for input
 		IF actor(2).count > 0 THEN
@@ -490,17 +498,17 @@ CASE 258	'Menu
 				CASE 7	'forfeit
 					player.menuMode = 999
 					player.menuContext = -1
-					player.level = 1
+					player.level = 0
 				END SELECT
 		'----------------------------------------------------------------------
 		CASE 3	'Death menu
 				SELECT CASE player.menuItem
-				CASE 1	'no
+				CASE 1	'try again
 					player.score = 0
 					player.menuContext = -1
 					player.menuMode = 999
-				CASE 2	'try again
-					player.level = 1
+				CASE 2	'no
+					player.level = 0
 					player.menuContext = -1
 					player.menuMode = 999
 				END SELECT
@@ -524,7 +532,7 @@ CASE 258	'Menu
 					player.menuContextPrev = 0
 					player.menuMode = 999
 				CASE 2	'yes
-					player.level = 0
+					player.level = 24
 					player.menuContext = -1
 					player.menuMode = 999
 				END SELECT
@@ -569,8 +577,8 @@ CASE 258	'Menu
 				player.saveSlot = player.menuItem - 1
 				loadGame
 				IF player.menuContextPrev = 1 THEN
-					IF player.levelScore(1) = 0 THEN
-						player.level = 1
+					IF player.levelScore(0) = 0 THEN
+						player.level = 0
 						player.menuContext = -1
 						player.menuMode = 999
 					ELSE
@@ -578,7 +586,7 @@ CASE 258	'Menu
 						player.menuMode = 999
 					END IF
 				ELSE
-					player.level = 1
+					player.level = 0
 					player.menuContext = -1
 					player.menuMode = 999
 				END IF
@@ -589,8 +597,8 @@ CASE 258	'Menu
 			END IF
 		CASE 13	'Clear save data?
 			IF player.menuItem = 2 THEN
-				player.level = 1
-				FOR c = 1 to 16
+				player.level = 0
+				FOR c = 0 to 15
 					player.levelScore(c) = 0
 					player.levelCompletion(c) = 0
 					player.levelTime(c) = 0
@@ -617,6 +625,19 @@ CASE 258	'Menu
 				player.menuContext = player.menuContext + 1				
 				player.menuMode = 999
 			END SELECT
+		CASE 60 TO 70	'Ending text
+			player.menuMode = 999
+			IF player.menuItem = 1 THEN				
+				player.menuExitCtrl = 264
+				player.menuContext = 0
+			ELSE				
+				player.menuContext = player.menuContext + 1
+				IF player.menuItem = 3 THEN
+					player.level = 26
+					player.menuContext = -1
+				END IF				
+			END IF
+			
 		END SELECT
 	'--------------------------------------------------------------------------
 	CASE 999 to 1000		' Exit menu: clear screen
@@ -633,12 +654,14 @@ CASE 258	'Menu
 		menuClear
 		IF player.menuContext > 0 THEN
 			player.menuMode = 0
+			player.menuSound = SndPause
 			EXIT SUB
 		END IF
 		IF player.menuContext = 0 THEN
-			actor(2).control = 255
+			actor(2).control = player.menuExitCtrl
 			player.menuMode = 0
 			player.hudLock = 0
+			player.menuSound = SndPause
 			hudUpdate 255
 		END IF
 		IF player.menuContext < 0 THEN
@@ -791,7 +814,7 @@ CASE 255	'Normal player
 	'CHEATS
 	IF kbArray(16) THEN player.hp = 4
 	IF kbArray(17) THEN
-		FOR c = 1 TO 16
+		FOR c = 0 TO 15
 			player.levelScore(c) = 1
 		NEXT c
 	END IF
@@ -852,14 +875,14 @@ CASE 255	'Normal player
 	IF kbArray(1) THEN
 		actor(2).control = 258
 		player.menuContext = 2
-		IF player.level = 1 THEN player.menuContext = 1
+		IF player.level = 0 THEN player.menuContext = 1
 		player.menuMode = 0		
 	END IF
 	
 	tickSec = tickSec + 1
 	IF tickSec > 23 THEN
 		tickSec = 0
-		IF player.level > 1 THEN 
+		IF player.level > 0 AND player.level < 16 THEN 
 			IF player.time > 0 THEN
 				player.time = player.time - 1
 			ELSE
@@ -869,6 +892,32 @@ CASE 255	'Normal player
 		hudUpdate &H8
 	END IF			
 	
+CASE 264	'Ending demo
+	'w40char.text = time$ + str$(actor(3).jump) + str$(actor(3).dir) + str$(actor(2).y) + str$(actor(2).vecY) + "|"
+	'aPrint &HFFFF, &HF1F1, 0, 0, hudBufferSeg, hudBufferOfs
+	screenTargetX = actor(2).x - 20
+	screenTargetY = actor(2).y - 46
+	handleCamera	
+	IF actor(2).vecY > -3 THEN actor(2).vecY = actor(2).vecY - 1
+	IF actor(2).y = actor(3).dir THEN				
+		actor(2).control = 258
+		player.menuMode = 0
+		player.menuContext = actor(3).jump + 59
+		actor(3).jump = actor(3).jump + 1
+		FOR c = 1 TO 64
+			IF level.spawner(c).object = &HF022 AND level.spawner(c).flags = actor(3).jump THEN
+				actor(3).dir = level.spawner(c).y
+				EXIT FOR
+			END IF
+		NEXT c	
+	END IF
+	IF kbArray(1) THEN
+		actor(2).control = 258
+		player.menuContext = 2
+		IF player.level = 0 THEN player.menuContext = 1
+		player.menuMode = 0
+		player.menuSound = -1
+	END IF
 END SELECT
 
 playerX = actor(2).x
@@ -1771,9 +1820,9 @@ DO
         END IF
     
     CASE 15 'SPIKE BALL BOUNCE
-        c = tileRead(actor(n).x, actor(n).y + 6)
+        c = tileRead(actor(n).x, actor(n).y + 1)
         IF c > 29 AND actor(n).vecY > 10 THEN
-			actor(n).y = actor(n).y AND &HFFF8 - 6
+			actor(n).y = actor(n).y AND &HFFF8 - 1			
 			actor(n).vecY = -33
 			aSoundNote 40
 		ELSE
@@ -2133,7 +2182,7 @@ SUB hudUpdate (flags AS INTEGER)
 			EXIT SUB
 		END IF
 	END IF
-	IF player.level > 1 THEN
+	IF player.level > 0 THEN
 		IF flags AND 1 THEN
 			w40char.text = " KEYS:    0000000              TIME:    |"
 			aPrint &HFFFF, &HE0C, 0, 0, hudBufferSeg, hudBufferOfs
@@ -2175,9 +2224,9 @@ SUB hudUpdate (flags AS INTEGER)
 END SUB
 
 SUB initGame
-	'OPEN "debug.txt" FOR OUTPUT AS #1
-	'	PRINT #1, TIME$
-	'CLOSE #1
+	OPEN "debug.txt" FOR OUTPUT AS #1
+		PRINT #1, TIME$
+	CLOSE #1
 	elfInit
 	
 	loadSounds "sound"
@@ -2190,7 +2239,7 @@ SUB initGame
 END SUB
 
 SUB initTestGame
-	player.level = 0
+	player.level = 24
 	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)
 	DO		
 		main
@@ -2302,8 +2351,8 @@ END SUB
 	
 	updateText = 1
 	
-	IF player.level = 1 THEN
-		player.score = player.levelScore(1)
+	IF player.level = 0 THEN
+		player.score = player.levelScore(0)
 		handleSpawn 1
 		handleSpawn 2
 		handleSpawn 3
@@ -2311,7 +2360,7 @@ END SUB
 		player.wavePrev = 0
 	END IF
 	
-	IF player.level = 0 THEN
+	IF player.level = 24 THEN
 		'hudTextLoad &H6E0, 0
 		player.hudLock = 999
 		actor(2).control = 258
@@ -2747,7 +2796,19 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).anim = 0
 		actor(n).spawner = spawner
 		actor(n).dir = object
-		actor(n).visY = 40		
+		actor(n).visY = 40
+	CASE 34				'Demo camera target
+		IF spawnerFlags = 1 THEN
+			actor(3).dir = y
+		END IF
+		IF spawnerFlags = 0 THEN
+			actor(2).x = x + 18
+			actor(2).y = y + 46
+			actor(2).control = 264			
+			actor(3).jump = 1
+			actor(2).frame = 0
+			actor(3).frame = 0			
+		END IF
 	CASE 41	   'PICKUP GEM/KEY/ETC...
 		actorListNew n
 		actor(n).control = 41
@@ -2845,13 +2906,11 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		IF player.levelScore(spawnerFlags) THEN 
 			tileWrite x, y, 27
 		END IF
-	CASE 67		'Hub-level Star Door
-		debugOut "star door found"
-		FOR c = 2 TO 11
+	CASE 67		'Hub-level Star Door		
+		FOR c = 1 TO 10
 			IF player.levelScore(c) = 0 THEN n = 0
 		NEXT c
-		IF n THEN
-			debugOut "star door open"
+		IF n THEN			
 			actorListNew n
 			actor(n).jump = spawnerFlags			
 			actor(n).frame = 38

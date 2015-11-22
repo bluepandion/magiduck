@@ -1,0 +1,52 @@
+
+player
+
+loop: {
+	
+	?? exist {
+		?? visible {
+		
+			transforms
+			
+			1s behaviors
+			
+			?? page {
+				2s behaviors
+				animations
+			}			
+			render queue
+		}
+		?? page {
+			life
+		}
+	}
+}
+
+collisions
+
+loop: {
+	
+	?? exist {
+		?? visible {
+		
+			transforms
+			
+			1s behaviors
+			
+			?? page {
+				2s behaviors
+			}			
+		}
+		?? page {
+			life
+		}
+	}
+}
+
+render queue
+collisions
+
+sub onesBehavior
+sub twosBehavior
+sub handleAnims
+sub handleLife

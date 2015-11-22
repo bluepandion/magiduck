@@ -21,6 +21,7 @@ DECLARE FUNCTION menuGetWord% ()
 DECLARE SUB ProgressBar (progress%)
 DECLARE SUB SaveGame ()
 DECLARE SUB LoadGame ()
+DECLARE FUNCTION GetKeyCode% ()
 
 DEFINT A-Z
 
@@ -91,9 +92,9 @@ SUB elfInit
 	PRINT " WARNING!"
 	COLOR 7, 0
 	PRINT 
-	PRINT "  Alpha 2 (2015-08-02)"
-	PRINT "  This version of MagiDuck has never"
-	PRINT "  been tested on real hardware."
+	PRINT "  Beta 1 (2015-11-09)"
+	PRINT "  See readme.txt for list of"
+	PRINT "  confirmed h/w compatibility."
 	COLOR 12, 0
 	PRINT
 	PRINT "  You are running this software at your"
@@ -671,7 +672,6 @@ SUB screenFakePos (y)
  '
  ' - windowY and windowOfs must match current situation.
  '
- ' - y(change) && 0x8 must match y(current) && 0x8.
 	yTileRelative = gfx.screenY(gfx.page) AND 7
 
 	y = (y AND &HFFF8) + yTileRelative
@@ -944,7 +944,7 @@ END SUB
 SUB LoadGame
 	fileOfs = 1 + player.saveSlot * 96
 	OPEN "savegame.sav" FOR BINARY AS #1
-		FOR n = 1 to 16
+		FOR n = 0 to 15
 			GET #1, fileOfs, player.levelScore(n)
 			fileOfs = fileOfs + 4
 			GET #1, fileOfs, player.levelCompletion(n)
@@ -956,9 +956,15 @@ SUB LoadGame
 END SUB
 
 SUB SaveGame
+	player.levelCompletion(0) = 0
+	FOR n = 1 TO 15
+		player.levelCompletion(0) = player.levelCompletion(0) + player.levelCompletion(n)
+	NEXT n
+	player.levelCompletion(0) = player.levelCompletion(0) / 15
+	
 	fileOfs = 1 + player.saveSlot * 128
 	OPEN "savegame.sav" FOR BINARY AS #1		
-		FOR n = 1 to 16
+		FOR n = 0 to 15
 			PUT #1, fileOfs, player.levelScore(n)
 			fileOfs = fileOfs + 4
 			PUT #1, fileOfs, player.levelCompletion(n)
@@ -968,12 +974,6 @@ SUB SaveGame
 		NEXT n
 	CLOSE #1
 	
-	player.levelCompletion(1) = 0
-	FOR n = 2 TO 16
-		player.levelCompletion(1) = player.levelCompletion(1) + player.levelCompletion(n)
-	NEXT n
-	player.levelCompletion(1) = player.levelCompletion(1) / 15
-	
 	fileOfs = 408 + player.saveSlot * 90
 	OPEN "menu.cmm" FOR BINARY AS #1
 		a$ = DATE$
@@ -981,7 +981,7 @@ SUB SaveGame
 		fileOfs = fileOfs + 30
 		'a$ = "SCORE:         |"
 		'PUT #1, fileOfs, a$
-		a$ = STR$(player.levelScore(1)) + " P|"
+		a$ = STR$(player.levelScore(0)) + " P|"
 		'n = fileOfs
 		'fileOfs = fileOfs + 15 - LEN(a$)
 		PUT #1, fileOfs, a$
@@ -989,8 +989,30 @@ SUB SaveGame
 		'a$ = "COMPLETE:     %|"
 		'PUT #1, fileOfs, a$
 		fileOfs = fileOfs + 30
-		a$ = STR$(player.levelCompletion(1)) + " %|"
+		a$ = STR$(player.levelCompletion(0)) + " %|"
 		'fileOfs = fileOfs + 14 - LEN(a$)
 		PUT #1, fileOfs, a$
 	CLOSE #1
 END SUB
+
+'
+' Read keyboard buffer for user string input, no repeat
+'
+FUNCTION GetKeyCode%
+	GetKeyCode = -999
+	FOR c = 2 TO 11	'numbers
+		IF kbArray(c) THEN GetKeyCode = c + 28: kbArray(c) = 0
+	NEXT c	
+	FOR c = 16 TO 25 'qwerty
+		IF kbArray(c) THEN GetKeyCode = c - 15: kbArray(c) = 0
+	NEXT c
+	FOR c = 30 TO 38 'asd
+		IF kbArray(c) THEN GetKeyCode = c - 18: kbArray(c) = 0
+	NEXT c
+	FOR c = 44 TO 50 'zxc
+		IF kbArray(c) THEN GetKeyCode = c - 24: kbArray(c) = 0
+	NEXT c
+	IF kbArray(14) THEN GetKeyCode = -1: kbArray(14) = 0
+	IF kbArray(28) THEN GetKeyCode = -2: kbArray(28) = 0
+	IF kbArray(57) THEN GetKeyCode = 0: kbArray(57) = 0
+END FUNCTION

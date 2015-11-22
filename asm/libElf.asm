@@ -2512,6 +2512,37 @@ aSetHudRows PROC
 	pop bp
 	retf 2
 aSetHudRows ENDP
+aUnPackLevelRLE PROC
+	push	bp
+	push	es
+	push	di
+	mov		bp, sp
+	mov		ax, [bp + 6]	
+	xor		cx, cx
+	xor		dx, dx
+	mov		dl, ah
+	mov		cl,	ah
+	xor		ah, ah	
+	mov		es, gfxTileSeg
+	mov		di, gfxTileMap
+	add		di, [bp + 8]
+	
+	xor		bx, bx
+	mov		bh, cl
+	shl		bh, 1
+	adc		bl, bl
+	
+loopRLE:
+	stosb
+	add		al, bl
+	loop	loopRLE
+	
+	mov		ax, dx
+	pop		di
+	pop		es
+	pop		bp
+	retf	4	
+aUnPackLevelRLE ENDP
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight

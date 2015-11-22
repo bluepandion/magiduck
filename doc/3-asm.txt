@@ -1,0 +1,139 @@
+     The QBNews                                                     Page 25
+     Volume  1, Number  3                                      May 22, 1990
+
+
+
+     ----------------------------------------------------------------------
+                  S o m e   A s s e m b l y   R e q u i r e d  
+     ----------------------------------------------------------------------
+
+     Assembler Programming for QuickBASIC by Tom Hanlin
+     
+          Perhaps  you  already  know a little  bit  about  programming  in
+     assembly  language,  or perhaps you've never given  it  much  thought.
+     After  all,  it's  supposed to be  frighteningly  difficult  to  write
+     assembler programs, and you've already got QuickBASIC anyway.
+     
+          Well,  it's true that there's a lot of work involved  in  writing
+     large programs in assembly language.  If you keep to the small  stuff,
+     however,  there's actually very little to it.  One of the easiest  and
+     most  rewarding  uses for assembly language lies in  writing  routines
+     that can be called from a higher-level language like QuickBASIC.  This
+     can give you entirely new capabilities or make your existing  programs
+     smaller  and  faster.   By  mixing the  capabilities  of  a  low-level
+     language  like assembler with a high-level language  like  QuickBASIC,
+     you  can  gain  a  lot  of  flexibility  when  you  need  it,  without
+     sacrificing the ease of use of good ol' BASIC.
+     
+          Microsoft's documentation on mixed-language programming is rather
+     daunting.  It's not exactly clear and the examples never seem to cover
+     quite  what you had in mind.  Once you understand a few simple  rules,
+     though,  you'll see that adding assembler routines to your  QuickBASIC
+     programs can be readily accomplished.
+     
+          I'm  going  to assume you have some notion of how to  program  in
+     both  QuickBASIC  and assembly language, since  explaining  an  entire
+     language would be a bit more than a single article could cover!   With
+     that in mind, let's take a look at the basic rules of writing assembly
+     routines for QuickBASIC and follow that up with the code for a working
+     routine.
+     
+          The first thing you need to know is which registers you can  use.
+     The  answer  is, "all of them."  However, certain  registers  must  be
+     preserved  for  BASIC,  so if you use them,  you  must  restore  their
+     original  values  before  returning to the main  BASIC  program.   The
+     registers  that  must be preserved are SI, DI, BP, and DS.   You  also
+     need  to  preserve  the stack (SS and SP)  and  direction  flag.   The
+     direction  flag  must  always be "forward" when you exit,  so  if  you
+     change it using the "STD" instruction, be sure to restore it using the
+     "CLD" instruction.
+     
+          Believe  it  or not, that's most of what you need to  know  right
+     there.  The other important thing to know is how to pass parameters to
+     or  from the assembler routine.  I'll keep it simple by  assuming  you
+     use the standard convention, which is "pass by reference", rather than
+     "pass by value", which has to be explicitly declared.
+     
+          What  do I mean by "pass by reference?"  I mean that, instead  of
+     getting the actual value of a parameter, your routine gets the address
+     of  that parameter and has to look up the value.  It's useful to  have
+     the address of the parameter, since that means you can return a  value
+     
+     The QBNews                                                     Page 26
+     Volume  1, Number  3                                      May 22, 1990
+
+     by storing it in the parameter's address.
+     
+          Integral  numbers are stored simply.  For integers,  the  address
+     you  are  given points directly to the integer (a word).  If  you  use
+     long integers, the address points to the long integer (a doubleword).
+     
+          Strings  are  stored  in a slightly more  complex  fashion.   The
+     address  you  are  given  points  to  a  "string  descriptor".    This
+     descriptor is composed of two words, with the first giving the  length
+     of  the string and the second the address of the string.  You are  not
+     allowed  to  change  the  length or address  of  the  string  in  your
+     assembler routine, although you may change the string itself.
+     
+          I  won't  go into single precision or double  precision  numbers,
+     because  they  are rather tricky to handle in assembler.  I  won't  go
+     into  arrays,  TYPEd values, or fixed-length strings here  either,  to
+     keep it reasonably brief.  Perhaps in a later article...
+     
+          Parameters  are passed on the stack, starting at offset  6  (six)
+     for  the -last- parameter and going up by two as you move towards  the
+     first parameter.
+     
+          Finally, you need to end your routine with a special "RET" opcode
+     that will clean the parameters off the stack for QuickBASIC.  The  RET
+     must  have a number after it which is twice the number  of  parameters
+     passed to the routine.
+     
+          Clear  as mud?  Well, perhaps the example routine will help  show
+     what I'm talking about.  The DOSVER.ASM file contains the source code.
+     To assemble it just type: ASM DOSVER; (where "ASM" is the name of your
+     assembler: MASM, TASM, or OPTASM)
+     
+          Convert  the  resulting DOSVER.OBJ file to a library so  you  can
+     easily  use  it  both from the command line and  QB  environment:
+          LIB   DOSVER;                     (this  creates   DOSVER.LIB)
+          LINK DOSVER/Q,,NUL,BQLB45;        (this creates DOSVER.QLB)
+     
+          If you are using QuickBASIC 4.0, change the BQLB45 to BQLB40.  If
+     you are using QuickBASIC 4.0a or 4.0b, change it to BQLB41.
+     
+          You  can  now use the DOSVER routine from the QB  environment  by
+     specifying the library name when you start QuickBASIC: QB /L DOSVER
+     
+          Use of the DECLARE statement is optional, but it will help  catch
+     any errors you might make when calling DOSVER.  Use this: DECLARE  SUB
+     DOSVER(VERSION$, MAJORV%, MINORV%)
+     
+          Before  calling the routine, you must set the VERSION$ string  to
+     at  least four characters, since the routine is not allowed to  change
+     the  length  of the string.  Call the routine like  this:
+          VERSION$  = SPACE$(4)
+          CALL DOSVER(VERSION$, MAJORV%, MINORV%)
+     
+          Typical  results will be "3.11" for VERSION$, 3 for MAJORV%,  and
+     11 for MINORV%.
+     
+     The QBNews                                                     Page 27
+     Volume  1, Number  3                                      May 22, 1990
+
+     
+          In  later articles, if there is any interest in it, I'll  explain
+     how  to handle arrays, TYPEd variables, and fixed-length strings,  and
+     also  how  to  pass  values back  from  functions  rather  than  using
+     subprograms.
+     
+     **********************************************************************
+     Tom  Hanlin  is  the author of the very  popular  ADVBAS  library  for
+     QuickBASIC. His  new  shareware library is called BASWIZ.  He  can  be
+     reached  through  the  QUIK_BAS echo on Fidonet or  in  care  of  this
+     newsletter.
+     **********************************************************************
+     
+     [EDITOR'S NOTE]
+          The archive ASMREQ.ZIP contains the assembler source code plus an
+     assembled .OBJ file for the routine contained in the article.

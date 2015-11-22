@@ -1,0 +1,44 @@
+name (0, "xyzzy")
+set (3, exist, 40)
+set (3, frame, 32)
+set (3, vecX, -1)
+text (3)
+sound (3)
+delay (48)
+exit (2)
+
+
+LINE INPUT #1, a$
+IF NotAlpha(a$) THEN	
+	IF a$ = ")" THEN ProcessStatement
+	IF prevToken = currToken THEN currToken = prevToken + 1
+ELSE
+	prevToken = currToken
+	token = token + UCASE$(a$)
+END IF
+
+SUB ProcessStatement
+	FOR n = 1 to 50
+		IF token(0) = "name" THEN
+			actorAlias(tokenVal(1)) = token(2)
+		END IF		
+		IF token(0) = keyWord(n) THEN
+			w0 = n
+			IF n < 32 THEN
+				w1 = token(1)
+				IF tokenVal(1) = 0 THEN w1 = GetActorByAlias(token(1))		
+			END IF
+			w2 = token(2)				
+			EXIT FOR
+		END IF		
+	NEXT n
+END SUB
+
+FUNCTION GetActorByAlias (alias$)
+	FOR n = 1 to 60
+		IF actorAlias(n) = alias$ THEN
+			GetActorByAlias = n
+			EXIT FUNCTION
+		END IF
+	NEXT n
+END FUNCTION

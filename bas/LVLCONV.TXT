@@ -46,27 +46,27 @@
 013, "CHECK1", 65, 04, 04, 01
 014, "CHECK2", 65, 04, 04, 02
 015, "CHECK3", 65, 04, 04, 03
-081, "Level1", 64, 08, 12, 02
-082, "Level2", 64, 08, 12, 03
-083, "Level3", 64, 08, 12, 04
-084, "Level4", 64, 08, 12, 05
-085, "Level5", 64, 08, 12, 06
-086, "Level6", 64, 08, 12, 07
-087, "Level7", 64, 08, 12, 08
-088, "Level8", 64, 08, 12, 09
-089, "Level9", 64, 08, 12, 10
-090, "Level10", 64, 08, 12, 11
-173, "BOSSLV", 64, 08, 12, 12
-091, "Star 1", 66, 00, 00, 02
-092, "Star 2", 66, 00, 00, 03
-093, "Star 3", 66, 00, 00, 04
-094, "Star 4", 66, 00, 00, 05
-095, "Star 5", 66, 00, 00, 06
-096, "Star 6", 66, 00, 00, 07
-097, "Star 7", 66, 00, 00, 08
-098, "Star 8", 66, 00, 00, 09
-099, "Star 9", 66, 00, 00, 10
-100, "Star10", 66, 00, 00, 11
+081, "Level1", 64, 08, 12, 01
+082, "Level2", 64, 08, 12, 02
+083, "Level3", 64, 08, 12, 03
+084, "Level4", 64, 08, 12, 04
+085, "Level5", 64, 08, 12, 05
+086, "Level6", 64, 08, 12, 06
+087, "Level7", 64, 08, 12, 07
+088, "Level8", 64, 08, 12, 08
+089, "Level9", 64, 08, 12, 09
+090, "Level10", 64, 08, 12, 10
+173, "BOSSLV", 64, 08, 12, 11
+091, "Star 1", 66, 00, 00, 01
+092, "Star 2", 66, 00, 00, 02
+093, "Star 3", 66, 00, 00, 03
+094, "Star 4", 66, 00, 00, 04
+095, "Star 5", 66, 00, 00, 05
+096, "Star 6", 66, 00, 00, 06
+097, "Star 7", 66, 00, 00, 07
+098, "Star 8", 66, 00, 00, 08
+099, "Star 9", 66, 00, 00, 09
+100, "Star10", 66, 00, 00, 10
 101, "Btn A ", 30, 04, 08, 01
 102, "Btn B ", 30, 04, 08, 02
 103, "Btn C ", 30, 04, 08, 04
@@ -91,44 +91,45 @@
 126, "Grow F", 32, 00, 00, 32
 127, "Grow G", 32, 00, 00, 64
 128, "Grow H", 32, 00, 00, 128
-180, "Info  ", 33, 00, 00, 00
-181, "Info  ", 33, 00, 00, 01
-182, "Info  ", 33, 00, 00, 02
-183, "Info  ", 33, 00, 00, 03
-184, "Info  ", 33, 00, 00, 04
-185, "Info  ", 33, 00, 00, 05
-186, "Info  ", 33, 00, 00, 06
-187, "Info  ", 33, 00, 00, 07
-188, "Info  ", 33, 00, 00, 08
-189, "Info  ", 33, 00, 00, 09
-190, "Info  ", 33, 00, 00, 10
-191, "Info  ", 33, 00, 00, 11
-192, "Info  ", 33, 00, 00, 12
-193, "Info  ", 33, 00, 00, 13
-194, "Info  ", 33, 00, 00, 14
-195, "Secret 1", 68, 04, 04, 13
-196, "Secret 2", 68, 04, 04, 14
-197, "Secret 3", 68, 04, 04, 15
-198, "SecrLV 1", 64, 04, 04, 13
-199, "SecrLV 2", 64, 04, 04, 14
-200, "SecrLV 3", 64, 04, 04, 15
+161, "Demo  ", 34, 00, 00, 00
+162, "Demo  ", 34, 00, 00, 01
+163, "Demo  ", 34, 00, 00, 02
+164, "Demo  ", 34, 00, 00, 03
+165, "Demo  ", 34, 00, 00, 04
+181, "Info  ", 33, 00, 00, 00
+182, "Info  ", 33, 00, 00, 01
+183, "Info  ", 33, 00, 00, 02
+184, "Info  ", 33, 00, 00, 03
+185, "Info  ", 33, 00, 00, 04
+186, "Info  ", 33, 00, 00, 05
+187, "Info  ", 33, 00, 00, 06
+188, "Info  ", 33, 00, 00, 07
+189, "Info  ", 33, 00, 00, 08
+195, "Secret 1", 68, 04, 04, 12
+196, "Secret 2", 68, 04, 04, 13
+197, "Secret 3", 68, 04, 04, 14
+198, "SecrLV 1", 64, 04, 04, 12
+199, "SecrLV 2", 64, 04, 04, 13
+200, "SecrLV 3", 64, 04, 04, 14
 "/actors"
 "pakfile", "levels", "/pakfile"
 "maps"
-"..\convert\logo.tmx", "logotile, "spenemy0", 0, -1
-"..\convert\hubworld.tmx", "tileset2", "spenemy0", 1, -1
-"..\convert\court1.tmx", "tileset1", "spenemy0", 2, -1
-"..\convert\court2.tmx", "tileset1", "spenemy0", 3, -1
-"..\convert\hicoin.tmx", "tileset0", "spenemy0", 4, -1
-"..\convert\chntower.tmx", "tileset0", "spenemy0", 5, -1
-"..\convert\foresta.tmx", "tileset3", "spenemy0", 6, -1
-"..\convert\elevator.tmx", "tileset3", "spenemy0", 7, -1
-"..\convert\aqua1.tmx", "tileset4", "spenemy0", 8, -1
-"..\convert\aqua2.tmx", "tileset4", "spenemy0", 9, -1
-"..\convert\scarys1.tmx", "tileset5", "spenemy0", 10, -1
-"..\convert\scarys2.tmx", "tileset5", "spenemy0", 11, -1
-"..\convert\boss.tmx", "tileset6", "sprboss1", 12, -1
-"..\convert\level2.tmx", "tileset1", "spenemy0", 13, -1
-"..\convert\pearltwr.tmx", "tileset1", "spenemy0", 14, -1
+0, "..\convert\hubworld.tmx", "tileset2", "spenemy0", -1
+1, "..\convert\court1.tmx", "tileset1", "spenemy0", -1
+2, "..\convert\court2.tmx", "tileset1", "spenemy0", -1
+3, "..\convert\hicoin.tmx", "tileset0", "spenemy0", -1
+4, "..\convert\chntower.tmx", "tileset0", "spenemy0", -1
+5, "..\convert\foresta.tmx", "tileset3", "spenemy0", -1
+6, "..\convert\elevator.tmx", "tileset3", "spenemy0", -1
+7, "..\convert\aqua1.tmx", "tileset4", "spenemy0", -1
+8, "..\convert\aqua2.tmx", "tileset4", "spenemy0", -1
+9, "..\convert\scarys1.tmx", "tileset5", "spenemy0", -1
+10, "..\convert\scarys2.tmx", "tileset5", "spenemy0", -1
+11, "..\convert\boss.tmx", "tileset6", "sprboss1", -1
+12, "..\convert\level2.tmx", "tileset1", "spenemy0", -1
+13, "..\convert\pearltwr.tmx", "tileset1", "spenemy0", -1
+24, "..\convert\logo.tmx", "logotile", "spenemy0", -1
+25, "..\convert\endscrol.tmx", "tileset7", "sprboss1", -1
+26, "..\convert\ending.tmx", "logotile", "spenemy0", -1
 "/maps"
 "/convert"
