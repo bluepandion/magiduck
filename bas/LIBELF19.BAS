@@ -1,5 +1,4 @@
 DECLARE FUNCTION getSpawnSlot% ()
-DECLARE SUB loadText (screenOfs%, textOfs%)
 DECLARE SUB handleCamera ()
 DECLARE SUB handleScroll ()
 DECLARE SUB damagePlayer ()
@@ -21,7 +20,6 @@ DECLARE FUNCTION menuGetWord% ()
 DECLARE SUB ProgressBar (progress%)
 DECLARE SUB SaveGame ()
 DECLARE SUB LoadGame ()
-DECLARE FUNCTION GetKeyCode% ()
 
 DEFINT A-Z
 
@@ -587,26 +585,6 @@ SUB loadSprites (file$, offset)
 	CLOSE #1
 END SUB
 
-SUB loadText (screenOfs, textOfs)
- 
- DEF SEG = &HB800
-
- OPEN "ducktext.ctt" FOR BINARY AS #1
-  FOR n = 1 TO 160
-
-	textOfs = textOfs + 1
-	GET #1, textOfs, loadStr
-
-	POKE screenOfs, ASC(loadStr)
-	screenOfs = screenOfs + 1
-
-  NEXT n
- CLOSE #1
-
- DEF SEG
-	
-END SUB
-
 SUB loadTiles (file$)
 	DEF SEG = tileBufferSeg
 	BLOAD file$ + ".ctg", tileBankOfs
@@ -822,11 +800,11 @@ SUB menuLoad (menuNo%)
 	fileOfs = menuGetWord%
 	itemCount = menuGetWord%
 	player.menuItem = menuGetWord%
-	menuLoadPos = fileOfs
-	tileCopyList(0, gfx.page).x = menuGetByte%
+	menuLoadPos = fileOfs	
+	tileCopyList(0, gfx.page).x = menuGetByte%	
 	tileCopyList(0, gfx.page).y = menuGetByte%
 	tileCopyList(0, gfx.page).w = menuGetByte%
-	tileCopyList(0, gfx.page).h = menuGetByte%
+	tileCopyList(0, gfx.page).h = menuGetByte%	
 	loadInt = menuGetWord%
 	tileCopyList(1, gfx.page).y = 255
 	aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), loadInt
@@ -974,7 +952,7 @@ SUB SaveGame
 		NEXT n
 	CLOSE #1
 	
-	fileOfs = 408 + player.saveSlot * 90
+	fileOfs = 536 + player.saveSlot * 90
 	OPEN "menu.cmm" FOR BINARY AS #1
 		a$ = DATE$
 		PUT #1, fileOfs, a$
@@ -995,24 +973,3 @@ SUB SaveGame
 	CLOSE #1
 END SUB
 
-'
-' Read keyboard buffer for user string input, no repeat
-'
-FUNCTION GetKeyCode%
-	GetKeyCode = -999
-	FOR c = 2 TO 11	'numbers
-		IF kbArray(c) THEN GetKeyCode = c + 28: kbArray(c) = 0
-	NEXT c	
-	FOR c = 16 TO 25 'qwerty
-		IF kbArray(c) THEN GetKeyCode = c - 15: kbArray(c) = 0
-	NEXT c
-	FOR c = 30 TO 38 'asd
-		IF kbArray(c) THEN GetKeyCode = c - 18: kbArray(c) = 0
-	NEXT c
-	FOR c = 44 TO 50 'zxc
-		IF kbArray(c) THEN GetKeyCode = c - 24: kbArray(c) = 0
-	NEXT c
-	IF kbArray(14) THEN GetKeyCode = -1: kbArray(14) = 0
-	IF kbArray(28) THEN GetKeyCode = -2: kbArray(28) = 0
-	IF kbArray(57) THEN GetKeyCode = 0: kbArray(57) = 0
-END FUNCTION

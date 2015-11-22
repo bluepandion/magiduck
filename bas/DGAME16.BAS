@@ -42,8 +42,8 @@ DECLARE SUB quit ()
 DECLARE FUNCTION getSpawnSlot% ()
 DECLARE SUB SaveGame
 DECLARE SUB LoadGame
-DECLARE FUNCTION GetKeyCode% ()
-
+DECLARE FUNCTION DrawHighScores% ()
+DECLARE SUB SaveHighScore (offset)
 'DECLARE SUB oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo ()
 
 DEFINT A-Z
@@ -219,8 +219,64 @@ CASE 263	'Main menu pan
 	actor(2).count = actor(2).count + 1
 	IF actor(2).count > 2 THEN actor(2).control = 258
 '------------------------------------------------------------------------------
-CASE 265	'High score - get user input
-	c = GetKeyCode
+CASE 265	'High score - draw screen		
+	myPrint 16, 4, "TOP DUCKS", &H1A17
+	actor(2).frame = 0
+	actor(3).frame = 0
+	c = DrawHighScores
+	actor(2).jump = (10 - c) * -3 + 40
+	actor(2).dir = (10 - c) * 12 + 1
+	actor(2).count = 0	
+	highScoreEntry.name = "       "
+	highScoreEntry.score = player.score
+	IF c > 0 THEN 
+		actor(2).control = 266
+		aKBremove		
+	ELSE
+		actor(2).control = 258
+		actor(2).dir = 0
+		player.menuMode = 0
+		player.menuContext = 14		
+	END IF	
+CASE 266	'High score - get input	
+	d$ = inkey$
+	IF d$ <> "" THEN 
+		c = ASC(UCASE$(d$))
+	ELSE
+		c = 0
+	END IF
+	
+	IF c > 31 AND c < 91 THEN		
+		IF actor(2).count < 8 THEN
+			actor(2).count = actor(2).count + 1			
+		END IF
+		MID$(highScoreEntry.name, actor(2).count, 1) = CHR$(c)		
+	END IF
+	IF c = 8 THEN				
+		IF actor(2).count > 0 THEN
+			MID$(highScoreEntry.name, actor(2).count, 1) = " "		
+			actor(2).count = actor(2).count - 1
+		END IF
+	END IF
+	myPrint 11, actor(2).jump, highScoreEntry.name, &H1F1F
+	myPrint 25, actor(2).jump, str$(highScoreEntry.score), &H1F1F
+	nn = &H1E1E
+	IF gfx.page THEN nn = &H1D1D
+	myPrint 11 + actor(2).count, actor(2).jump, ". ", nn
+	IF c = 13 THEN 
+		actor(2).control = 267
+		myPrint 10 + actor(2).count, actor(2).jump, "  ", nn
+	END IF
+CASE 267	'High score - sync pages after input	
+	myPrint 11 + actor(2).count, actor(2).jump, "  ", &H1111
+	actor(2).control = 268
+CASE 268	'High score - reinstall keyboard int, save score
+	debugOut "268"
+	aKBinit
+	SaveHighScore actor(2).dir
+	player.score = 0
+	actor(2).control = 265
+	
 CASE 262	'Level Clear - Score Count
       pageOfs = gfx.pageOfs(gfx.page)
 
@@ -553,6 +609,11 @@ CASE 258	'Menu
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 11
 					player.menuMode = 999
+				CASE 4  'high scores
+					player.score = 1001
+					player.menuMode = 999
+					player.menuExitCtrl = 265
+					player.menuContext = 0
 				CASE 5	'quit to dos
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
@@ -610,6 +671,9 @@ CASE 258	'Menu
 				player.menuContext = 12
 				player.menuMode = 999
 			END IF
+		CASE 14
+			player.menuContext = 10
+			player.menuMode = 999
 		CASE 21 TO 23	'Secret level unlocked message
 				player.menuContext = 0
 				player.menuMode = 999
@@ -647,7 +711,7 @@ CASE 258	'Menu
 		tileCopyList(0, gfx.page).h = 50
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), &HDE
-		aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
+		aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)		
 		player.menuMode = player.menuMode + 1
 	CASE 1001
 		actor(1).lNext = actor(2).jump
@@ -3024,4 +3088,34 @@ SUB unParent (index)
 	ELSE
 		actor(index).exist = -1
 	END IF
+END SUB
+
+FUNCTION DrawHighScores
+	DrawHighScores = -1
+	c = 1
+	y = 40
+	debugOut "Drawhighscores"	
+	OPEN "hiscores.def" FOR BINARY AS #1
+		FOR n = 10 to 1 STEP -1						
+			GET #1, c, highScoreEntry					
+			IF player.score >= highScoreEntry.score THEN 				
+				DrawHighScores = n										
+			END IF
+			debugOut "entry" + str$(n) + str$(y)
+			debugOut highScoreEntry.name
+			myPrint 6, y, str$(n) + "." , &H1717
+			myPrint 11, y, highScoreEntry.name, &H1E1E
+			myPrint 25, y, STR$(highScoreEntry.score), &H1E1E
+			y = y - 3 
+			c = c + 12
+		NEXT n
+	CLOSE #1
+	aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)	
+END FUNCTION
+
+SUB SaveHighScore (offset)	
+	OPEN "hiscores.def" FOR BINARY AS #1
+		PUT #1, offset, highScoreEntry
+	CLOSE #1
+	debugOut "ok"
 END SUB

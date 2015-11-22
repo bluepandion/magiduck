@@ -130,6 +130,5 @@
 13, "..\convert\pearltwr.tmx", "tileset1", "spenemy0", -1
 24, "..\convert\logo.tmx", "logotile", "spenemy0", -1
 25, "..\convert\endscrol.tmx", "tileset7", "sprboss1", -1
-26, "..\convert\ending.tmx", "logotile", "spenemy0", -1
 "/maps"
 "/convert"

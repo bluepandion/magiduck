@@ -285,4 +285,11 @@ COMMON SHARED w40char AS w40textType
 DIM menuItem(1 to 16) AS INTEGER
 COMMON SHARED menuItem() AS INTEGER
 
+TYPE scoreType
+ name AS STRING * 8
+ score AS LONG
+END TYPE
+
+COMMON SHARED highScoreEntry AS scoreType
+
 COMMON SHARED errorMessage$

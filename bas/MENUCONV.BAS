@@ -8,7 +8,7 @@ DIM SHARED saveString AS STRING
 DIM SHARED fileString AS STRING
 DIM SHARED prelString AS STRING
 
-fileString = STRING$(384, 0)
+fileString = STRING$(512, 0)
 prelString = STRING$(60, 0)
 
 ofsOFFSETS = 1
