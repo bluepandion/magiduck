@@ -219,7 +219,7 @@ CASE 263	'Main menu pan
 	actor(2).count = actor(2).count + 1
 	IF actor(2).count > 2 THEN actor(2).control = 258
 '------------------------------------------------------------------------------
-CASE 265	'High score - draw screen		
+CASE 265	'High score - draw screen			
 	myPrint 16, 4, "TOP DUCKS", &H1A17
 	actor(2).frame = 0
 	actor(3).frame = 0
@@ -270,8 +270,7 @@ CASE 266	'High score - get input
 CASE 267	'High score - sync pages after input	
 	myPrint 11 + actor(2).count, actor(2).jump, "  ", &H1111
 	actor(2).control = 268
-CASE 268	'High score - reinstall keyboard int, save score
-	debugOut "268"
+CASE 268	'High score - reinstall keyboard int, save score	
 	aKBinit
 	SaveHighScore actor(2).dir
 	player.score = 0
@@ -535,7 +534,13 @@ CASE 258	'Menu
 		aMenuHiLite x, y, w, h, player.menuHLcolor, gfx.pageOfs(gfx.page)
 	'--------------------------------------------------------------------------
 	CASE 5								'MENUCONTEXT Process selected menu item
+		'
+		'menuContext -1 = change level, 0 = exit menu behavior, >0 = change menu
+		'menuMode 999 = menu clear
+		'
 		player.menuMode = 2
+		player.targetX = 0
+		player.targetY = 0
 		SELECT CASE player.menuContext
 		'----------------------------------------------------------------------
 		CASE 1 TO 2	'Pause menu
@@ -599,21 +604,28 @@ CASE 258	'Menu
 					player.menuContext = 12
 					player.menuContextPrev = 1
 					player.menuMode = 999
-					screenResetPos actor(2).x - 20, actor(2).y + 84
+					'screenResetPos 
+					player.targetX = actor(2).x - 20
+					player.targetY = actor(2).y + 84
 				CASE 2 'continue
 					player.menuContext = 12
 					player.menuContextPrev = 2
 					player.menuMode = 999
-					screenResetPos actor(2).x - 20, actor(2).y + 20
+					'screenResetPos 
+					player.targetX = actor(2).x - 20
+					player.targetY = actor(2).y + 20
 				CASE 3 'help
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 11
 					player.menuMode = 999
 				CASE 4  'high scores
-					player.score = 1001
+					player.score = 0
 					player.menuMode = 999
 					player.menuExitCtrl = 265
 					player.menuContext = 0
+					'screenResetPos 
+					player.targetX = actor(2).x - 20
+					player.targetY = 520
 				CASE 5	'quit to dos
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 4
@@ -626,12 +638,16 @@ CASE 258	'Menu
 				player.menuContext = 40
 			CASE 3				
 				player.menuContext = 30
-				screenResetPos actor(2).x - 20, actor(2).y + 316
+				'screenResetPos 
+				player.targetX = actor(2).x - 20
+				player.targetY = actor(2).y + 316
 			CASE 7			
 				player.menuContext = 41				
 			CASE 12
 				player.menuContext = player.menuContextPrev
-				screenResetPos actor(2).x - 20, actor(2).y - 52
+				'screenResetPos 
+				playerX = actor(2).x - 20
+				playerY = actor(2).y - 52
 			END SELECT
 		CASE 12	'Load Game
 			IF player.menuItem < 4 THEN
@@ -654,7 +670,9 @@ CASE 258	'Menu
 			ELSE
 				player.menuContext = 10
 				player.menuMode = 999
-				screenResetPos actor(2).x - 20, actor(2).y - 52
+				'screenResetPos 
+				player.targetX = actor(2).x - 20
+				player.targetY = actor(2).y - 52
 			END IF
 		CASE 13	'Clear save data?
 			IF player.menuItem = 2 THEN
@@ -671,9 +689,17 @@ CASE 258	'Menu
 				player.menuContext = 12
 				player.menuMode = 999
 			END IF
-		CASE 14
-			player.menuContext = 10
+		CASE 14	'Highscore exit
 			player.menuMode = 999
+			IF player.level = 24 THEN 
+				'screenResetPos 
+				player.targetX = actor(2).x - 20
+				player.targetY = actor(2).y - 52
+				player.menuContext = 10			
+			ELSE
+				player.level = 24
+				player.menuContext = -1
+			END IF			
 		CASE 21 TO 23	'Secret level unlocked message
 				player.menuContext = 0
 				player.menuMode = 999
@@ -711,9 +737,12 @@ CASE 258	'Menu
 		tileCopyList(0, gfx.page).h = 50
 		tileCopyList(1, gfx.page).y = 255
 		aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), &HDE
-		aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)		
+		aRectList gfx.WindowOfs(gfx.page), gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset)
 		player.menuMode = player.menuMode + 1
 	CASE 1001
+		IF player.targetX <> 0 OR player.targetY <> 0 THEN
+			screenResetPos player.targetX, player.targetY
+		END IF
 		actor(1).lNext = actor(2).jump
 		menuClear
 		IF player.menuContext > 0 THEN
@@ -724,7 +753,7 @@ CASE 258	'Menu
 		IF player.menuContext = 0 THEN
 			actor(2).control = player.menuExitCtrl
 			player.menuMode = 0
-			player.hudLock = 0
+			player.hudLock = 4
 			player.menuSound = SndPause
 			hudUpdate 255
 		END IF
@@ -1493,27 +1522,32 @@ DO
 	
 	'Flamer
 	CASE 17 TO 19        		
-		IF level.spawner(actor(n).spawner).object > 0 THEN 
-			actor(n).life = 0
-			actor(n).control = 0
-			actor(n).spawner = 0
-		END IF		
-		playerDeltaX = ABS(actor(n).x - playerX)
-		playerDeltaY = actor(n).y - playerY
-		IF playerDeltaX < 3 AND playerDeltaY < 7 AND playerDeltaY > -6 THEN
-			damagePlayer			
-		END IF
-		actor(n).count = actor(n).count + 1
-		IF actor(n).count > 9 THEN					
-			actor(n).dir = (actor(n).dir + 7) AND 63
+		'IF level.spawner(actor(n).spawner).object > 0 THEN 
+		'	actor(n).life = 0
+		'	actor(n).control = 0
+		'	actor(n).spawner = 0
+		'END IF		
+		IF ABS(actor(2).y - level.spawner(actor(n).spawner).y) < 60 THEN			
+			playerDeltaX = ABS(actor(n).x - playerX)
+			playerDeltaY = actor(n).y - playerY
+			IF playerDeltaX < 3 AND playerDeltaY < 7 AND playerDeltaY > -6 THEN
+				damagePlayer			
+			END IF
 			c = actor(n).dir			
 			actor(n).vecX = angle.x(c)
 			actor(n).vecY = angle.y(c)
-			c = actor(n).spawner
-			actor(n).x = level.spawner(c).x
-			actor(n).y = level.spawner(c).y
-			actor(n).count = 0
-		END IF	
+			actor(n).count = actor(n).count + 1
+			IF actor(n).count > 9 THEN					
+				actor(n).dir = (actor(n).dir + 7) AND 63				
+				c = actor(n).spawner
+				actor(n).x = level.spawner(c).x
+				actor(n).y = level.spawner(c).y
+				actor(n).count = 0
+			END IF
+		ELSE
+			actor(n).vecX = 0
+			actor(n).vecY = 0
+		END IF
 
 	'Drip
 	CASE 104
@@ -2032,8 +2066,8 @@ DO
 				actor(n).frame = 30
 				actor(n).control = 0
 				actor(2).control = 263				
-				player.menuContext = 20 + actor(n).jump
-				player.levelCompletion(actor(n).jump + 12) = 1
+				player.menuContext = 9 + actor(n).jump
+				player.levelCompletion(actor(n).jump) = 1				
 			END IF
 		END IF
 
@@ -2813,8 +2847,8 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 50
 		c = (object > 17)
 		actor(n).dir = 0'1 - c - c
-		actor(n).visX = 60
-		actor(n).visY = 60
+		actor(n).visX = 80
+		actor(n).visY = 80
 		actor(n).life = -999
 		actor(n).spawner = spawner
 		n = getSpawnSlot
@@ -2827,8 +2861,8 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).count = 5
 		actor(n).frame = 50		
 		actor(n).dir = 0 '1 - c - c
-		actor(n).visX = 60
-		actor(n).visY = 60
+		actor(n).visX = 80
+		actor(n).visY = 70
 		actor(n).spawner = spawner
 		'actor(n).anim = 0
 		'actor(n).control = object
@@ -2935,16 +2969,16 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		END IF
 		actor(n).spawner = spawner
 		'secret level
-		IF spawnerFlags > 12 AND spawnerFlags < 16 THEN				
+		IF spawnerFlags > 11 AND spawnerFlags < 16 THEN							
 			actor(n).control = 0
 			actor(n).jump = spawnerFlags
-			IF player.levelCompletion(spawnerFlags) = 1 THEN 
+			IF player.levelCompletion(spawnerFlags) = 1 THEN 				
 				actor(n).control = 64
 				tileWrite x, y, 24				
 			ELSEIF player.levelCompletion(spawnerFlags) > 49 THEN 				
 				actor(n).control = 64
 				tileWrite x, y, 25
-			END IF
+			END IF			
 			'actor(n).y = y + 20
 			actor(n).frame = 0			
 		'normal level
@@ -2987,13 +3021,14 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			'actor(n).y = actor(n).y + 8
 			actor(n).count = 4			
 		END IF
-	CASE 68		'Secret level unlock
-		IF player.levelCompletion(spawnerFlags) = 0 THEN
+	CASE 68		'Secret level unlock				
+		IF player.levelCompletion(spawnerFlags) = 0 THEN			
 			actorListNew n			
 			actor(n).spawner = spawner		
 			actor(n).control = 63
 			actor(n).frame = 67
-			actor(n).jump = spawnerFlags - 12
+			actor(n).jump = spawnerFlags
+			actor(n).dir = y
 		END IF
 	END SELECT
 END SUB
@@ -3093,16 +3128,13 @@ END SUB
 FUNCTION DrawHighScores
 	DrawHighScores = -1
 	c = 1
-	y = 40
-	debugOut "Drawhighscores"	
+	y = 40	
 	OPEN "hiscores.def" FOR BINARY AS #1
 		FOR n = 10 to 1 STEP -1						
 			GET #1, c, highScoreEntry					
 			IF player.score >= highScoreEntry.score THEN 				
 				DrawHighScores = n										
 			END IF
-			debugOut "entry" + str$(n) + str$(y)
-			debugOut highScoreEntry.name
 			myPrint 6, y, str$(n) + "." , &H1717
 			myPrint 11, y, highScoreEntry.name, &H1E1E
 			myPrint 25, y, STR$(highScoreEntry.score), &H1E1E
@@ -3116,6 +3148,5 @@ END FUNCTION
 SUB SaveHighScore (offset)	
 	OPEN "hiscores.def" FOR BINARY AS #1
 		PUT #1, offset, highScoreEntry
-	CLOSE #1
-	debugOut "ok"
+	CLOSE #1	
 END SUB

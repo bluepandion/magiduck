@@ -638,10 +638,7 @@ SUB quit
 	 PRINT "n = "; nn
 	 COLOR 7
 	 PRINT " Thanks for playing!"
-	 PRINT " If you found bugs or things to improve,"
-	 PRINT " please send your feedback to"
-	 PRINT " toni.svenstrom @ hotmail.com"
-	 PRINT
+	 PRINT	 	 
 	 END
 END SUB
 
@@ -938,7 +935,7 @@ SUB SaveGame
 	FOR n = 1 TO 15
 		player.levelCompletion(0) = player.levelCompletion(0) + player.levelCompletion(n)
 	NEXT n
-	player.levelCompletion(0) = player.levelCompletion(0) / 15
+	player.levelCompletion(0) = player.levelCompletion(0) / 13
 	
 	fileOfs = 1 + player.saveSlot * 128
 	OPEN "savegame.sav" FOR BINARY AS #1		
