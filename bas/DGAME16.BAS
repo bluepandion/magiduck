@@ -117,7 +117,7 @@ SUB addScore (eventType)
 	CASE 1
 		s = 15
 	CASE ItemSuperOrb
-		s = 20000
+		s = 1000
 	CASE ItemGemSmall
 		s = 100
 	CASE ItemGemBig
@@ -544,34 +544,30 @@ CASE 258	'Menu
 		SELECT CASE player.menuContext
 		'----------------------------------------------------------------------
 		CASE 1 TO 2	'Pause menu
+				player.menuMode = 999
 				SELECT CASE player.menuItem
-				CASE 1
-					player.menuMode = 999
+				CASE 1					
 					player.menuContext = 0
 				CASE 2	'quit to main menu
 					player.menuContextPrev = player.menuContext
-					player.menuContext = 5
-					player.menuMode = 999
+					player.menuContext = 5					
 				CASE 3	'quit to dos
 					player.menuContextPrev = player.menuContext
-					player.menuContext = 4
-					player.menuMode = 999
-				CASE 7	'forfeit
-					player.menuMode = 999
+					player.menuContext = 4					
+				CASE 7	'forfeit					
 					player.menuContext = -1
 					player.level = 0
 				END SELECT
 		'----------------------------------------------------------------------
 		CASE 3	'Death menu
+				player.menuMode = 999
 				SELECT CASE player.menuItem
 				CASE 1	'try again
 					player.score = 0
-					player.menuContext = -1
-					player.menuMode = 999
+					player.menuContext = -1					
 				CASE 2	'no
 					player.level = 0
-					player.menuContext = -1
-					player.menuMode = 999
+					player.menuContext = -1					
 				END SELECT
 		'----------------------------------------------------------------------
 		CASE 4	'Quit to dos
@@ -587,40 +583,36 @@ CASE 258	'Menu
 				END SELECT
 		'----------------------------------------------------------------------
 		CASE 5	'Quit to main menu
+				player.menuMode = 999
 				SELECT CASE player.menuItem
 				CASE 1	'no
 					player.menuContext = player.menuContextPrev
-					player.menuContextPrev = 0
-					player.menuMode = 999
+					player.menuContextPrev = 0					
 				CASE 2	'yes
 					player.level = 24
-					player.menuContext = -1
-					player.menuMode = 999
+					player.menuContext = -1					
 				END SELECT
 		'----------------------------------------------------------------------
 		CASE 10 'Main menu
+				player.menuMode = 999
 				SELECT CASE player.menuItem
 				CASE 1	'new game
 					player.menuContext = 12
-					player.menuContextPrev = 1
-					player.menuMode = 999
+					player.menuContextPrev = 1					
 					'screenResetPos 
 					player.targetX = actor(2).x - 20
 					player.targetY = actor(2).y + 84
 				CASE 2 'continue
 					player.menuContext = 12
-					player.menuContextPrev = 2
-					player.menuMode = 999
+					player.menuContextPrev = 2					
 					'screenResetPos 
 					player.targetX = actor(2).x - 20
 					player.targetY = actor(2).y + 20
 				CASE 3 'help
 					player.menuContextPrev = player.menuContext
-					player.menuContext = 11
-					player.menuMode = 999
+					player.menuContext = 11					
 				CASE 4  'high scores
-					player.score = 0
-					player.menuMode = 999
+					player.score = 0					
 					player.menuExitCtrl = 265
 					player.menuContext = 0
 					'screenResetPos 
@@ -628,8 +620,7 @@ CASE 258	'Menu
 					player.targetY = 520
 				CASE 5	'quit to dos
 					player.menuContextPrev = player.menuContext
-					player.menuContext = 4
-					player.menuMode = 999
+					player.menuContext = 4					
 				END SELECT		
 		CASE 11 'Help contents
 			player.menuMode = 999
@@ -647,7 +638,7 @@ CASE 258	'Menu
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y + 148
 			CASE 5	'items
-				player.menuContext = 30
+				player.menuContext = 46
 				'screenResetPos 
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y + 316
@@ -660,31 +651,29 @@ CASE 258	'Menu
 				player.targetY = actor(2).y - 52
 			END SELECT
 		CASE 12	'Load Game
+			player.menuMode = 999
 			IF player.menuItem < 4 THEN
 				player.saveSlot = player.menuItem - 1
 				loadGame
 				IF player.menuContextPrev = 1 THEN
 					IF player.levelScore(0) = 0 THEN
 						player.level = 0
-						player.menuContext = -1
-						player.menuMode = 999
+						player.menuContext = -1						
 					ELSE
-						player.menuContext = 13
-						player.menuMode = 999
+						player.menuContext = 13						
 					END IF
 				ELSE
 					player.level = 0
-					player.menuContext = -1
-					player.menuMode = 999
+					player.menuContext = -1					
 				END IF
 			ELSE
-				player.menuContext = 10
-				player.menuMode = 999
+				player.menuContext = 10				
 				'screenResetPos 
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y - 52
 			END IF
 		CASE 13	'Clear save data?
+			player.menuMode = 999
 			IF player.menuItem = 2 THEN
 				player.level = 0
 				FOR c = 0 to 15
@@ -693,11 +682,9 @@ CASE 258	'Menu
 					player.levelTime(c) = 0
 				NEXT c
 				player.menuContext = -1
-				player.menuContextPrev = 1
-				player.menuMode = 999
+				player.menuContextPrev = 1				
 			ELSE
-				player.menuContext = 12
-				player.menuMode = 999
+				player.menuContext = 12				
 			END IF
 		CASE 14	'Highscore exit
 			player.menuMode = 999
@@ -714,16 +701,14 @@ CASE 258	'Menu
 				player.menuContext = 0
 				player.menuMode = 999
 		CASE 30 TO 50	'Help flippable pages
-			SELECT CASE player.menuItem
+			player.menuMode = 999
+			SELECT CASE player.menuItem			
 			CASE 1
-				player.menuContext = 11
-				player.menuMode = 999
+				player.menuContext = 11				
 			CASE 2
-				player.menuContext = player.menuContext - 1				
-				player.menuMode = 999
+				player.menuContext = player.menuContext - 1								
 			CASE 3
-				player.menuContext = player.menuContext + 1				
-				player.menuMode = 999
+				player.menuContext = player.menuContext + 1								
 			END SELECT
 		CASE 60 TO 70	'Ending text
 			player.menuMode = 999
@@ -733,8 +718,9 @@ CASE 258	'Menu
 			ELSE				
 				player.menuContext = player.menuContext + 1
 				IF player.menuItem = 3 THEN
-					player.level = 26
-					player.menuContext = -1
+					player.score = player.levelScore(0)					
+					player.menuExitCtrl = 265
+					player.menuContext = 0
 				END IF				
 			END IF
 			
@@ -1537,7 +1523,7 @@ DO
 		'	actor(n).control = 0
 		'	actor(n).spawner = 0
 		'END IF		
-		IF ABS(actor(2).y - level.spawner(actor(n).spawner).y) < 60 THEN			
+		IF ABS(actor(2).y - actor(n).jump) < 60 THEN			
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = actor(n).y - playerY
 			IF playerDeltaX < 3 AND playerDeltaY < 7 AND playerDeltaY > -6 THEN
@@ -2859,7 +2845,8 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).dir = 0'1 - c - c
 		actor(n).visX = 80
 		actor(n).visY = 80
-		actor(n).life = -999
+		actor(n).life = -999		
+		actor(n).jump = y
 		actor(n).spawner = spawner
 		n = getSpawnSlot
 		actorListNew n
@@ -2873,6 +2860,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).dir = 0 '1 - c - c
 		actor(n).visX = 80
 		actor(n).visY = 80
+		actor(n).jump = y
 		actor(n).spawner = spawner
 		'actor(n).anim = 0
 		'actor(n).control = object
