@@ -125,6 +125,7 @@ OPEN listFile$ FOR INPUT AS #1
 	IF a$ <> "/maps" THEN
 	clearLevel
 	levelNo = val(a$)
+	INPUT #1, levelName$
 	INPUT #1, inFile$
 	INPUT #1, level.tileSet
 	INPUT #1, level.spriteSet	

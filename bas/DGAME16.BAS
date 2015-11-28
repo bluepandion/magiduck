@@ -636,18 +636,28 @@ CASE 258	'Menu
 			SELECT CASE player.menuItem			
 			CASE 1								
 				player.menuContext = 40
-			CASE 3				
+			CASE 3	'enemies
 				player.menuContext = 30
 				'screenResetPos 
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y + 316
-			CASE 7			
+			CASE 4	'special tiles
+				player.menuContext = 45
+				'screenResetPos 
+				player.targetX = actor(2).x - 20
+				player.targetY = actor(2).y + 148
+			CASE 5	'items
+				player.menuContext = 30
+				'screenResetPos 
+				player.targetX = actor(2).x - 20
+				player.targetY = actor(2).y + 316
+			CASE 7	'credits		
 				player.menuContext = 41				
 			CASE 12
 				player.menuContext = player.menuContextPrev
 				'screenResetPos 
-				playerX = actor(2).x - 20
-				playerY = actor(2).y - 52
+				player.targetX = actor(2).x - 20
+				player.targetY = actor(2).y - 52
 			END SELECT
 		CASE 12	'Load Game
 			IF player.menuItem < 4 THEN
@@ -2862,7 +2872,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 50		
 		actor(n).dir = 0 '1 - c - c
 		actor(n).visX = 80
-		actor(n).visY = 70
+		actor(n).visY = 80
 		actor(n).spawner = spawner
 		'actor(n).anim = 0
 		'actor(n).control = object
