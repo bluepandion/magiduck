@@ -728,8 +728,7 @@ CASE 258	'Menu
 			player.menuContext = 0
 			IF player.menuItem = 1 THEN				
 				player.menuExitCtrl = 264				
-			ELSE				
-				player.menuContext = player.menuContext + 1
+			ELSE								
 				IF player.menuItem = 3 THEN
 					player.score = player.levelScore(0)					
 					player.menuExitCtrl = 265					
@@ -1433,12 +1432,15 @@ DO
 				END IF
 				IF actor(n).y < 24 THEN
 				IF level.spawner(63).object = 0 THEN 
-						SpawnObject actor(n).x -8, 32, 63, 63, 0
+						SpawnObject actor(n).x -9, 32, 63, 63, 0
 						level.spawner(63).object = -63
-					END IF
+					END IF					
 					actor(n).control = 0
 					actor(n).vecX = 0
 					actor(n).vecY = 0
+					FOR c = 4 TO 60
+						actor(c).collider = 0
+					NEXT c
 				END IF
 			END IF
 		END SELECT
@@ -1534,12 +1536,7 @@ DO
 		END IF
 	
 	'Flamer
-	CASE 17 TO 19        		
-		'IF level.spawner(actor(n).spawner).object > 0 THEN 
-		'	actor(n).life = 0
-		'	actor(n).control = 0
-		'	actor(n).spawner = 0
-		'END IF		
+	CASE 17 TO 19        				
 		IF ABS(actor(2).y - actor(n).jump) < 60 THEN			
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = actor(n).y - playerY
@@ -1561,6 +1558,11 @@ DO
 			actor(n).vecX = 0
 			actor(n).vecY = 0
 		END IF
+		IF level.spawner(actor(n).spawner).object > 0 THEN 
+			actor(n).life = 0
+			actor(n).control = 0
+			actor(n).spawner = 0
+		END IF		
 
 	'Drip
 	CASE 104
@@ -2484,7 +2486,9 @@ END SUB
 		hudUpdate 255
 		screenResetPos actor(2).x - 20, actor(2).y - 46
 	END IF
-
+	
+	player.levelPrev = player.level
+	
 	CALL aTimerReset
 		
 	DO

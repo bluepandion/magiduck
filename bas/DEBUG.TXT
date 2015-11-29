@@ -1,1 +1,66 @@
-13:52:55
+00:08:10
+Load tilemap @  28137
+load sprites spenemy0 - sprites0
+load tiles logotile
+ok
+Level load successful  24 from  0
+Load tilemap @  88
+load sprites spenemy0 -         
+load tiles tileset2
+ok
+Level load successful  0 from  24
+Load tilemap @  2015
+load sprites spenemy0 -         
+load tiles tileset1
+ok
+Level load successful  1 from  0
+Load tilemap @  2015
+load sprites spenemy0 -         
+load tiles tileset1
+ok
+Level load successful  1 from  1
+Load tilemap @  88
+load sprites spenemy0 -         
+load tiles tileset2
+ok
+Level load successful  0 from  1
+Load tilemap @  22253
+load sprites spenemy0 -         
+load tiles tileset1
+ok
+Level load successful  12 from  0
+Load tilemap @  22253
+load sprites spenemy0 -         
+load tiles tileset1
+ok
+Level load successful  12 from  12
+Load tilemap @  88
+load sprites spenemy0 -         
+load tiles tileset2
+ok
+Level load successful  0 from  12
+Load tilemap @  17223
+load sprites spenemy0 -         
+load tiles tileset5
+ok
+Level load successful  9 from  0
+Load tilemap @  17223
+load sprites spenemy0 -         
+load tiles tileset5
+ok
+Level load successful  9 from  9
+Load tilemap @  88
+load sprites spenemy0 -         
+load tiles tileset2
+ok
+Level load successful  0 from  9
+Load tilemap @  18689
+load sprites spenemy0 -         
+load tiles tileset5
+ok
+Level load successful  10 from  0
+Load tilemap @  18689
+load sprites spenemy0 -         
+load tiles tileset5
+ok
+Level load successful  10 from  10

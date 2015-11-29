@@ -484,11 +484,11 @@ END SUB
 
 SUB loadLevel
 	IF player.levelPrev <> player.level THEN
-		FOR n = 1 to 80
+		FOR n = 1 to 64
 			level.spawner(n).object = 0
 		NEXT n
 	ELSE
-		FOR n = 1 to 80
+		FOR n = 1 to 64
 			level.spawner(n).object = level.spawner(n).object AND &HFF
 		NEXT n
 	END IF
@@ -509,7 +509,7 @@ SUB loadLevel
 		fileOfs = fileOfs + 24
 	END IF
 		ProgressBar 1		
-	
+		debugOut "Load tilemap @ " + str$(fileOfs)
 		n = 1		
 		loadValue = 400
 		FOR i = 2 TO 5
@@ -540,19 +540,25 @@ SUB loadLevel
 		ProgressBar 6
 	CLOSE #1
 	
+	debugOut "load sprites " + level.spriteSet + " - " + player.spriteSet
+	
 	IF player.spriteSet <> level.spriteSet THEN 
 		loadSprites level.spriteSet, spriteBankAuxOfs
 		player.spriteSet = file$
 	END IF
 	
+	debugOut "load tiles " + level.tileSet
+	
 	ProgressBar 7
 	
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet
 	
-	w40char.text = "        |"
-	aPrint &HFFFF, &H0000, 0, 0, hudBufferSeg, hudBufferOfs
+	debugOut "ok"
 	
-	player.levelPrev = player.level
+	w40char.text = "        |"
+	aPrint &HFFFF, &H0000, 0, 0, hudBufferSeg, hudBufferOfs	
+	
+	debugOut "Level load successful " + str$(player.level) + " from " + str$(player.levelPrev)
 	
 END SUB
 
