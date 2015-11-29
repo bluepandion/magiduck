@@ -483,12 +483,19 @@ SUB initLookUps
 END SUB
 
 SUB loadLevel
-	FOR n = 1 to 80
-		level.spawner(n).object = 0
-	NEXT n
+	IF player.levelPrev <> player.level THEN
+		FOR n = 1 to 80
+			level.spawner(n).object = 0
+		NEXT n
+	ELSE
+		FOR n = 1 to 80
+			level.spawner(n).object = level.spawner(n).object AND &HFF
+		NEXT n
+	END IF
+	
 	OPEN "levels.clp" FOR BINARY as # 1
 		GET #1, player.level * 2 + 1, fileOfs
-		
+	IF player.levelPrev <> player.level THEN	
 		GET #1, fileOfs, level.playerX
 		GET #1, fileOfs + 2, level.playerY
 		fileOfs = fileOfs + 4
@@ -498,8 +505,11 @@ SUB loadLevel
 		GET #1, fileOfs, level.coins
 		GET #1, fileOfs + 2, level.keys
 		fileOfs = fileOfs + 4
+	ELSE
+		fileOfs = fileOfs + 24
+	END IF
 		ProgressBar 1		
-		
+	
 		n = 1		
 		loadValue = 400
 		FOR i = 2 TO 5
@@ -516,7 +526,7 @@ SUB loadLevel
 			ProgressBar i
 			loadValue = loadValue + 400
 		NEXT i
-				
+	IF player.levelPrev <> player.level THEN
 		GET #1, fileOfs, loadStr
 		fileOfs = fileOfs + 1
 		loadInt = ASC(loadStr)
@@ -526,6 +536,7 @@ SUB loadLevel
 			GET #1, fileOfs, level.spawner(ASC(loadStr))
 			fileOfs = fileOfs + 8
 		NEXT n
+	END IF
 		ProgressBar 6
 	CLOSE #1
 	
@@ -540,6 +551,9 @@ SUB loadLevel
 	
 	w40char.text = "        |"
 	aPrint &HFFFF, &H0000, 0, 0, hudBufferSeg, hudBufferOfs
+	
+	player.levelPrev = player.level
+	
 END SUB
 
 SUB loadSounds (file$)

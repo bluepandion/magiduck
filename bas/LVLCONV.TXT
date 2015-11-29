@@ -131,7 +131,7 @@
 11, "   mystic tower     ", "..\convert\boss.tmx", "tileset6", "sprboss1", -1
 12, "  secret tower 1    ", "..\convert\level2.tmx", "tileset1", "spenemy0", -1
 13, "  secret tower 2    ", "..\convert\pearltwr.tmx", "tileset1", "spenemy0", -1
-14, "  secret tower 3    ", "..\convert\secret3.tmx", "tileset1", "spenemy0", -1
+14, "  secret tower 3    ", "..\convert\secret3.tmx", "tileset0", "spenemy0", -1
 24, "     main menu      ",  "..\convert\logo.tmx", "logotile", "spenemy0", -1
 25, "     epilogue       ", "..\convert\endscrol.tmx", "tileset7", "sprboss1", -1
 "/maps"

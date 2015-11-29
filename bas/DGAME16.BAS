@@ -229,7 +229,9 @@ CASE 265	'High score - draw screen
 	actor(2).count = 0	
 	highScoreEntry.name = "       "
 	highScoreEntry.score = player.score
-	IF c > 0 THEN 
+	IF c > 0 THEN 		
+		w40char.text = " PLEASE TYPE YOUR NAME AND PRESS ENTER. |"
+		aPrint &HFFFF, &H0E0E, 0, 0, hudBufferSeg, hudBufferOfs
 		actor(2).control = 266
 		aKBremove		
 	ELSE
@@ -692,11 +694,22 @@ CASE 258	'Menu
 				'screenResetPos 
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y - 52
-				player.menuContext = 10			
+				player.menuContext = 10
 			ELSE
 				player.level = 24
 				player.menuContext = -1
-			END IF			
+			END IF
+		CASE 15	'Skip demo?
+			player.menuMode = 999
+			player.menuContext = 0
+			IF player.menuItem = 2 THEN				
+				player.menuExitCtrl = 265
+				player.menuContext = 0							
+				player.targetX = 16
+				player.targetY = 50
+			ELSE
+				player.menuExitCtrl = 264				
+			END IF
 		CASE 21 TO 23	'Secret level unlocked message
 				player.menuContext = 0
 				player.menuMode = 999
@@ -712,15 +725,14 @@ CASE 258	'Menu
 			END SELECT
 		CASE 60 TO 70	'Ending text
 			player.menuMode = 999
+			player.menuContext = 0
 			IF player.menuItem = 1 THEN				
-				player.menuExitCtrl = 264
-				player.menuContext = 0
+				player.menuExitCtrl = 264				
 			ELSE				
 				player.menuContext = player.menuContext + 1
 				IF player.menuItem = 3 THEN
 					player.score = player.levelScore(0)					
-					player.menuExitCtrl = 265
-					player.menuContext = 0
+					player.menuExitCtrl = 265					
 				END IF				
 			END IF
 			
@@ -888,7 +900,7 @@ CASE 255	'Normal player
       END IF
 	END IF
 
-	IF kbArray(80) THEN	screenTargetY = actor(2).y - 24	
+	IF kbArray(80) OR kbArray(76) THEN screenTargetY = actor(2).y - 24	
 
 	player.ShootDelay = player.ShootDelay + (player.ShootDelay > 0)
 	IF kbArray(45) AND player.ShootDelay = 0 THEN
@@ -987,10 +999,16 @@ CASE 264	'Ending demo
 	screenTargetX = actor(2).x - 20
 	screenTargetY = actor(2).y - 46
 	handleCamera	
-	IF actor(2).vecY > -3 THEN actor(2).vecY = actor(2).vecY - 1
-	IF actor(2).y = actor(3).dir THEN				
+	IF actor(2).vecY > -3 THEN 
+		actor(2).vecY = -3		
+		w40char.text = " ESC TO SKIP DEMO                       |"
+		aPrint &HFFFF, &H0E0E, 0, 0, hudBufferSeg, hudBufferOfs
+	END IF
+	IF actor(2).y - 46 = actor(3).dir THEN				
+		actor(2).vecY = 0
 		actor(2).control = 258
 		player.menuMode = 0
+		player.menuSound = -1
 		player.menuContext = actor(3).jump + 59
 		actor(3).jump = actor(3).jump + 1
 		FOR c = 1 TO 64
@@ -1002,10 +1020,9 @@ CASE 264	'Ending demo
 	END IF
 	IF kbArray(1) THEN
 		actor(2).control = 258
-		player.menuContext = 2
-		IF player.level = 0 THEN player.menuContext = 1
+		player.menuContext = 15		
 		player.menuMode = 0
-		player.menuSound = -1
+		actor(2).vecY = 0
 	END IF
 END SELECT
 
@@ -2469,9 +2486,7 @@ END SUB
 	END IF
 
 	CALL aTimerReset
-	
-	player.levelPrev = player.level
-	
+		
 	DO
 		CALL aTimerWait
 		handleCollision
@@ -2960,6 +2975,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 63		
 	CASE 64		'LEVEL ENTRANCE
 		actorListNew n
+		actor(n).visY = 55
 		'teleport player at door if s/he was just there
 		IF player.levelPrev = spawnerFlags THEN
 			actor(2).x = x
