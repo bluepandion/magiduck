@@ -734,7 +734,13 @@ CASE 258	'Menu
 					player.menuExitCtrl = 265					
 				END IF				
 			END IF
-			
+		CASE 80 TO 120
+			player.menuMode = 999			
+			IF player.menuItem = 1 THEN				
+				player.menuContext = player.menuContext + 1
+			ELSE												
+				player.menuContext = 0
+			END IF
 		END SELECT
 	'--------------------------------------------------------------------------
 	CASE 999 to 1000		' Exit menu: clear screen
@@ -2001,6 +2007,27 @@ DO
 				actor(n).y = actor(n).y + 8
 			END IF
 		END IF
+	
+	CASE 33	
+		actor(n).y = actor(n).dir + mulTable(2, angle.x(tick24))
+		playerDeltaX = ABS(actor(n).x - playerX)
+		playerDeltaY = ABS(actor(n).y - playerY)		
+		IF playerDeltaX < 4 AND playerDeltaY < 16 THEN									
+			actor(n).count = 1
+			w40char.text = "          PRESS UP TO READ NOTE         |"
+			aPrint &HFFFF, &HE0E, 0, 0, hudBufferSeg, hudBufferOfs
+			IF kbArray(72) THEN
+				actor(2).control = 258
+				player.menuMode = 0
+				player.menuContext = actor(n).jump
+			END IF
+		ELSE
+			IF actor(n).count THEN
+				player.hudLock = 0
+				hudUpdate 255
+				actor(n).count = 0
+			END IF
+		END IF
 		
 		
 	'CHECKPOINT
@@ -2912,6 +2939,14 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).spawner = spawner
 		actor(n).dir = object
 		actor(n).visY = 40
+	CASE 33				'Info letter
+		actorListNew n
+		actor(n).visY = 50
+		actor(n).frame = 68
+		actor(n).control = 33
+		actor(n).spawner = spawner
+		actor(n).jump = spawnerFlags + 80		
+		actor(n).dir = y
 	CASE 34				'Demo camera target
 		IF spawnerFlags = 1 THEN
 			actor(3).dir = y

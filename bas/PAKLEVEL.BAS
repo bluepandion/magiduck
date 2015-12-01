@@ -23,7 +23,7 @@ TYPE actorConv
  flags AS INTEGER
 END TYPE
 
-DIM SHARED actorConvert(1 TO 210) AS actorConv
+DIM SHARED actorConvert(1 TO 240) AS actorConv
 
 DIM SHARED levelMenuRef(0 TO 15) AS INTEGER
 
@@ -292,9 +292,6 @@ SUB addActor (actor, wave, x, y)
 	 level.spawner(nn).x = actorConvert(actor).xOfs + x
 	 level.spawner(nn).y = actorConvert(actor).yOfs + y
 	 level.spawner(nn).flags = actorConvert(actor).flags
-	 IF actorConvert(actor).id = 33 THEN 
-		level.spawner(nn).flags = levelMenuRef(actorConvert(actor).flags)
-	 END IF
 	 PRINT "   Wave:"; wave; " Spawner:"; spawner, "Actor: "; actor,
 	 PRINT actorConvert(actor).name, x; ","; y
 	 spawner = 999: GOTO exitWindow
