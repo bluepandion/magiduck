@@ -1,5 +1,6 @@
 DECLARE SUB DEBUGOUT (s$)
 DECLARE SUB actorListNew (index%)
+DECLARE SUB actorListNewLast (index%)
 DECLARE SUB unParent (object%)
 DECLARE SUB makeParent (child%, parent%)
 DECLARE SUB getChildrenFor(parent%)
@@ -95,20 +96,40 @@ SUB actorListNew (index)
 	'debugOut "actorListNew"
 	actor(index).exist = 1
 	
-	actor(index).lNext = 1 '2
-	actor(index).lPrev = actor(1).lPrev 'actor(2).lPrev
+	actor(index).lPrev = 1
+	actor(index).lNext = actor(1).lNext
+	
+	actor(actor(1).lNext).lPrev = index
+	
+	actor(1).lNext = index
+	
+	''actor(index).lNext = 2 '1
+	''actor(index).lPrev = actor(2).lPrev 'actor(1).lPrev
+	
+	
 	
 	'Using actor 2 here will keep player on top of the linked list
 	'
 	'actor(actor(2).lPrev).lNext = index
 	'actor(2).lPrev = index
 	
-	actor(actor(1).lPrev).lNext = index
-	actor(1).lPrev = index
+	''actor(actor(1).lPrev).lNext = index
+	''actor(1).lPrev = index
 	
 	'actor(actor(1).lPrev).lNext = index
 	'actor(index).lPrev = actor(1).lPrev
 	'actor(1).lPrev = index
+END SUB
+
+SUB actorListNewLast (index)
+	actor(index).exist = 1
+	
+	actor(index).lPrev = actor(1).lPrev
+	actor(index).lNext = 1
+	
+	actor(actor(1).lPrev).lNext = index
+	
+	actor(1).lPrev = index
 END SUB
 
 SUB addScore (eventType)
@@ -2572,7 +2593,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 
 	SELECT CASE object
 	CASE 257	'Player Die
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 0
 		actor(n).life = 15
 		actor(n).frame = 34
@@ -2625,7 +2646,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).jump = spawnerFlags
 	
 	CASE 93		'Twinkle particle
-		actorListNew n   
+		actorListNewLast n   
 		actor(n).control = 0
 		actor(n).frame = 30
 		actor(n).life = 6
@@ -2633,7 +2654,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).vecY = spawner
 		actor(n).spawner = 0
 	CASE 100	'Player Bullet
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 100
 		actor(n).life = 7
 		actor(n).flags = spawnerFlags
@@ -2641,7 +2662,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).vecX = 30 + (spawnerFlags <> 0) * 60
 		actor(n).frame = 13
 	CASE 102	'Enemy Bullet
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 102
 		actor(n).life = 24
 		actor(n).vecX = 10 + (spawnerFlags <> 0) * 20
@@ -2651,7 +2672,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).visX = 40
 		actor(n).visY = 40
 	CASE 104	'DRIP
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 104
 		actor(n).life = 18
 		actor(n).vecX = spawnerFlags
@@ -2660,7 +2681,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).anim = 214
 		actor(n).visY = 40
 	CASE 111	'FIRE PARTICLE
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 102
 		actor(n).life = 15
 		actor(n).vecX = 7 + (spawnerFlags <> 0) * 14
@@ -2669,7 +2690,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).visX = 70
 		actor(n).visY = 40   
 	CASE 112	'FIRE BOMB
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 112
 		actor(n).life = 18
 		actor(n).vecX = 0
@@ -2688,7 +2709,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).visY = 40
 		actor(n).flash = 50
 	CASE 114	'FIRE, arbitrary angle
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 102
 		actor(n).life = 5
 		actor(n).vecX = angle.x(spawnerFlags)
@@ -2714,7 +2735,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		IF spawnerFlags > 1 THEN
 			c = n
 			n = getSpawnSlot
-			actorListNew n			
+			actorListNewLast n			
 			actor(n).exist = c
 			actor(n).X = x
 			actor(n).Y = y - 11
@@ -2870,18 +2891,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).frame = 45
 		actor(n).visX = 24
 		actor(n).visY = 55		
-		actor(n).spawner = spawner
-	CASE 16  		'SPAWNER
-		actorListNew n
-		actor(n).control = 16    
-		actor(n).life = -999
-		actor(n).frame = 0
-		actor(n).visX = 30
-		actor(n).visY = 70
-		actor(n).jump = spawnerFlags
-		actor(n).spawner = spawner
+		actor(n).spawner = spawner	
 	CASE 17 TO 19	'Flamer
-		actorListNew n		
+		actorListNewLast n		
 		actor(n).control = 17
 		actor(n).x = x
 		actor(n).y = y
