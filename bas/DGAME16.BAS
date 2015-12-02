@@ -136,7 +136,7 @@ SUB addScore (eventType)
 	s = 0
 	SELECT CASE eventType
 	CASE 1
-		s = 15
+		s = 50
 	CASE ItemSuperOrb
 		s = 1000
 	CASE ItemGemSmall
@@ -150,7 +150,7 @@ SUB addScore (eventType)
 	CASE ItemKey
 		s = 500		
 	END SELECT
-	IF player.supaFly THEN s = s * 20
+	IF player.supaFly THEN s = s * 10
 	player.score = player.score + s
 END SUB
 
@@ -307,7 +307,7 @@ CASE 262	'Level Clear - Score Count
 		actor(2).jump = actor(2).jump + 1
 	   CASE 0
           IF player.supaFly THEN
-			player.supaFly = 1500
+			player.supaFly = 300
 			c = &H0A0A OR player.levelColor
 			myPrint 2, 5, "POWER BONUS!", c
 		  ELSE
@@ -315,7 +315,7 @@ CASE 262	'Level Clear - Score Count
 		  END IF
 		  c = &H0A0A OR player.levelColor
 		  myPrint 2, 22, "TIME BONUS            X" + STR$(player.supaFly), c
-          myPrint 2, 26, "LIFE BONUS            X 1000", c
+          myPrint 2, 26, "LIFE BONUS            X 5000", c
           myPrint 2, 30, "KEYS                  /" + str$(level.keys), c
 		  myPrint 2, 34, "CHESTS                /" + str$(level.keys), c
 		  myPrint 2, 38, "COINS                 /" + str$(level.coins), c
@@ -391,8 +391,8 @@ CASE 262	'Level Clear - Score Count
                player.scoreCounter = 1
                player.scoreCounterInc = 1
                player.scoreCounterTarget = player.hp
-               player.scoreCounterMul = 1000
-			   player.scoreDelta = player.hp * 1000
+               player.scoreCounterMul = 5000
+			   player.scoreDelta = player.hp * 5000
                actor(2).jump = 4
 			   hudUpdate 4
           CASE 2
@@ -1504,9 +1504,9 @@ DO
 					t = 54
 					actor(n).vecY = 0
 					IF player.hp > 1 THEN
-						o = 23
+						o = ItemGemBig
 					ELSE
-						o = 25
+						o = ItemHeart
 					END IF
 					spawnObject actor(n).x + 2, actor(n).y, 41, o, 0
 					actor(n).frame = 39
@@ -1743,7 +1743,7 @@ DO
 		soundEvent = SndGetChest
 		CASE 3
 		spawnObject actor(n).x + 3, actor(n).y - 14, 41, ItemGemSmall, 0			
-		CASE 4
+		CASE 4		
 		spawnObject actor(n).x, actor(n).y - 16, 41, ItemGemBig, 0	
 		CASE 5
 		actor(n).control = 0
@@ -2774,6 +2774,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).visY = 60
 		actor(n).visX = 55
 		actor(n).dir = 0
+		actor(n).jump = 1
 		actor(n).spawner = spawner
 	CASE 4	   'DROOLY
 		actorListNew n

@@ -386,14 +386,32 @@ SUB saveLevel (file$, No)
 		n = 1
 		rleCount = 1
 		prevTile = MID$(levelStr$, n, 1)
+		runMode = 0
 		DO
 			n = n + 1
 			tile = MID$(levelStr$, n, 1)
-			IF tile <> prevTile OR rleCount = 255 OR n = 1600 THEN
-				byte = CHR$(rleCount)
-				PUT #2, ofsDATA, byte
-				PUT #2, ofsDATA + 1, prevTile
-				ofsDATA = ofsDATA + 2
+			IF tile <> prevTile OR rleCount = 254 OR n = 1600 THEN
+				IF rleCount > 1 THEN
+					IF runMode = 1 THEN
+						byte = chr$(255)
+						PUT #2, ofsData, byte
+						ofsData = ofsData + 1
+						runMode = 0
+					END IF
+					byte = CHR$(rleCount)
+					PUT #2, ofsDATA, byte
+					PUT #2, ofsDATA + 1, prevTile
+					ofsDATA = ofsDATA + 2
+				ELSE
+					IF runMode = 0 THEN 
+						runMode = 1
+						byte = chr$(255)
+						PUT #2, ofsData, byte
+						ofsData = ofsData + 1
+					END IF
+					PUT #2, ofsData, prevTile
+					ofsData = ofsData + 1
+				END IF
 				prevTile = tile
 				rleCount = 0
 			END IF
