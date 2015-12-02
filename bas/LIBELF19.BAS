@@ -653,14 +653,14 @@ SUB quit
 	nn = 1
 	DO				
 		n = actor(n).lNext
-		PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
+		'PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
+		PRINT actor(n).control; "["; actor(n).frame; "]";
 		nn = nn + 1
 	LOOP WHILE n > 1	
 	 PRINT 
 	 PRINT "n = "; nn
 	 COLOR 7
-	 PRINT " Thanks for playing!"
-	 PRINT	 	 
+	 PRINT " Thanks for playing!"	 
 	 END
 END SUB
 

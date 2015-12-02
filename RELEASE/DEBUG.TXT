@@ -1,16 +1,1 @@
-00:38:32
-Load tilemap @  28137
-load sprites spenemy0 - sprites0
-load tiles logotile
-ok
-Level load successful  24 from  0
-Load tilemap @  88
-load sprites spenemy0 -         
-load tiles tileset2
-ok
-Level load successful  0 from  24
-Load tilemap @  15076
-load sprites spenemy0 -         
-load tiles tileset4
-ok
-Level load successful  8 from  0
+02:51:38

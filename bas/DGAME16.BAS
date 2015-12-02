@@ -1564,26 +1564,29 @@ DO
 	
 	'Flamer
 	CASE 17 TO 19        				
-		IF ABS(actor(2).y - actor(n).jump) < 60 THEN			
+		c = actor(n).spawner
+		IF ABS(actor(2).y - level.spawner(c).y) < 60 THEN			
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = actor(n).y - playerY
 			IF playerDeltaX < 3 AND playerDeltaY < 7 AND playerDeltaY > -6 THEN
 				damagePlayer			
-			END IF
-			c = actor(n).dir			
-			actor(n).vecX = angle.x(c)
-			actor(n).vecY = angle.y(c)
+			END IF			
 			actor(n).count = actor(n).count + 1
 			IF actor(n).count > 9 THEN					
-				actor(n).dir = (actor(n).dir + 7) AND 63				
-				c = actor(n).spawner
+				actor(n).dir = (actor(n).dir + 7) AND 63								
 				actor(n).x = level.spawner(c).x
 				actor(n).y = level.spawner(c).y
 				actor(n).count = 0
 			END IF
-		ELSE
+			c = actor(n).dir	
+			actor(n).vecX = angle.x(c)
+			actor(n).vecY = angle.y(c)
+		ELSE			
 			actor(n).vecX = 0
 			actor(n).vecY = 0
+			actor(n).x = level.spawner(c).x
+			actor(n).y = level.spawner(c).y
+			actor(n).count = actor(n).jump
 		END IF
 		IF level.spawner(actor(n).spawner).object > 0 THEN 
 			actor(n).life = 0
@@ -2416,7 +2419,7 @@ END SUB
  REM |  |  | |     | __|__ |  \_|                             
 '==============================================================================
  SUB main
-	
+		
 	'Load level
 	w40char.text = " LOADING                               |"
 	aPrint &HFFFF, &HE0C, 0, 0, hudBufferSeg, hudBufferOfs
@@ -2907,8 +2910,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).life = -999		
 		actor(n).jump = y
 		actor(n).spawner = spawner
+		actor(n).jump = 0
 		n = getSpawnSlot
-		actorListNew n
+		actorListNewLast n
 		actor(n).life = -999
 		actor(n).control = 17
 		actor(n).exist = 1		
@@ -2919,8 +2923,9 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).dir = 0 '1 - c - c
 		actor(n).visX = 80
 		actor(n).visY = 80
-		actor(n).jump = y
+		actor(n).jump = 5
 		actor(n).spawner = spawner
+		actor(n).flags = 0
 		'actor(n).anim = 0
 		'actor(n).control = object
 		'actor(n).flags = 0
