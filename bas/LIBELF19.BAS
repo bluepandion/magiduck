@@ -939,7 +939,7 @@ SUB ProgressBar(progress%)
 END SUB
 
 SUB LoadGame
-	fileOfs = 1 + player.saveSlot * 96
+	fileOfs = 1 + player.saveSlot * 128
 	OPEN "savegame.sav" FOR BINARY AS #1
 		FOR n = 0 to 15
 			GET #1, fileOfs, player.levelScore(n)

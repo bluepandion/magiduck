@@ -45,6 +45,7 @@ DECLARE SUB SaveGame
 DECLARE SUB LoadGame
 DECLARE FUNCTION DrawHighScores% ()
 DECLARE SUB SaveHighScore (offset)
+DECLARE SUB Scramble (n)
 'DECLARE SUB oooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo ()
 
 DEFINT A-Z
@@ -247,6 +248,7 @@ CASE 265	'High score - draw screen
 	c = DrawHighScores
 	actor(2).jump = (10 - c) * -3 + 40
 	actor(2).dir = (10 - c) * 12 + 1
+	actor(3).jump = c
 	actor(2).count = 0	
 	highScoreEntry.name = "       "
 	highScoreEntry.score = player.score
@@ -295,6 +297,7 @@ CASE 267	'High score - sync pages after input
 	actor(2).control = 268
 CASE 268	'High score - reinstall keyboard int, save score	
 	aKBinit
+	Scramble actor(3).jump
 	SaveHighScore actor(2).dir
 	player.score = 0
 	actor(2).control = 265
@@ -1477,6 +1480,18 @@ DO
 		IF actor(n).vecY > 15 THEN actor(n).vecY = 15
 		IF actor(n).vecY < -15 THEN actor(n).vecY = -15
 	
+	CASE 15 'SPIKE BALL BOUNCE
+        c = tileRead(actor(n).x, actor(n).y + 2)
+        IF c > 29 AND actor(n).vecY > 5 THEN
+			actor(n).y = (actor(n).y AND &HFFF8)
+			actor(n).vecY = -33
+			aSoundNote 40
+		ELSE
+			actor(n).vecY = actor(n).vecY + 3
+			IF actor(n).vecY > 20 THEN actor(n).vecY = 20
+        END IF
+	
+	
 	CASE 20	'Water / Lava
 	playerDeltaX = ABS(actor(n).x - playerX)
 	playerDeltaY = actor(n).y - playerY
@@ -1565,7 +1580,7 @@ DO
 	'Flamer
 	CASE 17 TO 19        				
 		c = actor(n).spawner
-		IF ABS(actor(2).y - level.spawner(c).y) < 60 THEN			
+		IF ABS(actor(2).y - level.spawner(c).y) < 50 THEN			
 			playerDeltaX = ABS(actor(n).x - playerX)
 			playerDeltaY = actor(n).y - playerY
 			IF playerDeltaX < 3 AND playerDeltaY < 7 AND playerDeltaY > -6 THEN
@@ -1587,6 +1602,7 @@ DO
 			actor(n).x = level.spawner(c).x
 			actor(n).y = level.spawner(c).y
 			actor(n).count = actor(n).jump
+			actor(n).dir = 0
 		END IF
 		IF level.spawner(actor(n).spawner).object > 0 THEN 
 			actor(n).life = 0
@@ -1688,7 +1704,7 @@ DO
 		IF actor(n).life < 24 AND actor(n).frame > 22 THEN actor(n).flash = 36
 
 		IF playerDeltaX < 5 AND ABS(actor(2).y - actor(n).y) < 8 THEN
-            level.spawner(actor(n).spawner).object = 0
+            'level.spawner(actor(n).spawner).object = level.spawner(actor(n).spawner).object OR &H4000
             soundEvent = 110            		
 			IF actor(n).frame = ItemSuperOrb THEN 
 				soundEvent = 132
@@ -1734,7 +1750,7 @@ DO
 			actor(n).life = 10
 			actor(n).frame = 0
 			'actor(n).vecY = -5			
-			level.spawner(actor(n).spawner).object = 0
+			'level.spawner(actor(n).spawner).object = 0
 			hudUpdate 16
 			soundEvent = SndGetChest
 			spawnObject actor(n).x - 2, actor(n).y - 14, 41, ItemGemSmall, 0
@@ -1962,17 +1978,6 @@ DO
            actor(n).frame = 47
         END IF
     
-    CASE 15 'SPIKE BALL BOUNCE
-        c = tileRead(actor(n).x, actor(n).y + 1)
-        IF c > 29 AND actor(n).vecY > 10 THEN
-			actor(n).y = actor(n).y AND &HFFF8 - 1			
-			actor(n).vecY = -33
-			aSoundNote 40
-		ELSE
-			actor(n).vecY = actor(n).vecY + 6
-			IF actor(n).vecY > 20 THEN actor(n).vecY = 20
-        END IF
-	
 	CASE 30	'BUTTON
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)
@@ -3203,6 +3208,7 @@ FUNCTION DrawHighScores
 	OPEN "hiscores.def" FOR BINARY AS #1
 		FOR n = 10 to 1 STEP -1						
 			GET #1, c, highScoreEntry					
+			Scramble (11 - n)
 			IF player.score >= highScoreEntry.score THEN 				
 				DrawHighScores = n										
 			END IF
@@ -3220,4 +3226,11 @@ SUB SaveHighScore (offset)
 	OPEN "hiscores.def" FOR BINARY AS #1
 		PUT #1, offset, highScoreEntry
 	CLOSE #1	
+END SUB
+
+SUB Scramble (n)
+	n = n + 64
+	FOR c = 1 TO 8
+		MID$(highScoreEntry.name, c, 1) = CHR$(ASC(MID$(highScoreEntry.name, c, 1)) XOR (c + n))
+	NEXT c
 END SUB
