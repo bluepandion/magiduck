@@ -90,7 +90,7 @@ SUB elfInit
 	PRINT " WARNING!"
 	COLOR 7, 0
 	PRINT 
-	PRINT "  Beta 1 (2015-11-09)"
+	PRINT "  Beta 1 (2015-12-05)"
 	PRINT "  See readme.txt for list of"
 	PRINT "  confirmed h/w compatibility."
 	COLOR 12, 0
@@ -653,14 +653,17 @@ SUB quit
 	nn = 1
 	DO				
 		n = actor(n).lNext
-		'PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
-		PRINT actor(n).control; "["; actor(n).frame; "]";
+		PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
+		'PRINT actor(n).control; "["; actor(n).frame; "]";
 		nn = nn + 1
 	LOOP WHILE n > 1	
 	 PRINT 
-	 PRINT "n = "; nn
-	 COLOR 7
-	 PRINT " Thanks for playing!"	 
+	 PRINT "n = "; nn	 
+	 COLOR 7	 
+	 PRINT " MagiDuck, its source code and its"
+	 PRINT "  project files are Freeware."
+	 PRINT
+	 PRINT " Thanks for playing!"	
 	 END
 END SUB
 
@@ -957,7 +960,7 @@ SUB SaveGame
 	FOR n = 1 TO 15
 		player.levelCompletion(0) = player.levelCompletion(0) + player.levelCompletion(n)
 	NEXT n
-	player.levelCompletion(0) = player.levelCompletion(0) / 13
+	player.levelCompletion(0) = player.levelCompletion(0) / 14
 	
 	fileOfs = 1 + player.saveSlot * 128
 	OPEN "savegame.sav" FOR BINARY AS #1		

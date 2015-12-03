@@ -248,10 +248,10 @@ CASE 265	'High score - draw screen
 	c = DrawHighScores
 	actor(2).jump = (10 - c) * -3 + 40
 	actor(2).dir = (10 - c) * 12 + 1
-	actor(3).jump = c
+	actor(3).jump = (11 - c)
 	actor(2).count = 0	
 	highScoreEntry.name = "       "
-	highScoreEntry.score = player.score
+	highScoreEntry.score = player.levelScore(0)
 	IF c > 0 THEN 		
 		w40char.text = " PLEASE TYPE YOUR NAME AND PRESS ENTER. |"
 		aPrint &HFFFF, &H0E0E, 0, 0, hudBufferSeg, hudBufferOfs
@@ -727,6 +727,7 @@ CASE 258	'Menu
 			player.menuMode = 999
 			player.menuContext = 0
 			IF player.menuItem = 2 THEN				
+				player.score = player.levelScore(0)
 				player.menuExitCtrl = 265
 				player.menuContext = 0							
 				player.targetX = 16
@@ -3209,8 +3210,8 @@ FUNCTION DrawHighScores
 		FOR n = 10 to 1 STEP -1						
 			GET #1, c, highScoreEntry					
 			Scramble (11 - n)
-			IF player.score >= highScoreEntry.score THEN 				
-				DrawHighScores = n										
+			IF player.score > highScoreEntry.score THEN 				
+				DrawHighScores = n
 			END IF
 			myPrint 6, y, str$(n) + "." , &H1717
 			myPrint 11, y, highScoreEntry.name, &H1E1E
@@ -3220,6 +3221,7 @@ FUNCTION DrawHighScores
 		NEXT n
 	CLOSE #1
 	aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)	
+	player.score = 0
 END FUNCTION
 
 SUB SaveHighScore (offset)	

@@ -1,8 +1,10 @@
-       MagiDuck
-
-(c) 2014 Toni Svenström 
- mangis.deviantart.com
+           MagiDuck
+    
+	by Toni Svenström 2015   
+     mangis.deviantart.com
+ www.indiedb.com/games/magiduck
 -----------------------------------------------------------------------------
+
 
 About
 	
