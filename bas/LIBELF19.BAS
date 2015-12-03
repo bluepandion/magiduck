@@ -10,7 +10,7 @@ DECLARE SUB loadSprites (file$, offset%)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
 DECLARE SUB quit ()
-DECLARE SUB debugOut (text$)
+'DECLARE SUB debugOut (text$)
 DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
 DECLARE SUB menuClear ()
@@ -91,8 +91,8 @@ SUB elfInit
 	COLOR 7, 0
 	PRINT 
 	PRINT "  Beta 1 (2015-12-05)"
-	PRINT "  See readme.txt for list of"
-	PRINT "  confirmed h/w compatibility."
+	PRINT "  This game has not been fully tested"
+	PRINT "  on real hardware."
 	COLOR 12, 0
 	PRINT
 	PRINT "  You are running this software at your"
@@ -930,11 +930,11 @@ FUNCTION menuGetWord%
 	'debugOut STR$(menuLoadPos)
 END FUNCTION
 
-SUB DEBUGOUT (s$)
-	OPEN "debug.txt" FOR APPEND AS #3
-		PRINT #3, s$
-	CLOSE #3
-END SUB
+'SUB DEBUGOUT (s$)
+'	OPEN "debug.txt" FOR APPEND AS #3
+'		PRINT #3, s$
+'	CLOSE #3
+'END SUB
 
 SUB ProgressBar(progress%)
 	w40char.text = ".|"
@@ -959,8 +959,12 @@ SUB SaveGame
 	player.levelCompletion(0) = 0
 	FOR n = 1 TO 15
 		player.levelCompletion(0) = player.levelCompletion(0) + player.levelCompletion(n)
-	NEXT n
-	player.levelCompletion(0) = player.levelCompletion(0) / 14
+	NEXT n	
+	IF player.levelCompletion(0) > 1385 AND player.levelCompletion(0) < 1400 THEN
+		player.levelCompletion(0) = 99
+	ELSE
+		player.levelCompletion(0) = player.levelCompletion(0) / 14
+	END IF
 	
 	fileOfs = 1 + player.saveSlot * 128
 	OPEN "savegame.sav" FOR BINARY AS #1		

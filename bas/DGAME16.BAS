@@ -2394,9 +2394,9 @@ SUB hudUpdate (flags AS INTEGER)
 END SUB
 
 SUB initGame
-	OPEN "debug.txt" FOR OUTPUT AS #1
-		PRINT #1, TIME$
-	CLOSE #1
+	'OPEN "debug.txt" FOR OUTPUT AS #1
+	'	PRINT #1, TIME$
+	'CLOSE #1
 	elfInit
 	
 	loadSounds "sound"
