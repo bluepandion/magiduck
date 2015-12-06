@@ -10,7 +10,7 @@ DECLARE SUB loadSprites (file$, offset%)
 DECLARE SUB loadTiles (file$)
 DECLARE SUB loadSounds (file$)
 DECLARE SUB quit ()
-'DECLARE SUB debugOut (text$)
+DECLARE SUB debugOut (text$)
 DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
 DECLARE SUB menuClear ()
@@ -930,11 +930,11 @@ FUNCTION menuGetWord%
 	'debugOut STR$(menuLoadPos)
 END FUNCTION
 
-'SUB DEBUGOUT (s$)
-'	OPEN "debug.txt" FOR APPEND AS #3
-'		PRINT #3, s$
-'	CLOSE #3
-'END SUB
+SUB DEBUGOUT (s$)
+	OPEN "debug.txt" FOR APPEND AS #3
+		PRINT #3, s$
+	CLOSE #3
+END SUB
 
 SUB ProgressBar(progress%)
 	w40char.text = ".|"

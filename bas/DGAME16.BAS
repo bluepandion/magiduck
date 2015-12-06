@@ -1345,14 +1345,6 @@ DO
 			actor(n).life = -45
 		END IF
 		
-		c = tileRead(actor(n).x, actor(n).y + 1) > 29
-        IF c THEN
-			actor(n).y = actor(n).y AND &HFFF8
-			actor(n).vecY = 0
-        ELSE			
-			actor(n).vecY = 20
-        END IF
-
 		IF actor(n).life > -50 THEN
 			IF actor(n).life = -49 THEN actor(n).y = actor(n).y - 6
 			actor(n).life = -50
@@ -1360,12 +1352,20 @@ DO
 			actor(n).collider = 0			
         END IF
         
-		IF actor(n).count = 0 THEN 
+		c = tileRead(actor(n).x, actor(n).y + 1) > 29
+        IF c THEN
+			actor(n).y = actor(n).y AND &HFFF8
+			actor(n).vecY = 0
 			speed = 4
-		ELSE
+        ELSE			
+			actor(n).vecY = 20			
+			speed = 0
+		END IF
+		
+		IF actor(n).count > 0 THEN 			
 			speed = 0
 			actor(n).vecX = 0
-			IF c THEN actor(n).count = actor(n).count - 1
+			IF c THEN actor(n).count = actor(n).count - 1			
 			actor(n).frame = 75
 			IF actor(n).count = 0 THEN
 				actor(n).frame = 72
@@ -1373,7 +1373,7 @@ DO
 				'actor(n).vecX = actor(n).dir
 			END IF
 		END IF
-		
+				
 		IF actor(n).flags THEN
 			xp = -2
 			flags = 0
