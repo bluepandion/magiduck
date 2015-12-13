@@ -2522,31 +2522,33 @@ aUnPackTileGfxRLE PROC
 	push	ds
 	push	si
 		
-	mov		ds, [bp + 8]
-	mov		si, [bp + 6]
+	mov		ds, [bp + 08]
+	mov		si, [bp + 06]
 	mov		es, gfxTileSeg
 	mov		di, gfxTileBank
-	
+		
 	xor		dx, dx
-	mov		bl, 0BBh				;RLE run start symbol	
-	mov		cx, 1920
+	xor		ax, ax
+	mov		dl, 2
+	mov		bl, 0F0h				;RLE run start value
+	mov		cx, 1924
 loopRLE:
-	lodsb
+	lodsb	
 	cmp		al, bl
-	je		decodeRun
+	jae		decodeRun
 	stosb
 	loop	loopRLE
 	jmp		exit
 decodeRun:
-	lodsw
+	and		al, 0Fh
+	add		al, dl
+	sub		cx, ax
 	push	cx
-	mov		cl, al
-	mov		dl, al
+	mov		cl, al	
 	xor		ch, ch
-	mov		al, ah
+	lodsb	
 	rep		stosb
-	pop		cx
-	sub		cx, dx
+	pop		cx	
 	cmp		cx, 1
 	jle		exit
 	jmp		loopRLE

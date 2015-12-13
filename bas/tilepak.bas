@@ -94,23 +94,19 @@ SUB CheckBytes
 END SUB
 
 SUB SaveRle 
-	outPut$ = ""
-	rleLen = 0
+	outPut$ = ""	
 	rleIndex$ = tiles(0)
 	rleCmp$ = tiles(0)
-	FOR n = 1 to 1920							
-		rleIndex$ = tiles(n)				
-		nonRLString$ = nonRLString$ + rleIndex$
+	rleLen = 0
+	FOR n = 1 to 1924
+		rleIndex$ = tiles(n)						
 		rleLen = rleLen + 1
-		IF rleIndex$ <> rleCmp$ OR rleLen = 15 THEN
+		IF rleIndex$ <> rleCmp$ OR rleLen = 17 THEN
 			
 			PRINT rleLen;
 			IF rleLen > 1 THEN
-				outStr = chr$(rleLen OR &HB0)				
-				outPut$ = outPut$ + outStr
-				'outStr = chr$(rleLen)
-				'PUT #2, fileOutOfs, outStr
-				outPut$ = outPut$ + rleCmp$				
+				outStr = chr$((rleLen - 2) OR &HF0)				
+				outPut$ = outPut$ + outStr + rleCmp$
 			ELSE						
 				outPut$ = outPut$ + rleCmp$
 				nonRLString$ = ""
@@ -119,7 +115,7 @@ SUB SaveRle
 			rleCmp$ = rleIndex$
 		END IF				
 	NEXT n
-	n = len(outPut$)
+	n = len(outPut$) + 1
 	PUT #2, fileOutOfs, n
 	fileOutOfs = fileOutOfs + 2
 	PUT #2, fileOutOfs, outPut$

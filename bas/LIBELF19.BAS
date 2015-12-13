@@ -516,8 +516,7 @@ SUB loadLevel
 		GET #1, fileOfs, loadInt		
 		fileOfs = fileOfs + 2		
 		loadVarStr = SPACE$(loadInt)		
-		GET #1, fileOfs, loadVarStr		
-		debugOut str$(fileOfs)
+		GET #1, fileOfs, loadVarStr				
 		fileOfs = fileOfs + loadInt
 		progressBar 2
 		p0% = SSEG(loadVarStr)
@@ -600,8 +599,22 @@ SUB loadSprites (file$, offset)
 END SUB
 
 SUB loadTiles (file$)
+	
+	'BLOAD file$ + ".ctg", tileBankOfs
+	OPEN "tiles.ctp" FOR BINARY AS #1
+		GET #1, 1, fileOfs
+		debugOut str$(fileOfs)
+		GET #1, fileOfs, loadInt
+		debugOut str$(loadInt)
+		fileOfs = fileOfs + 2
+		loadVarStr = SPACE$(loadInt)
+		GET #1, fileOfs, loadVarStr		
+		p0% = SSEG(loadVarStr)
+		p1% = SADD(loadVarStr)	
+		CALL aUnPackTileGfxRLE (p0%, p1%)	
+	CLOSE #1
+	
 	DEF SEG = tileBufferSeg
-	BLOAD file$ + ".ctg", tileBankOfs
 	player.levelColor = PEEK(tileBankOfs)
 	DEF SEG
 	player.levelColor = player.levelColor + player.levelColor * 256
