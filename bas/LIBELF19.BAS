@@ -483,7 +483,9 @@ SUB initLookUps
 END SUB
 
 SUB loadLevel
+	
 	IF player.levelPrev <> player.level THEN
+		
 		FOR n = 1 to 64
 			level.spawner(n).object = 0
 		NEXT n
@@ -495,67 +497,57 @@ SUB loadLevel
 	
 	OPEN "levels.clp" FOR BINARY as # 1
 		GET #1, player.level * 2 + 1, fileOfs
-	IF player.levelPrev <> player.level THEN	
-		GET #1, fileOfs, level.playerX
-		GET #1, fileOfs + 2, level.playerY
-		fileOfs = fileOfs + 4
-		GET #1, fileOfs, level.tileSet
-		GET #1, fileOfs + 8, level.spriteSet
-		fileOfs = fileOfs + 16
-		GET #1, fileOfs, level.coins
-		GET #1, fileOfs + 2, level.keys
-		fileOfs = fileOfs + 4
-	ELSE
-		fileOfs = fileOfs + 24
-	END IF
-		ProgressBar 1				
-		n = 1		
-		loadValue = 400
-		FOR i = 2 TO 5
-			DO
-				GET #1, fileOfs, loadStr
-				loadInt = ASC(loadStr)
-				GET #1, fileOfs + 1, loadStr
-				fileOfs = fileOfs + 2
-				IF loadInt < 255 THEN
-					FOR nn = 9760 + n TO 9760 + n + loadInt
-						MID$(tileBuffer, nn, 1) = loadStr
-					NEXT nn
-					n = n + loadInt
-				ELSE					
-					n = n + 9760
-					DO
-						MID$(tileBuffer, n, 1) = loadStr
-						n = n + 1
-						GET #1, fileOfs, loadStr
-						fileOfs = fileOfs + 1
-					LOOP WHILE loadStr <> CHR$(255)
-					n = n - 9760
-				END IF
-			LOOP WHILE n < loadValue
-			ProgressBar i
-			loadValue = loadValue + 400
-		NEXT i
-	IF player.levelPrev <> player.level THEN
-		GET #1, fileOfs, loadStr
-		fileOfs = fileOfs + 1
-		loadInt = ASC(loadStr)
-		FOR n = 1 TO loadInt
+	
+		IF player.levelPrev <> player.level THEN			
+			GET #1, fileOfs, level.playerX
+			GET #1, fileOfs + 2, level.playerY
+			fileOfs = fileOfs + 4
+			GET #1, fileOfs, level.tileSet
+			GET #1, fileOfs + 8, level.spriteSet
+			fileOfs = fileOfs + 16
+			GET #1, fileOfs, level.coins
+			GET #1, fileOfs + 2, level.keys
+			fileOfs = fileOfs + 4
+		ELSE		
+			fileOfs = fileOfs + 24
+		END IF
+				
+		progressBar 1
+		GET #1, fileOfs, loadInt		
+		fileOfs = fileOfs + 2		
+		loadVarStr = SPACE$(loadInt)		
+		GET #1, fileOfs, loadVarStr		
+		debugOut str$(fileOfs)
+		fileOfs = fileOfs + loadInt
+		progressBar 2
+		p0% = SSEG(loadVarStr)
+		p1% = SADD(loadVarStr)	
+		CALL aUnPackLevelRLE (p0%, p1%)		
+		
+		progressBar 3		
+		IF player.levelPrev <> player.level THEN			
 			GET #1, fileOfs, loadStr
 			fileOfs = fileOfs + 1
-			GET #1, fileOfs, level.spawner(ASC(loadStr))
-			fileOfs = fileOfs + 8
-		NEXT n
-	END IF
-		ProgressBar 6
+			loadInt = ASC(loadStr)			
+			IF loadInt > 0 THEN
+				FOR n = 1 TO loadInt
+					GET #1, fileOfs, loadStr
+					fileOfs = fileOfs + 1					
+					GET #1, fileOfs, level.spawner(ASC(loadStr))
+					fileOfs = fileOfs + 8
+				NEXT n
+			END IF
+		END IF
+		ProgressBar 4
 	CLOSE #1
 	
 	IF player.spriteSet <> level.spriteSet THEN 
+		
 		loadSprites level.spriteSet, spriteBankAuxOfs
 		player.spriteSet = file$
 	END IF	
 	
-	ProgressBar 7
+	ProgressBar 5
 	
 	IF player.tileSet <> level.tileSet THEN loadTiles level.tileSet	
 	
@@ -637,8 +629,7 @@ SUB quit
 	 'aExitVideo gfx.adapter, gfx.oldMode
 	 aVideoExit
 
-	 'SHELL "cls"
-	 PRINT errorMessage$
+	 'SHELL "cls"	 
 	 PRINT FRE(-1)
 	 PRINT gfx.pageOfs(0), gfx.pageOfs(1)
 	 C = 1
@@ -664,6 +655,11 @@ SUB quit
 	 PRINT "  project files are Freeware."
 	 PRINT
 	 PRINT " Thanks for playing!"	
+	 'OPEN "debug.txt" for output as #1
+	 'FOR nn = 9760 + n TO 9760 + 1599
+	 '  	PRINT #1, HEX$(ASC(MID$(tileBuffer, nn, 1)));
+	 'NEXT nn
+	 'close #1
 	 END
 END SUB
 

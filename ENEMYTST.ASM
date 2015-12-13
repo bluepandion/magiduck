@@ -34,6 +34,9 @@ actor1 PROC
 	jb		@actor1_noTCfloor:
 	mov		actorVecY, 0
 	and		actorY,	&HFFF8
+	
+	CALL	FN_TILEREAD, x, y
+
 @actor1_noTCfloor:
 	
 	cmp		actorDir, 5

@@ -980,8 +980,9 @@ testYclip_up:				;CLIPTEST
 	JMP testYclip_down		;
 yClip_up:								
 	add ch, bh				;Sprite Height - Clip
-	inc ch
-	mov dx, 0FF00h			;Sprite offset + (Clip * 80)
+	;inc ch
+	dec	bh
+	mov dx, 0FF00h			;Sprite offset + (Clip * 80)	
 	sub dh, bh
 	shr dx, 1
 	shr dx, 1
@@ -2454,6 +2455,110 @@ jnz loopY
 	pop bp
 	retf 12
 aMenuHiLite ENDP
+aUnPackLevelRLE PROC
+;
+;	Unpack a level tilemap from a string.
+;
+;	Parameters
+;	06	RLE string offset
+;	08	RLE string segment
+;
+	push	bp
+	mov 	bp, sp
+	push	es
+	push	di
+	push	ds
+	push	si
+		
+	mov		ds, [bp + 08]
+	mov		si, [bp + 06]		
+		
+	mov		es, gfxTileSeg
+	mov		di, gfxTileMap	
+	
+	xor		dx, dx
+	mov		bl, 127				;Bit 8 flags an RLE run	
+	mov		cx, 1600
+loopRLE:
+	lodsb
+	cmp		al, bl
+	ja		decodeRun
+	stosb
+	loop	loopRLE
+	jmp		exit
+decodeRun:	
+	and		al, bl
+	push	cx
+	mov		cl, al
+	mov		dl, al
+	xor		ch, ch
+	lodsb
+	rep		stosb
+	pop		cx
+	sub		cx, dx
+	cmp		cx, 1
+	jle		exit
+	jmp		loopRLE
+
+exit:			
+	pop		si
+	pop		ds
+	pop		di
+	pop		es
+	pop		bp
+	retf	4	
+aUnPackLevelRLE ENDP
+aUnPackTileGfxRLE PROC
+;	Unpack RL encoded tile graphics from a string to tile bank.
+;
+;	Parameters
+;	06	RLE string offset
+;	08	RLE string segment
+;
+	push	bp
+	mov 	bp, sp
+	push	es
+	push	di
+	push	ds
+	push	si
+		
+	mov		ds, [bp + 8]
+	mov		si, [bp + 6]
+	mov		es, gfxTileSeg
+	mov		di, gfxTileBank
+	
+	xor		dx, dx
+	mov		bl, 0BBh				;RLE run start symbol	
+	mov		cx, 1920
+loopRLE:
+	lodsb
+	cmp		al, bl
+	je		decodeRun
+	stosb
+	loop	loopRLE
+	jmp		exit
+decodeRun:
+	lodsw
+	push	cx
+	mov		cl, al
+	mov		dl, al
+	xor		ch, ch
+	mov		al, ah
+	rep		stosb
+	pop		cx
+	sub		cx, dx
+	cmp		cx, 1
+	jle		exit
+	jmp		loopRLE
+
+exit:	
+	pop		si
+	pop		ds
+	pop		di
+	pop		es
+	pop		bp
+	retf	4		
+aUnPackTileGfxRLE ENDP
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2708,6 +2813,8 @@ public aSoundStop
 public aSetup
 public aCopyPage
 public aMenuHiLite
+public aUnPackLevelRLE
+public aUnPackTileGfxRLE
 public aTimerStart
 public aTimerEnd
 public aTimerWait

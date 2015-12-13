@@ -23,7 +23,8 @@ DECLARE SUB aSetup (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aCopyPage (BYVAL sourceOfs%, BYVAL destOfs%)
 DECLARE SUB aMenuHiLite (BYVAL x%, BYVAL y%, BYVAL w%, BYVAL h%, BYVAL attribs%, BYVAL pageOfs%)
 
-DECLARE SUB aSetHudSize (BYVAL rows%)
+DECLARE SUB aUnPackLevelRLE (BYVAL dataSeg%, BYVAL dataOfs%)
+DECLARE SUB aUnPackTileGfxRLE (BYVAL dataSeg%, BYVAL dataOfs%)
 
 DECLARE SUB aTimerStart ()
 DECLARE SUB aTimerEnd ()
@@ -291,5 +292,3 @@ TYPE scoreType
 END TYPE
 
 COMMON SHARED highScoreEntry AS scoreType
-
-COMMON SHARED errorMessage$

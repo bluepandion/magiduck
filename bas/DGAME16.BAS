@@ -869,7 +869,8 @@ CASE 255	'Normal player
     END IF	
 	
 	IF player.supaFly THEN 		
-		screenTargetYlock = -1
+		'screenTargetYlock = -1
+		IF ABS(actor(2).y - screenTargetYlock > 50) THEN screenTargetYlock = -1
 		minY = -30
 		maxY = 20
 	END IF
@@ -2399,6 +2400,8 @@ SUB initGame
 	'CLOSE #1
 	elfInit
 	
+	player.levelPrev = -1
+	
 	loadSounds "sound"
 	
 	loadSprites "sprites0", 0
@@ -2410,7 +2413,7 @@ END SUB
 
 SUB initTestGame
 	player.level = 24
-	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)
+	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)	
 	DO		
 		main
 		IF player.level = -1 THEN 

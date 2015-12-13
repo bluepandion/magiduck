@@ -33,10 +33,13 @@ DIM SHARED rowInfo
 DIM SHARED rowDebug
 
 DIM SHARED levelStr$
+DIM SHARED outPut$
 
 DIM SHARED ofsDATA AS INTEGER
 
 DIM SHARED maxScore AS LONG
+
+DIM SHARED n AS INTEGER
 
 ofsDATA = 64
 
@@ -69,6 +72,9 @@ readToggle = 1
 
 VIEW PRINT 1 TO 7
 LOCATE 1, 1, 1
+
+OPEN "debug.txt" for output as #3
+print #3, ""
 
 OPEN listFile$ FOR INPUT AS #1
  DO
@@ -270,6 +276,9 @@ OPEN listFile$ FOR INPUT AS #1
  LOOP WHILE NOT EOF(1)
 CLOSE #1
 
+close #3
+
+END
 '-------------------------------------------------------------------------
 '-------------------------------------------------------------------------
 '-------------------------------------------------------------------------
@@ -323,7 +332,7 @@ exitWindow:
 END SUB
 
 SUB clearLevel
-	FOR n = 0 TO 80
+	FOR n = 0 TO 64
 		level.spawner(n).object = 0
 		level.spawner(n).x = 0
 		level.spawner(n).y = 0
@@ -363,6 +372,7 @@ SUB pause
 END SUB
 
 SUB saveLevel (file$, No)
+		
 	STATIC tile AS STRING * 1
 	STATIC prevTile AS STRING * 1
 	STATIC rleCount AS INTEGER
@@ -383,32 +393,25 @@ SUB saveLevel (file$, No)
 		PUT #2, ofsDATA + 2, level.keys
 		ofsDATA = ofsDATA + 4
 
+		rleStartOfs = ofsDATA		
+		ofsDATA = ofsDATA + 2
+		
 		n = 1
 		rleCount = 1
 		prevTile = MID$(levelStr$, n, 1)
-		runMode = 0
+		runMode = 0		
 		DO
 			n = n + 1
 			tile = MID$(levelStr$, n, 1)
-			IF tile <> prevTile OR rleCount = 254 OR n = 1600 THEN
-				IF rleCount > 1 THEN
-					IF runMode = 1 THEN
-						byte = chr$(255)
-						PUT #2, ofsData, byte
-						ofsData = ofsData + 1
-						runMode = 0
-					END IF
-					byte = CHR$(rleCount)
-					PUT #2, ofsDATA, byte
-					PUT #2, ofsDATA + 1, prevTile
-					ofsDATA = ofsDATA + 2
-				ELSE
-					IF runMode = 0 THEN 
-						runMode = 1
-						byte = chr$(255)
-						PUT #2, ofsData, byte
-						ofsData = ofsData + 1
-					END IF
+			IF tile <> prevTile OR rleCount = 127 OR n = 1600 THEN
+				IF rleCount > 1 THEN					
+					byte = chr$(rleCount OR 128)
+					PUT #2, ofsData, byte
+					ofsData = ofsData + 1
+					runMode = 0					
+					PUT #2, ofsDATA, prevTile
+					ofsDATA = ofsDATA + 1
+				ELSE					
 					PUT #2, ofsData, prevTile
 					ofsData = ofsData + 1
 				END IF
@@ -417,15 +420,21 @@ SUB saveLevel (file$, No)
 			END IF
 			rleCount = rleCount + 1
 		LOOP WHILE n < 1601
-
-		rleCount = 0
-		FOR n = 1 TO 80
+		
+		n = ofsData - rleStartOfs - 2
+		PUT #2, rleStartOfs, n
+		
+		rleCount = 0		
+		FOR n = 1 TO 64	
 			IF level.spawner(n).object THEN rleCount = rleCount + 1
-		NEXT n
+		NEXT n		
+		PRINT #3, rleCount
 		byte = CHR$(rleCount)
-		PUT #2, ofsDATA, byte
-		ofsDATA = ofsDATA + 1
-		FOR n = 1 TO 80
+		PUT #2, ofsDATA, byte		
+		print #3, ofsDATA
+		ofsDATA = ofsDATA + 1		
+		FOR n = 1 TO 64
+		
 			IF level.spawner(n).object THEN
 				byte = CHR$(n)
 				PUT #2, ofsDATA, byte
@@ -434,6 +443,7 @@ SUB saveLevel (file$, No)
 			END IF
 		NEXT n
 	CLOSE #2
+		
 END SUB
 
 SUB switchWindow
