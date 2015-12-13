@@ -7,7 +7,7 @@ DECLARE SUB myPrint (x%, y%, text$, attributes%)
 DECLARE SUB elfInit ()
 DECLARE SUB initLookUps ()
 DECLARE SUB loadSprites (file$, offset%)
-DECLARE SUB loadTiles (file$)
+DECLARE SUB loadTiles (set AS INTEGER)
 DECLARE SUB loadSounds (file$)
 DECLARE SUB quit ()
 DECLARE SUB debugOut (text$)
@@ -503,8 +503,8 @@ SUB loadLevel
 			GET #1, fileOfs + 2, level.playerY
 			fileOfs = fileOfs + 4
 			GET #1, fileOfs, level.tileSet
-			GET #1, fileOfs + 8, level.spriteSet
-			fileOfs = fileOfs + 16
+			GET #1, fileOfs + 2, level.spriteSet
+			fileOfs = fileOfs + 10
 			GET #1, fileOfs, level.coins
 			GET #1, fileOfs + 2, level.keys
 			fileOfs = fileOfs + 4
@@ -598,11 +598,12 @@ SUB loadSprites (file$, offset)
 	CLOSE #1
 END SUB
 
-SUB loadTiles (file$)
+SUB loadTiles (set)
 	
 	'BLOAD file$ + ".ctg", tileBankOfs
+	n = set * 2 + 1
 	OPEN "tiles.ctp" FOR BINARY AS #1
-		GET #1, 1, fileOfs
+		GET #1, n, fileOfs
 		debugOut str$(fileOfs)
 		GET #1, fileOfs, loadInt
 		debugOut str$(loadInt)
@@ -619,7 +620,7 @@ SUB loadTiles (file$)
 	DEF SEG
 	player.levelColor = player.levelColor + player.levelColor * 256
 	player.levelColor = player.levelColor AND &HF0F0
-	player.tileSet = file$
+	player.tileSet = set
 END SUB
 
 SUB myPrint (x, y, text$, attributes)

@@ -119,7 +119,7 @@ TYPE levelType
 	spawner(0 TO 64) as spawnerType
 	playerX AS INTEGER
 	playerY AS INTEGER
-	tileSet AS STRING * 8
+	tileSet AS INTEGER
 	spriteSet AS STRING * 8
 	keys AS INTEGER
 	coins AS INTEGER
@@ -182,7 +182,7 @@ TYPE playerType
 	scoreCounterMode AS INTEGER
 	scoreCounterSound AS INTEGER
 	scoreCounterMul AS INTEGER
-	tileSet AS STRING * 8
+	tileSet AS INTEGER
 	spriteSet AS STRING * 8
 	episode AS STRING * 8
 	levelScore(0 TO 15) AS LONG

@@ -2401,6 +2401,7 @@ SUB initGame
 	elfInit
 	
 	player.levelPrev = -1
+	player.tileSet = -1
 	
 	loadSounds "sound"
 	

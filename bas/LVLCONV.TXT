@@ -117,22 +117,22 @@
 "/actors"
 "pakfile", "levels", "/pakfile"
 "maps"
-00, "                    ", "..\convert\hubworld.tmx", "tileset2", "spenemy0", -1
-01, " castle courtyard a ", "..\convert\court1.tmx", "tileset1", "spenemy0", -1
-02, " castle courtyard b ", "..\convert\court2.tmx", "tileset1", "spenemy0", -1
-03, " dreadful dungeon a ", "..\convert\hicoin.tmx", "tileset0", "spenemy0", -1
-04, " dreadful dungeon b ", "..\convert\chntower.tmx", "tileset0", "spenemy0", -1
-05, "   green garden a   ", "..\convert\foresta.tmx", "tileset3", "spenemy0", -1
-06, "   green garden b   ", "..\convert\elevator.tmx", "tileset3", "spenemy0", -1
-07, "    aqua tower a    ", "..\convert\aqua1.tmx", "tileset4", "spenemy0", -1
-08, "    aqua tower b    ", "..\convert\aqua2.tmx", "tileset4", "spenemy0", -1
-09, "   scary spire a    ", "..\convert\scarys1.tmx", "tileset5", "spenemy0", -1
-10, "   scary spire b    ", "..\convert\scarys2.tmx", "tileset5", "spenemy0", -1
-11, "   mystic tower     ", "..\convert\boss.tmx", "tileset6", "sprboss1", -1
-12, "  secret tower #1   ", "..\convert\level2.tmx", "tileset1", "spenemy0", -1
-13, "  secret tower #2   ", "..\convert\pearltwr.tmx", "tileset1", "spenemy0", -1
-14, "  secret tower #3   ", "..\convert\secret3.tmx", "tileset0", "spenemy0", -1
-24, "     main menu      ",  "..\convert\logo.tmx", "logotile", "spenemy0", -1
-25, "     epilogue       ", "..\convert\endscrol.tmx", "tileset7", "sprboss1", -1
+00, "                    ", "..\convert\hubworld.tmx", 2, "spenemy0", -1
+01, " castle courtyard a ", "..\convert\court1.tmx", 1, "spenemy0", -1
+02, " castle courtyard b ", "..\convert\court2.tmx", 1, "spenemy0", -1
+03, " dreadful dungeon a ", "..\convert\hicoin.tmx", 0, "spenemy0", -1
+04, " dreadful dungeon b ", "..\convert\chntower.tmx", 0, "spenemy0", -1
+05, "   green garden a   ", "..\convert\foresta.tmx", 3, "spenemy0", -1
+06, "   green garden b   ", "..\convert\elevator.tmx", 3, "spenemy0", -1
+07, "    aqua tower a    ", "..\convert\aqua1.tmx", 4, "spenemy0", -1
+08, "    aqua tower b    ", "..\convert\aqua2.tmx", 4, "spenemy0", -1
+09, "   scary spire a    ", "..\convert\scarys1.tmx", 5, "spenemy0", -1
+10, "   scary spire b    ", "..\convert\scarys2.tmx", 5, "spenemy0", -1
+11, "   mystic tower     ", "..\convert\boss.tmx", 6, "sprboss1", -1
+12, "  secret tower #1   ", "..\convert\level2.tmx", 1, "spenemy0", -1
+13, "  secret tower #2   ", "..\convert\pearltwr.tmx", 1, "spenemy0", -1
+14, "  secret tower #3   ", "..\convert\secret3.tmx", 0, "spenemy0", -1
+24, "     main menu      ",  "..\convert\logo.tmx", 8, "spenemy0", -1
+25, "     epilogue       ", "..\convert\endscrol.tmx", 7, "sprboss1", -1
 "/maps"
 "/convert"

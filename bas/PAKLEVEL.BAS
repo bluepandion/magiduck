@@ -386,8 +386,8 @@ SUB saveLevel (file$, No)
 		ofsDATA = ofsDATA + 4
 
 		PUT #2, ofsDATA, level.tileSet
-		PUT #2, ofsDATA + 8, level.spriteSet
-		ofsDATA = ofsDATA + 16
+		PUT #2, ofsDATA + 2, level.spriteSet
+		ofsDATA = ofsDATA + 10
 
 		PUT #2, ofsDATA, level.coins
 		PUT #2, ofsDATA + 2, level.keys

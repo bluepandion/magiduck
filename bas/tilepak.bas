@@ -32,6 +32,7 @@ OPEN "tiles.ctp" FOR BINARY AS #2
 		COLOR 7
 		INPUT #1, a$
 		IF UCASE$(a$) <> "END" THEN
+			SHELL "tileconv " + a$
 			numDifferentBytes = 0
 			numMatches = 0
 			tileSetNum = VAL(A$)
@@ -102,12 +103,17 @@ SUB SaveRle
 		rleIndex$ = tiles(n)						
 		rleLen = rleLen + 1
 		IF rleIndex$ <> rleCmp$ OR rleLen = 17 THEN
-			
 			PRINT rleLen;
-			IF rleLen > 1 THEN
+			IF rleLen > 1 THEN				
 				outStr = chr$((rleLen - 2) OR &HF0)				
 				outPut$ = outPut$ + outStr + rleCmp$
 			ELSE						
+				IF ASC(rleCmp$) => &HF0 THEN
+					CLS
+					PRINT n
+					PRINT "Error: Found 0xF value in tilemap."
+					END
+				END IF
 				outPut$ = outPut$ + rleCmp$
 				nonRLString$ = ""
 			END IF
@@ -165,6 +171,7 @@ SUB SavePaletteRLE
 					'numNormEntries = numNormEntries + 1
 				END IF
 			ELSE
+
 				IF palTile1 > -1 THEN				
 					out$ = CHR$(palTile1 * 16 + rleLen)
 				ELSE
