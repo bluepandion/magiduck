@@ -31,37 +31,37 @@ OPEN "tiles.ctp" FOR BINARY AS #2
 	DO
 		COLOR 7
 		INPUT #1, a$
-		IF UCASE$(a$) <> "END" THEN
-			SHELL "tileconv " + a$
+		IF UCASE$(a$) <> "END" THEN			
 			numDifferentBytes = 0
 			numMatches = 0
 			tileSetNum = VAL(A$)
 			INPUT #1, a$
+			SHELL "tileconv " + a$
 			DEF SEG = VARSEG(tiles(0))
 			BLOAD a$ + ".ctg", VARPTR(tiles(0))
 			PRINT #3, a$ + ".ctg", fileOutOfs			
 			rleLen = 1
 			PUT #2, tileSetNum * 2 + 1, fileOutOfs
-			CheckBytes
-			COLOR 8
-			PRINT #3, "  Different attribute pairs: "; numDifferentBytes
-			maxM = 9999
-			tot = 0
-			PRINT #3, "  Top 15: ";
-			FOR c = 0 TO 14
-				m = 0			
-				nn = 0
-				FOR n = 0 to 255
-					IF numMatches(n) > m AND numMatches(n) < maxM THEN m = numMatches(n):nn= n
-				NEXT n			
-				tPalette(c) = CHR$(tileByte(nn))
-				'PRINT " Max Matches:    "; m'numMatches
-				PRINT #3, m;
-				tot = tot + m
-				maxM = m
-			NEXT c
-			PRINT #3, ""
-			PRINT #3, "  Total appearences in top 15: ";tot
+			'CheckBytes
+			'COLOR 8
+			'PRINT #3, "  Different attribute pairs: "; numDifferentBytes
+			'maxM = 9999
+			'tot = 0
+			'PRINT #3, "  Top 15: ";
+			'FOR c = 0 TO 14
+			'	m = 0			
+		'	'	nn = 0
+			'	FOR n = 0 to 255
+			'		IF numMatches(n) > m AND numMatches(n) < maxM THEN m = numMatches(n):nn= n
+			'	NEXT n			
+			'	tPalette(c) = CHR$(tileByte(nn))
+			'	'PRINT " Max Matches:    "; m'numMatches
+			'	PRINT #3, m;
+			'	tot = tot + m
+			'	maxM = m
+			'NEXT c
+			'PRINT #3, ""
+			'PRINT #3, "  Total appearences in top 15: ";tot
 			'SavePaletteRLE
 			SaveRLE
 			PRINT #3, ""
@@ -99,10 +99,10 @@ SUB SaveRle
 	rleIndex$ = tiles(0)
 	rleCmp$ = tiles(0)
 	rleLen = 0
-	FOR n = 1 to 1924
+	FOR n = 1 to 1920
 		rleIndex$ = tiles(n)						
 		rleLen = rleLen + 1
-		IF rleIndex$ <> rleCmp$ OR rleLen = 17 THEN
+		IF rleIndex$ <> rleCmp$ OR rleLen = 17 OR n = 1920 THEN
 			PRINT rleLen;
 			IF rleLen > 1 THEN				
 				outStr = chr$((rleLen - 2) OR &HF0)				

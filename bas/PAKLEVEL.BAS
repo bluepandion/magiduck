@@ -403,7 +403,7 @@ SUB saveLevel (file$, No)
 		DO
 			n = n + 1
 			tile = MID$(levelStr$, n, 1)
-			IF tile <> prevTile OR rleCount = 127 OR n = 1600 THEN
+			IF tile <> prevTile OR rleCount = 127 OR n = 1601 THEN
 				IF rleCount > 1 THEN					
 					byte = chr$(rleCount OR 128)
 					PUT #2, ofsData, byte

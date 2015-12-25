@@ -2364,11 +2364,11 @@ aCopyPage PROC
 	mov si, [bp + 8]
 	shl di, 1
 	shl si, 1
-	;add di, 160
-	;add si, 160
+	add di, 160
+	add si, 160
 	
 	mov dx, vWrap
-	mov cx, 2000
+	mov cx, 1920
 copyPage:
 	and di, dx
 	and si, dx
@@ -2455,7 +2455,7 @@ jnz loopY
 	pop bp
 	retf 12
 aMenuHiLite ENDP
-aUnPackLevelRLE PROC
+aUnpackLevelRLE PROC
 ;
 ;	Unpack a level tilemap from a string.
 ;
@@ -2507,8 +2507,8 @@ exit:
 	pop		es
 	pop		bp
 	retf	4	
-aUnPackLevelRLE ENDP
-aUnPackTileGfxRLE PROC
+aUnpackLevelRLE ENDP
+aUnpackTileGfxRLE PROC
 ;	Unpack RL encoded tile graphics from a string to tile bank.
 ;
 ;	Parameters
@@ -2531,7 +2531,7 @@ aUnPackTileGfxRLE PROC
 	xor		ax, ax
 	mov		dl, 2
 	mov		bl, 0F0h				;RLE run start value
-	mov		cx, 1924
+	mov		cx, 1920
 loopRLE:
 	lodsb	
 	cmp		al, bl
@@ -2560,7 +2560,111 @@ exit:
 	pop		es
 	pop		bp
 	retf	4		
-aUnPackTileGfxRLE ENDP
+aUnpackTileGfxRLE ENDP
+aUnpackSprites PROC
+;
+;	Unpack sprites with binary format mask data.
+;   Packed data is expected in Tile Buffer.
+;
+;	Parameters
+;	06	Sprite unpack target offset (Aux or Main sprite-bank)
+;
+	push	bp
+	mov 	bp, sp
+	push	es
+	push	di
+	push	ds
+	push	si
+	
+	mov		es,	gfxSpriteBank	
+	mov		ds, gfxTileSeg
+	mov		si, gfxTileBuffer
+	
+	mov		di, [bp + 06]			; Copy color data,		
+	lodsw							; length provided in first word.
+	mov		cx, ax
+	shr		cx, 1
+copyColor:
+	movsb
+	inc		di
+	movsb
+	inc		di
+	loop	copyColor
+	
+	mov		di, [bp + 06]			; Then unpack mask data bits
+	inc		di
+	mov		bx, 0FF0h
+	lodsw
+	mov		cx, ax
+nextMaskByte:
+	lodsb	
+	mov		dl, al
+	mov		dh, 1
+decodeBit0:
+	xor		al, al
+	test	dl, dh
+	jz		decodeBit1
+	or		al, bh
+decodeBit1:		
+	shl		dh, 1
+	test	dl, dh
+	jz		decodeBit2
+	or		al, bl
+decodeBit2:
+	stosb
+	inc		di
+	shl		dh, 1
+
+	xor		al, al
+	test	dl, dh
+	jz		decodeBit3
+	or		al, bh
+decodeBit3:		
+	shl		dh, 1
+	test	dl, dh
+	jz		decodeBit4
+	or		al, bl
+decodeBit4:
+	stosb
+	inc		di
+	shl		dh, 1
+
+	xor		al, al
+	test	dl, dh
+	jz		decodeBit5
+	or		al, bh
+decodeBit5:		
+	shl		dh, 1
+	test	dl, dh
+	jz		decodeBit6
+	or		al, bl
+decodeBit6:
+	stosb
+	inc		di
+	shl		dh, 1
+
+	xor		al, al
+	test	dl, dh
+	jz		decodeBit7
+	or		al, bh
+decodeBit7:		
+	shl		dh, 1
+	test	dl, dh
+	jz		nextMask
+	or		al, bl
+nextMask:
+	stosb
+	inc		di	
+	loop 	nextMaskByte
+exit:	
+	pop		si
+	pop		ds
+	pop		di
+	pop		es
+	pop		bp
+	retf	2
+aUnpackSprites ENDP
+
 ;==============================================================================
 ;
 ; Timer ISR by DeathShadow / Jason M. Knight
@@ -2770,10 +2874,7 @@ keyboardInterrupt:
 		dw 2281 , 2153 , 2032 , 1918 , 1810 , 1709 , 1612 , 1521 , 1435 , 1355 , 1280 , 1207
 		dw 1140 , 1075 , 1015 , 959 , 898 , 854 , 806 , 760 , 718 , 677 , 639 , 604
 		dw 570 , 538 , 507 , 479 , 452 , 427 , 403 , 380 , 359 , 338 , 319 , 301, 256, 256
-		
-		lupFadeOutLo	db	00, 00, 08, 08, 01, 01, 08, 09, 01, 08, 07, 14, 06, 09, 07, 14
-		lupFadeOutHi	db	00, 00, 128, 128, 16, 16, 128, 144, 16, 128, 112, 224, 96, 144, 112, 224
-		
+				
 		tileRead		dw	0000h, 0000h
 		gfxSpriteBank	dw	0000h, 0000h
 		gfxTileSeg		dw	0000h
@@ -2815,8 +2916,9 @@ public aSoundStop
 public aSetup
 public aCopyPage
 public aMenuHiLite
-public aUnPackLevelRLE
-public aUnPackTileGfxRLE
+public aUnpackLevelRLE
+public aUnpackTileGfxRLE
+public aUnpackSprites
 public aTimerStart
 public aTimerEnd
 public aTimerWait

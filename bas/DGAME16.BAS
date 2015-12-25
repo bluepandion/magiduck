@@ -242,6 +242,7 @@ CASE 263	'Main menu pan
 	IF actor(2).count > 2 THEN actor(2).control = 258
 '------------------------------------------------------------------------------
 CASE 265	'High score - draw screen			
+	player.hudLock = 999
 	myPrint 16, 4, "TOP DUCKS", &H1A17
 	actor(2).frame = 0
 	actor(3).frame = 0
@@ -493,23 +494,19 @@ CASE 260	'Level Clear - sync video pages
 	END IF
 '------------------------------------------------------------------------------			   
 CASE 258	'Menu	
-	SELECT CASE player.menuMode
-	CASE 0		'Display menu load message		
-		'w40char.text = " LOADING PAGE ...                      |"
-		player.menuExitCtrl = 255
-		player.hudLock = 999
-		'aPrint &HFFFF, &HC0E, w40char.seg, w40char.ofs, 0, 0, hudBufferSeg, hudBufferOfs
-		'player.menuMode = 1
+	SELECT CASE player.menuMode	
+	CASE 0		
 		actor(2).jump = actor(1).lNext
 		actor(1).lNext = 1
 		aSoundStop
 		handleScroll
 		menuLoad player.menuContext - 1
-		
-		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)
 		w40char.text = " ARROW KEYS TO MOVE ... ENTER TO SELECT |"
 		aPrint &HFFFF, &H0E0E, 0, 0, hudBufferSeg, hudBufferOfs
+		aPrint &HFFFF, &H0E0E, 0, 0, &HB800, gfx.pageOfs(gfx.page)
 		player.hudLock = 999
+		player.menuExitCtrl = 255
+		aCopyPage gfx.pageOfs(gfx.page), gfx.pageOfs(gfx.page xor 1)		
 		spriteList(0, 0).y = 255
 		spriteList(0, 1).y = 255
 		'aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
@@ -518,7 +515,6 @@ CASE 258	'Menu
 		player.menuMode = 2
 		player.menuHLcolor = &HCECF
 		soundEvent = player.menuSound
-		
 	CASE 2		'Item highlight and wait for input
 		IF actor(2).count > 0 THEN
 			IF actor(2).count > 3 THEN
@@ -786,14 +782,16 @@ CASE 258	'Menu
 		IF player.menuContext > 0 THEN
 			player.menuMode = 0
 			player.menuSound = SndPause
+			player.hudLock = 4
 			EXIT SUB
 		END IF
 		IF player.menuContext = 0 THEN
 			actor(2).control = player.menuExitCtrl
-			player.menuMode = 0
-			player.hudLock = 4
+			player.menuMode = 0			
 			player.menuSound = SndPause
-			hudUpdate 255
+			player.hudLock = 0
+			IF player.menuExitCtrl = 265 THEN player.hudLock = 4
+			hudUpdate 255			
 		END IF
 		IF player.menuContext < 0 THEN
 			actor(2).control = 259

@@ -23,8 +23,9 @@ DECLARE SUB aSetup (BYVAL dataSeg%, BYVAL dataOfs%)
 DECLARE SUB aCopyPage (BYVAL sourceOfs%, BYVAL destOfs%)
 DECLARE SUB aMenuHiLite (BYVAL x%, BYVAL y%, BYVAL w%, BYVAL h%, BYVAL attribs%, BYVAL pageOfs%)
 
-DECLARE SUB aUnPackLevelRLE (BYVAL dataSeg%, BYVAL dataOfs%)
-DECLARE SUB aUnPackTileGfxRLE (BYVAL dataSeg%, BYVAL dataOfs%)
+DECLARE SUB aUnpackLevelRLE (BYVAL dataSeg%, BYVAL dataOfs%)
+DECLARE SUB aUnpackTileGfxRLE (BYVAL dataSeg%, BYVAL dataOfs%)
+DECLARE SUB aUnpackSprites (BYVAL targetOfs%)
 
 DECLARE SUB aTimerStart ()
 DECLARE SUB aTimerEnd ()

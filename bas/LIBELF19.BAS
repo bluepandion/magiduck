@@ -251,7 +251,7 @@ SUB elfInit
 		END		
 	 END IF
 	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
-	 MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
+	 'MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
 	'------------------------------------------------------
 	'debugOut "timer init"
 	CALL aTimerStart
@@ -509,7 +509,7 @@ SUB loadLevel
 			GET #1, fileOfs + 2, level.keys
 			fileOfs = fileOfs + 4
 		ELSE		
-			fileOfs = fileOfs + 24
+			fileOfs = fileOfs + 18
 		END IF
 				
 		progressBar 1
@@ -568,8 +568,10 @@ SUB loadSprites (file$, offset)
 		offset = spriteBankAuxOfs		
 	END IF
 
-	DEF SEG = spriteBankSeg
-	BLOAD file$ + ".csg", offset
+	DEF SEG = tileBufferSeg 'spriteBankSeg
+	BLOAD file$ + ".csp", tileBufferOfs 'offset
+	CALL aUnpackSprites (offset)
+	
 	DEF SEG	
 	OPEN file$ + ".csd" FOR BINARY AS #1
 		fileOfs = 1
@@ -666,7 +668,7 @@ SUB quit
 	 PRINT "n = "; nn	 
 	 COLOR 7	 
 	 PRINT " MagiDuck, its source code and its"
-	 PRINT "  project files are Freeware."
+	 PRINT " project files are Freeware."
 	 PRINT
 	 PRINT " Thanks for playing!"	
 	 'OPEN "debug.txt" for output as #1
