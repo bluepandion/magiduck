@@ -15,8 +15,6 @@ DECLARE SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
 DECLARE SUB menuLoad (menuNo%)
 DECLARE SUB menuClear ()
 DECLARE FUNCTION tileRead% (x%, y%)
-DECLARE FUNCTION menuGetByte% ()
-DECLARE FUNCTION menuGetWord% ()
 DECLARE SUB ProgressBar (progress%)
 DECLARE SUB SaveGame ()
 DECLARE SUB LoadGame ()
@@ -250,18 +248,16 @@ SUB elfInit
 		PRINT "Display adapter not compatible."
 		END		
 	 END IF
-	 'Save video mode to hudbuffers end, so it can be referenced by aPageFlip
-	 'MID$(hudBuffer, 161, 1) = MID$(hudBuffer, 1, 1)
-	'------------------------------------------------------
+	
 	'debugOut "timer init"
 	CALL aTimerStart
-	'-----------------------------------------------------------------------
+	'
 	' Setup keyboard
-	'-----------------------------------------------------------------------
+	'
 	DEF SEG = 0
 	Keyflags = PEEK(&H417) AND &H70       'Save keyboard flags
 	DEF SEG
-	aKBinit 'KBoldSeg, KBoldOfs, p2%, p3%
+	aKBinit
 END SUB
 
 FUNCTION getSpawnSlot
@@ -580,9 +576,10 @@ SUB loadSprites (file$, offset)
 			fileOfs = fileOfs + 2
 			IF n > -1 THEN
 				GET #1, fileOfs, animation(n)
-				
-				'Calculate and convert actual sprite memory offset
-				' for both flip-states.
+				'
+				' Calculate and convert actual sprite memory offset
+				'  for both flip-states.
+				'
 				pLong& = animation(n).offset(0)
 				pLong& = pLong& + spriteBankOfs
 				a$ = MKL$(pLong&)                              					
@@ -605,10 +602,10 @@ SUB loadTiles (set)
 	'BLOAD file$ + ".ctg", tileBankOfs
 	n = set * 2 + 1
 	OPEN "tiles.ctp" FOR BINARY AS #1
-		GET #1, n, fileOfs
-		debugOut str$(fileOfs)
+		GET #1, n, fileOfs		
+		'debugOut str$(fileOfs)
 		GET #1, fileOfs, loadInt
-		debugOut str$(loadInt)
+		'debugOut str$(loadInt)
 		fileOfs = fileOfs + 2
 		loadVarStr = SPACE$(loadInt)
 		GET #1, fileOfs, loadVarStr		
@@ -823,44 +820,100 @@ END SUB
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
 	menuClear
+		
+	fileOfs = menuNo% * 2 + 1	
+	'
+	' Select menu source by entry number.
+	'
 	IF menuNo% > 9 THEN
+		'
+		' Load menu data to loadVarStr from file.
+		'
 		OPEN "menu.cmm" FOR BINARY AS #1
-		menuLoadSrc = 1
+			GET #1, fileOfs, loadInt
+			fileOfs = loadInt
+			GET #1, fileOfs, loadInt
+			fileOfs = fileOfs + 2
+			loadVarStr = SPACE$(loadInt)
+			GET #1, fileOfs, loadVarStr
+		CLOSE #1
+		'menuLoadSrc = 1
 	ELSE
-		menuLoadSrc = 0
+		'
+		' Copy data from preloaded menu string to loadVarStr.
+		'
+		loadInt = CVI(MID$(menuPreload, fileOfs, 2))
+		fileOfs = loadInt
+		debugOut str$(loadInt)
+		loadInt = CVI(MID$(menuPreload, fileOfs, 2))
+		fileOfs = fileOfs + 2
+		loadVarStr = MID$(menuPreload, fileOfs, loadInt)		
+		'menuLoadSrc = 0
 	END IF	
+		
+	fileOfs = 1
 	
-	menuLoadPos = menuNo% * 6 + 1
-	fileOfs = menuGetWord%
-	itemCount = menuGetWord%
-	player.menuItem = menuGetWord%
-	menuLoadPos = fileOfs	
-	tileCopyList(0, gfx.page).x = menuGetByte%	
-	tileCopyList(0, gfx.page).y = menuGetByte%
-	tileCopyList(0, gfx.page).w = menuGetByte%
-	tileCopyList(0, gfx.page).h = menuGetByte%	
-	loadInt = menuGetWord%
+	'menuLoadPos = menuNo% * 6 + 1	
+	'fileOfs = menuGetWord%
+	
+	'itemCount = menuGetWord%
+	'player.menuItem = menuGetWord%
+	'menuLoadPos = fileOfs	
+	'tileCopyList(0, gfx.page).x = menuGetByte%	
+	'tileCopyList(0, gfx.page).y = menuGetByte%
+	'tileCopyList(0, gfx.page).w = menuGetByte%
+	'tileCopyList(0, gfx.page).h = menuGetByte%
+	'loadInt = menuGetWord%
+	'tileCopyList(1, gfx.page).y = 255
+	
+	
+	itemCount = ASC(MID$(loadVarStr, fileOfs, 1))
+	player.menuItem = ASC(MID$(loadVarStr, fileOfs + 1, 1))
+	player.menuEscTarget = ASC(MID$(loadVarStr, fileOfs + 2, 1))
+	fileOfs = fileOfs + 3
+	'
+	' Menu background clear rectangle:
+	'
+	tileCopyList(0, gfx.page).x = ASC(MID$(loadVarStr, fileOfs, 1))
+	tileCopyList(0, gfx.page).y = ASC(MID$(loadVarStr, fileOfs + 1, 1))
+	tileCopyList(0, gfx.page).w = ASC(MID$(loadVarStr, fileOfs + 2, 1))
+	tileCopyList(0, gfx.page).h = ASC(MID$(loadVarStr, fileOfs + 3, 1))
+		
+	loadInt = CVI(MID$(loadVarStr, fileOfs + 4, 2))
 	tileCopyList(1, gfx.page).y = 255
+	fileOfs = fileOfs + 6
+	'
 	aClearList gfx.pageOfs(gfx.page), VARSEG(tileCopyList(0, gfx.page).offset), VARPTR(tileCopyList(0, gfx.page).offset), loadInt
 	prevGfxItem = 1
 	
 	for item = 1 to itemCount
-		itemIDX = menuGetWord%
+		itemIDX = ASC(MID$(loadVarStr, fileOfs, 1))
 		n = getSpawnSlot
-		actor(n).lPrev = menuGetWord%
-		actor(n).lNext = menuGetWord%
-		actor(n).x = menuGetWord%
-		actor(n).y = menuGetWord%
-		actor(n).vecX = menuGetWord%
-		actor(n).vecY = menuGetWord%
-		actor(n).frame = menuGetWord%
-		IF itemIDX > 0 THEN 
+		'
+		' Load menu-item properties:
+		'  prev, next, x, y, width, height, color
+		'
+		actor(n).lPrev = ASC(MID$(loadVarStr, fileOfs + 1, 1))
+		actor(n).lNext = ASC(MID$(loadVarStr, fileOfs + 2, 1))
+		actor(n).x = ASC(MID$(loadVarStr, fileOfs + 3, 1))
+		actor(n).y = ASC(MID$(loadVarStr, fileOfs + 4, 1))
+		actor(n).vecX = ASC(MID$(loadVarStr, fileOfs + 5, 1))
+		actor(n).vecY = ASC(MID$(loadVarStr, fileOfs + 6, 1))
+		actor(n).frame = CVI(MID$(loadVarStr, fileOfs + 7, 2))
+		fileOfs = fileOfs + 9
+		'
+		' If menu-item is text, draw a background rectangle:
+		'
+		IF itemIDX > 0 AND itemIDX < 255 THEN 
 			actor(n).exist = 1
 			actor(n).control = -16000
 			menuItem(itemIDX) = n
 			aMenuHiLite actor(n).x, actor(n).y, actor(n).vecX, actor(n).vecY, actor(n).frame, gfx.pageOfs(gfx.page)
 		END IF
-		IF itemIDX < 0 THEN 
+		'
+		' If menu-item is a sprite, setup actor properties accordingly:
+		'
+		IF itemIDX = 255 THEN 
 			actor(n).exist = 1
 			actor(n).control = -16001
 			actor(n).x = actor(n).x + gfx.screenX(0)
@@ -876,17 +929,20 @@ SUB menuLoad (menuNo%)
 			actor(n).life = -1
 			actor(n).flags = 0
 			prevGfxItem = n
-		END IF
-		IF itemIDX > -1 THEN
-			itemLen = menuGetByte%		
-			IF menuNo% > 9 THEN
-				loadVarStr = SPACE$(itemLen)
-				GET #1, menuLoadPos, loadVarStr
-				w40char.text = loadVarStr
-			ELSE
-				w40char.text = MID$(menuPreload, menuLoadPos, itemLen)
-			END IF
-			menuLoadPos = menuLoadPos + itemLen				
+			fileOfs = fileOfs + 2			
+		ELSE
+		'END IF
+		'
+		' Load text-string for menu-item:
+		'
+		'IF itemIDX < 255 THEN
+			itemLen = ASC(MID$(loadVarStr, fileOfs, 1))
+			fileOfs = fileOfs + 1		
+			'loadVarStr = SPACE$(itemLen)
+			'GET #1, menuLoadPos, loadVarStr
+			'w40char.text = loadVarStr
+			w40char.text = MID$(loadVarStr, fileOfs, itemLen) + "|"			
+			fileOfs = fileOfs + itemLen				
 			aPrint gfx.videoWrap, actor(n).frame, actor(n).x, actor(n).y + 1, &HB800, gfx.pageOfs(gfx.page)
 		END IF
 	NEXT item
@@ -896,9 +952,7 @@ SUB menuLoad (menuNo%)
 '		IF actor(n).exist OR n = 1 THEN
 '			debugOut str$(n) + str$(actor(n).lPrev) + str$(actor(n).lNext) + str$(actor(n).control)
 '		END IF
-'	NEXT n
-	
-	IF menuNo% > 9 THEN CLOSE #1	
+'	NEXT n	
 END SUB
 
 SUB menuClear
@@ -916,31 +970,6 @@ SUB menuClear
 		IF actor(n).control = -16001 THEN actor(n).exist = 0
 	NEXT n
 END SUB
-
-'
-' Read a byte/word from streamed or preloaded menu data.
-'
-FUNCTION menuGetByte%
-	IF menuLoadSrc THEN
-		GET #1, menuLoadPos, loadStr
-		menuGetByte% = ASC(loadStr)		
-	ELSE
-		menuGetByte% = ASC(MID$(menuPreload, menuLoadPos, 1))
-	END IF
-	menuLoadPos = menuLoadPos + 1
-	'debugOut STR$(menuLoadPos)
-END FUNCTION
-
-FUNCTION menuGetWord%
-	IF menuLoadSrc THEN
-		GET #1, menuLoadPos, loadInt
-		menuGetWord% = loadInt
-	ELSE
-		menuGetWord% = CVI(MID$(menuPreload, menuLoadPos, 2))
-	END IF
-	menuLoadPos = menuLoadPos + 2
-	'debugOut STR$(menuLoadPos)
-END FUNCTION
 
 SUB DEBUGOUT (s$)
 	OPEN "debug.txt" FOR APPEND AS #3

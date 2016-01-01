@@ -496,6 +496,7 @@ CASE 260	'Level Clear - sync video pages
 CASE 258	'Menu	
 	SELECT CASE player.menuMode	
 	CASE 0		
+		kbArray(1) = 0
 		actor(2).jump = actor(1).lNext
 		actor(1).lNext = 1
 		aSoundStop
@@ -516,6 +517,12 @@ CASE 258	'Menu
 		player.menuHLcolor = &HCECF
 		soundEvent = player.menuSound
 	CASE 2		'Item highlight and wait for input
+		nn = menuItem(player.menuItem)
+		x = actor(nn).x
+		y = actor(nn).y
+		w = actor(nn).vecX
+		h = actor(nn).vecY
+		aMenuHiLite x, y, w, h, player.menuHLcolor, gfx.pageOfs(gfx.page)
 		IF actor(2).count > 0 THEN
 			IF actor(2).count > 3 THEN
 				nn = menuItem(player.menuPrev)
@@ -547,13 +554,14 @@ CASE 258	'Menu
 				END IF
 			END IF
 			IF kbArray(28) THEN player.menuMode = 5
-		END IF
-		nn = menuItem(player.menuItem)
-		x = actor(nn).x
-		y = actor(nn).y
-		w = actor(nn).vecX
-		h = actor(nn).vecY
-		aMenuHiLite x, y, w, h, player.menuHLcolor, gfx.pageOfs(gfx.page)
+			IF kbArray(1) THEN
+				kbArray(1) = 0
+				IF player.menuEscTarget <> 255 THEN
+					player.menuMode = 5
+					player.menuItem = player.menuEscTarget
+				END IF
+			END IF
+		END IF		
 	'--------------------------------------------------------------------------
 	CASE 5								'MENUCONTEXT Process selected menu item
 		'
@@ -731,9 +739,9 @@ CASE 258	'Menu
 			ELSE
 				player.menuExitCtrl = 264				
 			END IF
-		CASE 21 TO 23	'Secret level unlocked message
+		CASE 21 TO 25	'Secret level unlocked message or Quick Help
 				player.menuContext = 0
-				player.menuMode = 999
+				player.menuMode = 999		
 		CASE 30 TO 50	'Help flippable pages
 			player.menuMode = 999
 			SELECT CASE player.menuItem			
@@ -755,7 +763,7 @@ CASE 258	'Menu
 					player.menuExitCtrl = 265					
 				END IF				
 			END IF
-		CASE 80 TO 120
+		CASE 80 TO 99	'Letters
 			player.menuMode = 999			
 			IF player.menuItem = 1 THEN				
 				player.menuContext = player.menuContext + 1
@@ -939,6 +947,12 @@ CASE 255	'Normal player
 		actor(2).anim = 8
 		actor(2).frame = 8
 		actor(3).frame = 9
+	END IF
+	
+	IF kbArray(59) THEN		'F1 quick-help
+		player.menuMode = 0
+		player.menuContext = 25
+		actor(2).control = 258	
 	END IF
 	
 	'CHEATS
@@ -3216,7 +3230,7 @@ FUNCTION DrawHighScores
 				DrawHighScores = n
 			END IF
 			myPrint 6, y, str$(n) + "." , &H1717
-			myPrint 11, y, highScoreEntry.name, &H1E1E
+			myPrint 11, y, highScoreEntry.name, &H1F1E
 			myPrint 25, y, STR$(highScoreEntry.score), &H1E1E
 			y = y - 3 
 			c = c + 12

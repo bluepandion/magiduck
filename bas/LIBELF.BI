@@ -134,7 +134,7 @@ TYPE animDataType
 	y AS INTEGER
 	jump AS INTEGER
 END TYPE
-DIM animation(0 TO 119) AS animDataType
+DIM animation(0 TO 99) AS animDataType
 COMMON SHARED animation() AS animDataType
 
 TYPE collisionType
@@ -168,6 +168,7 @@ TYPE playerType
 	menuItem AS INTEGER
 	menuPrev AS INTEGER
 	menuHLcolor AS INTEGER
+	menuEscTarget AS INTEGER
 	targetX AS INTEGER
 	targetY AS INTEGER		
 	bouncing AS INTEGER	

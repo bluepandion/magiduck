@@ -8,8 +8,8 @@ DIM SHARED saveString AS STRING
 DIM SHARED fileString AS STRING
 DIM SHARED prelString AS STRING
 
-fileString = STRING$(512, 0)
-prelString = STRING$(60, 0)
+fileString = STRING$(200, 0)
+prelString = STRING$(20, 0)
 
 ofsOFFSETS = 1
 ofsData = 0
@@ -23,7 +23,8 @@ CLS
       INPUT #1, menuNo
       menuNo = menuNo - 1
       INPUT #1, startItem
-      INPUT #1, fineTuneX
+      INPUT #1, escItem
+	  INPUT #1, fineTuneX
       INPUT #1, fineTuneY
       INPUT #1, clearX
       INPUT #1, clearY
@@ -36,7 +37,11 @@ CLS
 
       'Save streamed or preloaded menu data
       '----------------------------------------------------------------------
-         byte = CHR$(clearX + fineTuneX)
+         byte = CHR$(startItem)
+         saveString = saveString + byte
+		 byte = CHR$(escItem)
+         saveString = saveString + byte
+		 byte = CHR$(clearX + fineTuneX)
          saveString = saveString + byte
          byte = CHR$(clearY + fineTuneY)
          saveString = saveString + byte
@@ -72,38 +77,38 @@ CLS
 				END IF
 			   NEXT i
 			   
-			   IF itemIDX = -16 THEN itemText$ = ""
-			   
-			   itemText$ = itemText$ + "|"
-               
-			   itemLen = LEN(itemText$)
+			   IF itemIDX = -16 THEN itemText$ = "|"
+			   			   
+			   itemLen = LEN(itemText$) 
                INPUT #1, itemX
                itemX = itemX + fineTuneX + xSpace
                INPUT #1, itemY
                itemY = itemY + fineTuneY
                INPUT #1, itemW
                INPUT #1, itemH
-               itemW = itemLen - 1
+               itemW = itemLen
                itemH = 4
                INPUT #1, itemColor2
                INPUT #1, itemColor1
 
                'PRINT itemText$
                'PRINT ofsDATA
+			   
+			   IF itemIDX < 0 THEN itemIDX = 255
 
-               saveString = saveString + MKI$(itemIDX)
-               saveString = saveString + MKI$(itemPrev)
-               saveString = saveString + MKI$(itemNext)
-               saveString = saveString + MKI$(itemX)
-               saveString = saveString + MKI$(itemY)
-               saveString = saveString + MKI$(itemW)
-               saveString = saveString + MKI$(itemH)
+               saveString = saveString + CHR$(itemIDX)
+               saveString = saveString + CHR$(itemPrev)
+               saveString = saveString + CHR$(itemNext)
+               saveString = saveString + CHR$(itemX)
+               saveString = saveString + CHR$(itemY)
+               saveString = saveString + CHR$(itemW)
+               saveString = saveString + CHR$(itemH)
                   
                byte = CHR$(itemColor1)
                saveString = saveString + byte
-                  
                byte = CHR$(itemColor2)
                saveString = saveString + byte
+			   
                IF itemIDX > -1 THEN
                   byte = CHR$(itemLen)
                   saveString = saveString + byte
@@ -111,17 +116,20 @@ CLS
                END IF
             END IF
          LOOP WHILE itemIDX <> -1
-         IF menuNo > 9 THEN
-            'PUT #2, ofsData, saveString
-            MID$(fileString, menuNo * 6 + 1, 2) = MKI$(LEN(fileString) + 1)
-            MID$(fileString, menuNo * 6 + 3, 2) = MKI$(itemCount)
-            MID$(fileString, menuNo * 6 + 5, 2) = MKI$(startItem)
+         		 
+		 saveString = CHR$(itemCount) + saveString		 
+		 saveString = MKI$(LEN(saveString) + 2) + saveString
+		 
+		 IF menuNo > 9 THEN                        
+			MID$(fileString, menuNo * 2 + 1, 2) = MKI$(LEN(fileString) + 1)
+            'MID$(fileString, menuNo * 6 + 3, 2) = MKI$(itemCount)
+            'MID$(fileString, menuNo * 6 + 5, 2) = MKI$(startItem)
             fileString = fileString + saveString
             PRINT "Streamed item added: "; menuNo
          ELSE
-            MID$(prelString, menuNo * 6 + 1, 2) = MKI$(LEN(prelString) + 1)
-            MID$(prelString, menuNo * 6 + 3, 2) = MKI$(itemCount)
-            MID$(prelString, menuNo * 6 + 5, 2) = MKI$(startItem)
+            MID$(prelString, menuNo * 2 + 1, 2) = MKI$(LEN(prelString) + 1)
+            'MID$(prelString, menuNo * 6 + 3, 2) = MKI$(itemCount)
+            'MID$(prelString, menuNo * 6 + 5, 2) = MKI$(startItem)
             prelString = prelString + saveString
             PRINT "Preload item added:  "; menuNo
          END IF
