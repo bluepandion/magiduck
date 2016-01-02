@@ -1019,11 +1019,11 @@ SUB SaveGame
 		NEXT n
 	CLOSE #1
 	
-	fileOfs = 536 + player.saveSlot * 90
+	fileOfs = 222 + player.saveSlot * 66
 	OPEN "menu.cmm" FOR BINARY AS #1
 		a$ = DATE$
 		PUT #1, fileOfs, a$
-		fileOfs = fileOfs + 30
+		fileOfs = fileOfs + 22
 		'a$ = "SCORE:         |"
 		'PUT #1, fileOfs, a$
 		a$ = STR$(player.levelScore(0)) + " P|"
@@ -1033,7 +1033,7 @@ SUB SaveGame
 		'fileOfs = n + 30
 		'a$ = "COMPLETE:     %|"
 		'PUT #1, fileOfs, a$
-		fileOfs = fileOfs + 30
+		fileOfs = fileOfs + 22
 		a$ = STR$(player.levelCompletion(0)) + " %|"
 		'fileOfs = fileOfs + 14 - LEN(a$)
 		PUT #1, fileOfs, a$
