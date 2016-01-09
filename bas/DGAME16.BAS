@@ -628,24 +628,23 @@ CASE 258	'Menu
 				SELECT CASE player.menuItem
 				CASE 1	'new game
 					player.menuContext = 12
-					player.menuContextPrev = 1					
-					'screenResetPos 
+					player.menuContextPrev = 1										
 					player.targetX = actor(2).x - 20
 					player.targetY = actor(2).y + 84
 				CASE 2 'continue
 					player.menuContext = 12
-					player.menuContextPrev = 2					
-					'screenResetPos 
+					player.menuContextPrev = 2										
 					player.targetX = actor(2).x - 20
 					player.targetY = actor(2).y + 20
 				CASE 3 'help
+					player.targetX = actor(2).x - 20
+					player.targetY = actor(2).y + 316
 					player.menuContextPrev = player.menuContext
 					player.menuContext = 11					
 				CASE 4  'high scores
 					player.score = 0					
 					player.menuExitCtrl = 265
 					player.menuContext = 0
-					'screenResetPos 
 					player.targetX = actor(2).x - 20
 					player.targetY = 520
 				CASE 5	'quit to dos
@@ -654,29 +653,23 @@ CASE 258	'Menu
 				END SELECT		
 		CASE 11 'Help contents
 			player.menuMode = 999
+			player.targetX = actor(2).x - 20
+			player.targetY = actor(2).y + 316
 			SELECT CASE player.menuItem			
 			CASE 1								
 				player.menuContext = 40
 			CASE 3	'enemies
-				player.menuContext = 30
-				'screenResetPos 
-				player.targetX = actor(2).x - 20
-				player.targetY = actor(2).y + 316
+				player.menuContext = 30								
 			CASE 4	'special tiles
-				player.menuContext = 45
-				'screenResetPos 
+				player.menuContext = 45				
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y + 148
 			CASE 5	'items
-				player.menuContext = 46
-				'screenResetPos 
-				player.targetX = actor(2).x - 20
-				player.targetY = actor(2).y + 316
+				player.menuContext = 46								
 			CASE 7	'credits		
 				player.menuContext = 41				
 			CASE 12
-				player.menuContext = player.menuContextPrev
-				'screenResetPos 
+				player.menuContext = player.menuContextPrev				
 				player.targetX = actor(2).x - 20
 				player.targetY = actor(2).y - 52
 			END SELECT
@@ -876,7 +869,8 @@ CASE 255	'Normal player
 	
 	IF player.supaFly THEN 		
 		'screenTargetYlock = -1
-		IF ABS(actor(2).y - screenTargetYlock > 50) THEN screenTargetYlock = -1
+		screenTargetY = actor(2).y - 40
+		'IF ABS(actor(2).y - screenTargetYlock > 50) THEN screenTargetYlock = -1
 		minY = -30
 		maxY = 20
 	END IF
