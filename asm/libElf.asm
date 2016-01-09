@@ -34,7 +34,7 @@ aPageFlip PROC
 
 		mov ds, hudBuffer
 		mov si, hudBuffer+2
-
+		
 		mov es, vSegment				;ES:DI = Page offset * 2
 		mov di, [bp + 06]
 		shl di, 1
@@ -192,7 +192,7 @@ aKBinit PROC
 	int 021h			;Call interrupt 21h
 	
 	mov kbOld, es
-	mov kbOld + 2, bx
+	mov kbOld + 2, bx	
 	
 	mov dx, cs ;[bp + 10]		;DS = New keyboard routine segment
 	mov ds, dx			
@@ -254,8 +254,9 @@ mov [bp + 12], di
 
 mov es, vSegment		;ES = memory write segment (video memory or custom)
 
-mov ds, [bp + 10]		;DS = sprite List segment
-mov si, [bp + 08]		;SI = sprite List offset
+;mov ds, [bp + 10]		;DS = sprite List segment
+;mov si, [bp + 08]		;SI = sprite List offset
+lds si, [bp + 08]
 
 ;============================================================================
 ; SPRITE LIST READ
@@ -1714,6 +1715,7 @@ aPrint PROC
 ;12 Column
 ;14 Color attributes
 ;16 Buffer wrap
+;
 ;============================================================================
 	push bp
 	mov bp,sp
@@ -1724,8 +1726,9 @@ aPrint PROC
 ;---------------------------------------------------------------------------
 	mov dx, [bp + 16]				;DX = Buffer wrap
 	
-	mov es, [bp + 08]				;ES = Write seg
-	mov di, [bp + 06]				;DI = Write ofs
+	;mov es, [bp + 08]				;ES = Write seg
+	;mov di, [bp + 06]				;DI = Write ofs
+	les di, [bp + 06]
 	
 	mov ax, es
 	cmp ax, 0b800h					;IF screen segment, multiply write ofs by two
@@ -1747,7 +1750,6 @@ notVideoSeg:
 	and di, dx						;DI Buffer wrap
 		
 	mov ds, w40char					;DS = Text data seg
-	
 	mov bx, w40char+2				;BX = Text data ofs (Glyph lookup)
 	
 ;------------------------------------------------------------------------------	
@@ -1832,11 +1834,11 @@ aPrint ENDP
 aVideoDetect PROC
 ;============================================================================
 ;
-;	Checks for video adapters VGA, EGA, CGA or MONO/OTHER
+;	Checks for video adapters VGA, EGA, CGA, TANDY, PCJR or MONO/OTHER
 ;	
 ;	If MONO/OTHER is found, 0 is returned at ES:DI (and the game won't run).
 ;
-;	VGA/EGA/CGA will initialize 40x50 text mode with 8x8 characters.
+;	VGA/EGA/CGA/TANDY/PCJR will initialize 40x50 text mode with 8x8 characters.
 ;
 ;	MCGA, PCJR and TANDY detection is based on PAKUPAKU source code
 ;	by Jason M. Knight.
@@ -1877,8 +1879,10 @@ aVideoDetect PROC
 	
 	mov vOldMode, al
 ;---------------------------------------------------------------------------
-	mov es, [bp + 08]				;ES = Write seg (video adapter data)
-	mov di, [bp + 06]				;DI = Write ofs (video adapter data)
+	;mov es, [bp + 08]				;ES = Write seg (video adapter data)
+	;mov di, [bp + 06]				;DI = Write ofs (video adapter data)
+	les di, [bp + 06]
+	
 	push di
 	xor ax, ax
 	mov cx, 32						;Format string to test for data.
@@ -1896,8 +1900,10 @@ test_VGA:
 	je test_MCGA
 									;Check through data dump before
 									; giving up on VGA:
-	mov ds, [bp + 08]				;DS = seg (video adapter data)
-	mov si, [bp + 06]				;SI = ofs (video adapter data)
+	;mov ds, [bp + 08]				;DS = seg (video adapter data)
+	;mov si, [bp + 06]				;SI = ofs (video adapter data)
+	lds si, [bp + 06]
+	
 	xor bx, bx
 	mov cx, 16
 VGAstatedatacheck:
@@ -2202,6 +2208,12 @@ exit:
 ;================================================================================
 aVideoExit ENDP
 aSoundNote PROC
+	;
+	; Add a note to current sound queue position.
+	;
+	; Parameters:
+	;	06	Note
+	;
 	push bp
 	mov bp, sp
 	
@@ -2214,6 +2226,15 @@ aSoundNote PROC
 	retf 2
 aSoundNote ENDP
 aSoundFX PROC
+	;
+	; Copy a sound effeect (a list of notes) to
+	; the sound queue at desired position relative
+	; to current position.
+	;
+	; Parameters:
+	;	06	Sound effect position (0-255)
+	;	08	Sound queue copy offset
+	;
 	push bp
 	mov bp, sp
 	push ds
@@ -2225,7 +2246,8 @@ aSoundFX PROC
 	and bx, 63
 	
 	mov ds, soundData
-	mov si, soundData + 2
+	mov si, soundData + 2	
+	
 	add si, [bp + 6]
 	
 	fillQueue:
@@ -2244,6 +2266,10 @@ aSoundFX PROC
 	retf 4	
 aSoundFX ENDP
 aSoundPlay PROC
+	;
+	; Play a note from the sound queue,
+	; advance queue pointer by one.
+	;
 	xor bx, bx
 	mov bl, soundPos
 	xor ax, ax
@@ -2307,8 +2333,10 @@ aSetup PROC
 	xor al, 3
 	mov soundOff, al	
 	
-	mov ds, [bp + 8]		; Load external data addresses from
-	mov si, [bp + 6]		; provided string.
+	;mov ds, [bp + 8]		; Load external data addresses from
+	;mov si, [bp + 6]		; provided string.
+	
+	lds si, [bp + 6]
 	
 	lodsw
 	mov soundData, ax
@@ -2351,6 +2379,13 @@ aSetup PROC
 	retf 4
 aSetup ENDP
 aCopyPage PROC
+	;
+	; Copy video page from one offset to another.
+	;
+	; Parameters:
+	;	06	Target offset
+	;	08	Source offset
+	;
 	push bp
 	mov bp,sp
 	push es
@@ -2383,13 +2418,17 @@ loop copyPage
 	retf 4
 aCopyPage ENDP
 aMenuHiLite PROC
-	; Stack parameters:
+	;
+	; Draw an attribute-only filled rectangle in video memory.
+	;
+	; Parameters:
 	;	06 page offset
 	;	08 attribute
 	;	10 h
 	;	12 w
 	;	14 y
 	;	16 x
+	;
 	push bp
 	mov bp,sp
 	push es
@@ -2470,8 +2509,9 @@ aUnpackLevelRLE PROC
 	push	ds
 	push	si
 		
-	mov		ds, [bp + 08]
-	mov		si, [bp + 06]		
+	;mov		ds, [bp + 08]
+	;mov		si, [bp + 06]
+	lds		si, [bp + 06]
 		
 	mov		es, gfxTileSeg
 	mov		di, gfxTileMap	
@@ -2509,11 +2549,12 @@ exit:
 	retf	4	
 aUnpackLevelRLE ENDP
 aUnpackTileGfxRLE PROC
+;
 ;	Unpack RL encoded tile graphics from a string to tile bank.
 ;
 ;	Parameters
-;	06	RLE string offset
-;	08	RLE string segment
+;		06	RLE string offset
+;		08	RLE string segment
 ;
 	push	bp
 	mov 	bp, sp
@@ -2522,8 +2563,10 @@ aUnpackTileGfxRLE PROC
 	push	ds
 	push	si
 		
-	mov		ds, [bp + 08]
-	mov		si, [bp + 06]
+	;mov		ds, [bp + 08]
+	;mov		si, [bp + 06]
+	lds		si,	[bp + 06]
+		
 	mov		es, gfxTileSeg
 	mov		di, gfxTileBank
 		
@@ -2567,7 +2610,7 @@ aUnpackSprites PROC
 ;   Packed data is expected in Tile Buffer.
 ;
 ;	Parameters
-;	06	Sprite unpack target offset (Aux or Main sprite-bank)
+;		06	Sprite unpack target offset (Aux or Main sprite-bank)
 ;
 	push	bp
 	mov 	bp, sp
@@ -2800,7 +2843,7 @@ keyboardInterrupt:
 	mov ds, bx								; to save key states into.
 											;
 	mov bx, kbArray + 2						;
-											
+		
 	xor ah, ah								;AH = 0
 	in al, 060h								;AL = Read from port 60
 
