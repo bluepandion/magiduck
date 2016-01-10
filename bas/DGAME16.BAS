@@ -2045,7 +2045,7 @@ DO
 			END IF
 		END IF
 	
-	CASE 33	
+	CASE 33		'Note or letter
 		actor(n).y = actor(n).dir + mulTable(2, angle.x(tick24))
 		playerDeltaX = ABS(actor(n).x - playerX)
 		playerDeltaY = ABS(actor(n).y - playerY)		

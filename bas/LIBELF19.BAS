@@ -27,19 +27,6 @@ DEFINT A-Z
 ' Variables and types
 '-------------------------------------------------------------------------------
 
-DIM SHARED p0%
-DIM SHARED p1%
-DIM SHARED p2%
-DIM SHARED p3%
-DIM SHARED p4%
-DIM SHARED p5%
-DIM SHARED p6%
-DIM SHARED p7%
-DIM SHARED p8%
-DIM SHARED p9%
-DIM SHARED p10%
-DIM SHARED p11%
-
 DIM SHARED writeOfs AS LONG               'General purpose memory
 DIM SHARED readOfs AS LONG                ' Read/Write variables
 DIM SHARED storeOfs AS LONG
@@ -56,7 +43,7 @@ DIM SHARED tilemapReadX AS INTEGER              '0-7 scroll offset
 DIM SHARED tilemapReadY AS INTEGER              '0-3 scroll offset
 DIM SHARED tileMapReadOfs AS INTEGER            'Tilemap read offset
 
-DIM SHARED tileBuffer AS STRING * 11362         '7760 + 1600 + 2000
+DIM SHARED tileBuffer AS STRING * 11362         'buffer: 7760 + map: 1600 + tileset: 2000
 
 DIM SHARED tilePosXlookUp(-16 TO 95) AS INTEGER
 DIM SHARED tilePosYlookUp(-16 TO 655) AS INTEGER
@@ -88,7 +75,7 @@ SUB elfInit
 	PRINT " WARNING!"
 	COLOR 7, 0
 	PRINT 
-	PRINT "  Beta 1 (2015-12-05)"
+	PRINT "  Beta 2 (2016-01-16)"
 	PRINT "  This game has not been fully tested"
 	PRINT "  on real hardware."
 	COLOR 12, 0
@@ -112,10 +99,8 @@ SUB elfInit
 		PRINT "CGA";
 	CASE 2
 		PRINT "PCJR";
-	CASE 3
-		PRINT "Tandy SL/TL";
-	CASE 4
-		PRINT "Tandy 1000";
+	CASE 3 TO 4
+		PRINT "Tandy";	
 	CASE 5
 		PRINT "MCGA";
 	CASE 6
@@ -628,7 +613,7 @@ SUB myPrint (x, y, text$, attributes)
 END SUB
 
 SUB quit
-	IF gfx.adapter > 0 THEN
+	IF gfx.adapter > 0 THEN				 'Adapter = 0 means game startup was aborted.
 		aKBremove 					     'Restore old keyboard routine
 		DEF SEG = 0
 		n = PEEK(&H417) AND &H8F
@@ -643,31 +628,35 @@ SUB quit
 	 aVideoExit
 
 	 'SHELL "cls"	 
-	 PRINT FRE(-1)
-	 PRINT gfx.pageOfs(0), gfx.pageOfs(1)
-	 C = 1
+'	 PRINT FRE(-1)
+'	 PRINT gfx.pageOfs(0), gfx.pageOfs(1)
+'	 C = 1
 
-	 FOR n = 1 TO 64
-	  C = C + 4
-	  COLOR (n AND 1) + 7
-	  PRINT HEX$(level.spawner(n).object); TAB(C);
-	  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
-	 NEXT n
-	n = 1
-	nn = 1
-	DO				
-		n = actor(n).lNext
-		PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
-		'PRINT actor(n).control; "["; actor(n).frame; "]";
-		nn = nn + 1
-	LOOP WHILE n > 1	
-	 PRINT 
-	 PRINT "n = "; nn	 
-	 COLOR 7	 
+'	 FOR n = 1 TO 64
+'	  C = C + 4
+'	  COLOR (n AND 1) + 7
+'	  PRINT HEX$(level.spawner(n).object); TAB(C);
+'	  IF ((n - 1) AND 15) = 15 THEN PRINT : C = 1
+'	 NEXT n
+'	n = 1
+'	nn = 1
+'	DO				
+'		n = actor(n).lNext
+'		PRINT n; actor(n).control;actor(n).x;actor(n).y;actor(n).frame,
+'		'PRINT actor(n).control; "["; actor(n).frame; "]";
+'		nn = nn + 1
+'	LOOP WHILE n > 1	
+'	 PRINT 
+'	 PRINT "n = "; nn	 
+	 COLOR 12
 	 PRINT " MagiDuck, its source code and its"
 	 PRINT " project files are Freeware."
 	 PRINT
+	 PRINT " http://indiedb.com/games/magiduck/"
+	 PRINT
+	 COLOR 14
 	 PRINT " Thanks for playing!"	
+	 COLOR 7	 
 	 'OPEN "debug.txt" for output as #1
 	 'FOR nn = 9760 + n TO 9760 + 1599
 	 '  	PRINT #1, HEX$(ASC(MID$(tileBuffer, nn, 1)));
@@ -808,15 +797,6 @@ SUB tileWrite (x AS INTEGER, y AS INTEGER, index AS INTEGER)
 	 DEF SEG
 END SUB
 
-SUB hudTextLoad (offset AS INTEGER, show AS INTEGER)
-	loadStr = MID$(hudBuffer, 161, 1)
-	OPEN "ducktext.ctt" FOR BINARY AS #1
-		GET #1, offset + 1, hudBuffer
-	CLOSE #1
-	MID$(hudBuffer, 161, 1) = loadStr
-	IF show THEN aPageFlip gfx.pageOfs(gfx.page XOR 1), gfx.pageOfs(gfx.page)
-END SUB
-
 SUB menuLoad (menuNo%)
 	if menuNo% < 0 THEN menuNo% = 0
 	menuClear
@@ -843,8 +823,7 @@ SUB menuLoad (menuNo%)
 		' Copy data from preloaded menu string to loadVarStr.
 		'
 		loadInt = CVI(MID$(menuPreload, fileOfs, 2))
-		fileOfs = loadInt
-		debugOut str$(loadInt)
+		fileOfs = loadInt		
 		loadInt = CVI(MID$(menuPreload, fileOfs, 2))
 		fileOfs = fileOfs + 2
 		loadVarStr = MID$(menuPreload, fileOfs, loadInt)		
