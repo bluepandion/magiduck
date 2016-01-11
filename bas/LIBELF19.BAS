@@ -156,7 +156,7 @@ SUB elfInit
 	pLong& = pLong& + 9760
 	a$ = MKL$(pLong&)
 	TileMapOfs = CVI(a$)                           'Tile map    = 1600  bytes
-																  '              20x80 tiles
+												   '              20x80 tiles
 	pLong& = tileBufferOfs
 	pLong& = pLong& + 40                          'Offset tilebuffer by 40
 	a$ = MKL$(pLong&)                              'for some safety
@@ -652,7 +652,7 @@ SUB quit
 	 PRINT " MagiDuck, its source code and its"
 	 PRINT " project files are Freeware."
 	 PRINT
-	 PRINT " http://indiedb.com/games/magiduck/"
+	 PRINT " www.indiedb.com/games/magiduck"
 	 PRINT
 	 COLOR 14
 	 PRINT " Thanks for playing!"	

@@ -14,4 +14,4 @@ copy floats.clu ..\release
 copy sincos.clu ..\release
 copy *.cmm ..\release
 copy *.cmp ..\release
-
+copy ..\docs\readme.txt ..\release
