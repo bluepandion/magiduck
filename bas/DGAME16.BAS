@@ -956,7 +956,7 @@ CASE 255	'Normal player
 			player.levelScore(c) = 1
 		NEXT c
 	END IF
-	IF kbArray(18) THEN maxY = 1
+	'IF kbArray(18) THEN maxY = 1
 	
 	IF player.hp = 0 THEN		
 		actor(2).parentDX = 0
