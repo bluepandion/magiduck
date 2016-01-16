@@ -171,50 +171,47 @@ OPEN listFile$ FOR INPUT AS #1
 		 token$ = ""
 		END IF
 
-		IF strGet = "," THEN
-		 strGet = CHR$(255)
+		IF strGet = "," OR strGet = CHR$(10) OR strGet = CHR$(13) THEN		
+			 strGet = CHR$(255)
+			IF LEN(token$) > 0 THEN		
+				 IF tokenMode = 2 THEN
+					  tile = (VAL(token$) - 141) MOD 60
+					  IF tile < 0 THEN tile = 0
+					  IF tile = 28 OR tile = 58 THEN level.coins = level.coins + 1
+					  levelStr$ = levelStr$ + CHR$(tile)
+				 END IF
 
-		 IF tokenMode = 2 THEN
-		  tile = (VAL(token$) - 141) MOD 60
-		  IF tile < 0 THEN tile = 0
-		  IF tile = 28 OR tile = 58 THEN level.coins = level.coins + 1
-		  levelStr$ = levelStr$ + CHR$(tile)
-		 END IF
-
-		 IF tokenMode = 4 THEN
-		  tile = VAL(token$)
-		  IF tile > 0 THEN
-
-			IF tile = 1 THEN
-			 level.playerX = x
-			 level.playerY = y + 8
-			 PRINT "   Player start"
+				 IF tokenMode = 4 THEN
+					  tile = VAL(token$)
+					  IF tile > 0 THEN
+							IF tile = 1 THEN
+							 level.playerX = x
+							 level.playerY = y + 8
+							 PRINT "   Player start"
+							END IF
+							IF tile > 1 AND tile < 9 THEN
+							 actorWave = tile - 2
+							 actorSpawner = 1
+							 'pause
+							 CLS 1
+							END IF
+							IF tile > 11 AND tile < 19 THEN
+							 nWave = tile - 12
+							 'IF nWave = actorWave THEN
+							 '  nWave = nWave + 1
+							 'END IF
+							 addActor tile, actorWave, x, y
+							 'IF actorWave < 5 THEN addActor tile, actorWave + 1, x, y
+							END IF
+							IF tile > 19 OR tile = 11 THEN
+							 addActor tile, actorWave, x, y
+							END IF
+						END IF
+					  x = x + 4
+					  IF x > 79 THEN x = 0: y = y + 8
+				END IF
+				token$ = ""
 			END IF
-
-			IF tile > 1 AND tile < 9 THEN
-			 actorWave = tile - 2
-			 actorSpawner = 1
-			 'pause
-			 CLS 1
-			END IF
-
-			IF tile > 11 AND tile < 19 THEN
-			 nWave = tile - 12
-			 'IF nWave = actorWave THEN
-			 '  nWave = nWave + 1
-			 'END IF
-			 addActor tile, actorWave, x, y
-			 'IF actorWave < 5 THEN addActor tile, actorWave + 1, x, y
-			END IF
-
-			IF tile > 19 OR tile = 11 THEN
-			 addActor tile, actorWave, x, y
-			END IF
-		  END IF
-		  x = x + 4
-		  IF x > 79 THEN x = 0: y = y + 8
-		 END IF
-		 token$ = ""
 		END IF
 
 		SELECT CASE tokenMode
@@ -396,14 +393,18 @@ SUB saveLevel (file$, No)
 		rleStartOfs = ofsDATA		
 		ofsDATA = ofsDATA + 2
 		
-		n = 1
-		rleCount = 1
-		prevTile = MID$(levelStr$, n, 1)
+		n = 0
+		rleCount = 0
+		prevTile = MID$(levelStr$, 1, 1)
 		runMode = 0		
 		DO
 			n = n + 1
 			tile = MID$(levelStr$, n, 1)
-			IF tile <> prevTile OR rleCount = 127 OR n = 1601 THEN
+			IF tile <> prevTile OR rleCount = 127 OR n = 1601 THEN				
+				IF n = 1601 THEN
+					print rleCount, ASC(tile), ASC(prevTile), len(levelStr$)
+					do:loop while inkey$=""
+				END IF
 				IF rleCount > 1 THEN					
 					byte = chr$(rleCount OR 128)
 					PUT #2, ofsData, byte
