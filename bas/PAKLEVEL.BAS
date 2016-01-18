@@ -403,7 +403,7 @@ SUB saveLevel (file$, No)
 			IF tile <> prevTile OR rleCount = 127 OR n = 1601 THEN				
 				IF n = 1601 THEN
 					print rleCount, ASC(tile), ASC(prevTile), len(levelStr$)
-					do:loop while inkey$=""
+					'do:loop while inkey$=""
 				END IF
 				IF rleCount > 1 THEN					
 					byte = chr$(rleCount OR 128)

@@ -2508,9 +2508,7 @@ aUnpackLevelRLE PROC
 	push	di
 	push	ds
 	push	si
-		
-	;mov		ds, [bp + 08]
-	;mov		si, [bp + 06]
+			
 	lds		si, [bp + 06]
 		
 	mov		es, gfxTileSeg
@@ -2569,22 +2567,23 @@ aUnpackTileGfxRLE PROC
 		
 	mov		es, gfxTileSeg
 	mov		di, gfxTileBank
-		
-	xor		dx, dx
+			
 	xor		ax, ax
-	mov		dl, 2
-	mov		bl, 0F0h				;RLE run start value
+	mov		dl, 0F0h	
+	mov		bl, 0B0h				;RLE run start value
 	mov		cx, 1920
 loopRLE:
 	lodsb	
-	cmp		al, bl
-	jae		decodeRun
+	mov		dh, al
+	and		dh, dl
+	cmp		dh, bl
+	je		decodeRun
 	stosb
 	loop	loopRLE
 	jmp		exit
 decodeRun:
 	and		al, 0Fh
-	add		al, dl
+	add		al, 2
 	sub		cx, ax
 	push	cx
 	mov		cl, al	

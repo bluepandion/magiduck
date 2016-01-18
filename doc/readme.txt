@@ -1,7 +1,7 @@
 ------------------------------------------------------------------------------
                                MagiDuck
-    
-                        by Toni Svenstr√∂m 2015
+
+                        by Toni Svenstrîm 2015
                     www.indiedb.com/games/magiduck
 ------------------------------------------------------------------------------
 Contents
@@ -9,15 +9,16 @@ Contents
     2.  Minimum system requirements
     3.  Starting the game
     4.  Command line options
-    5.  DosBox
-    6.  License
+5.  DosBox
+6.  License
 ------------------------------------------------------------------------------
 
 1. How to play
 
-    Arrow keys  =   Walk / Look down
+    Left/Right  =   Walk
+    Down/5      =   Look Down
     Z           =   Jump / Hold to fly
-    X           =   Shoot
+    X = Shoot
     
     ESC         =   Back in menu / Pause menu
     ENTER       =   Select in menu
@@ -66,3 +67,4 @@ Contents
     Feel free to distribute or use the assets / code in your own projects.
 
 ------------------------------------------------------------------------------
+

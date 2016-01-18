@@ -75,7 +75,7 @@ SUB elfInit
 	PRINT " WARNING!"
 	COLOR 7, 0
 	PRINT 
-	PRINT "  Beta 2 (2016-01-16)"
+	PRINT "  Beta 2 (2016-01-18)"
 	PRINT "  This game has not been fully tested"
 	PRINT "  on real hardware."
 	COLOR 12, 0

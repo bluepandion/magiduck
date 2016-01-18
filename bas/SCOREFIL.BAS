@@ -19,7 +19,7 @@ DIM SHARED scores AS scoretable
 scores.entry(0).name = "CYGNUS"
 scores.entry(0).score = 100000
 scores.entry(1).name = "TREALITY"
-scores.entry(1).score = 300000
+scores.entry(1).score = 200000
 scores.entry(2).name = "ID"
 scores.entry(2).score = 300000
 scores.entry(3).name = "ECLIPSE"
@@ -34,7 +34,7 @@ scores.entry(7).name = "PAKU"
 scores.entry(7).score = 800000
 scores.entry(8).name = "COMPUTER"
 scores.entry(8).score = 1000000
-scores.entry(9).name = "VINTAGE"
+scores.entry(9).name = "VINTAGE-"
 scores.entry(9).score = 2000000
 
 FOR n = 0 to 9

@@ -105,13 +105,13 @@ SUB SaveRle
 		IF rleIndex$ <> rleCmp$ OR rleLen = 17 OR n = 1920 THEN
 			PRINT rleLen;
 			IF rleLen > 1 THEN				
-				outStr = chr$((rleLen - 2) OR &HF0)				
+				outStr = chr$((rleLen - 2) OR &HB0)				
 				outPut$ = outPut$ + outStr + rleCmp$
 			ELSE						
-				IF ASC(rleCmp$) => &HF0 THEN
+				IF ASC(rleCmp$) = &HB0 THEN
 					CLS
 					PRINT n
-					PRINT "Error: Found 0xF value in tilemap."
+					PRINT "Error: Found 0xB value in tilemap."
 					END
 				END IF
 				outPut$ = outPut$ + rleCmp$
@@ -167,7 +167,7 @@ SUB SavePaletteRLE
 					'numPalEntries = numPalEntries + 1
 				ELSE
 					
-					out$ = CHR$(&HF1) + rleCmp$
+					out$ = CHR$(&HBB) + rleCmp$
 					'numNormEntries = numNormEntries + 1
 				END IF
 			ELSE

@@ -1402,7 +1402,7 @@ DO
 			actor(n).x = actor(n).x AND &HFFFC + 2
 		END IF		
 	
-	CASE 10 'Boss Magpie
+	CASE 80 'Boss Magpie
 		IF actor(n).x < actor(2).x THEN
 			actor(n).flags = 1
 		ELSE
@@ -1469,15 +1469,16 @@ DO
 					actor(n).vecY = -1
 				END IF
 				IF actor(n).y < 24 THEN
-				IF level.spawner(63).object = 0 THEN 
+					IF level.spawner(63).object = 0 THEN 
 						SpawnObject actor(n).x -9, 32, 63, 63, 0
 						level.spawner(63).object = -63
 					END IF					
-					actor(n).control = 0
+					actor(n).flags = 0
+					actor(n).control = 81
 					actor(n).vecX = 0
 					actor(n).vecY = 0
 					FOR c = 4 TO 60
-						actor(c).collider = 0
+						IF actor(c).control > 79 AND actor(c).control < 82 THEN actor(c).collider = 0
 					NEXT c
 				END IF
 			END IF
@@ -1777,10 +1778,10 @@ DO
        	END SELECT
 	'Dragon
 	CASE 3
-		IF actor(n).dir = 0 THEN
-			playerDeltaX = ABS(actor(n).x - playerX)
+		playerDeltaX = ABS(actor(n).x - playerX)
+		IF actor(n).dir = 0 THEN			
 			playerDeltaY = ABS(actor(n).y - playerY)
-			IF playerDeltaX < 25 AND playerDeltaY < 40 THEN actor(n).dir = 1 
+			IF playerDeltaX < 26 AND playerDeltaY < 40 THEN actor(n).dir = 1 
 		ELSE
 			actor(n).count = actor(n).count + 1
 			IF actor(n).count < 32 THEN
@@ -1798,7 +1799,7 @@ DO
 			IF actor(n).vecY > 10 THEN actor(n).vecY = 10
 			IF actor(n).vecX < -5 THEN actor(n).vecX = -5
 			IF actor(n).vecX > 5 THEN actor(n).vecX = 5
-			IF playerDeltaX < 6 THEN
+			IF playerDeltaX < 8 THEN
 				IF actor(n).jump < 1 THEN
 					spawnObject actor(n).x, actor(n).y + 1, 112, 0, 0
 					actor(n).jump = 24
@@ -2102,7 +2103,7 @@ DO
 							level.spawner(actor(nn).spawner).object = level.spawner(actor(nn).spawner).object AND &HFFF
 							'debugOut "destroyed " + str$(actor(nn).control) + "  (" + str$(actor(nn).spawner) + " - " + hex$(level.spawner(actor(nn).spawner).object)
 						END IF
-						IF actor(nn).control <> 65 THEN 
+						IF actor(nn).control < 63 THEN 
 							actor(nn).control = 0
 							actor(nn).life = 0
 						END IF
@@ -2420,6 +2421,7 @@ END SUB
 
 SUB initTestGame
 	player.level = 24
+	player.menuSound = -1
 	IF LEN(COMMAND$) THEN player.level = VAL(COMMAND$)	
 	DO		
 		main
@@ -2786,7 +2788,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 	CASE 3	'DRAGON
 		actorListNew n
 		actor(n).control = 3   
-		actor(n).life = -2
+		actor(n).life = -3
 		actor(n).collider = 1
 		actor(n).frame = 89
 		actor(n).count = 0
@@ -2843,10 +2845,12 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).jump = 1
 		END IF
 	CASE 10	'BOSS
+		'spawner 63 reserved for end-of-level star spawn
+		level.spawner(63).object = 0
 		'head
 		actorListNew n		
 		actor(n).exist = -1
-		actor(n).control = 10
+		actor(n).control = 80
 		actor(n).visX = 80
 		actor(n).visY = 512
 		actor(n).frame = 80
@@ -2860,6 +2864,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		'body
 		n = getSpawnSlot
 		actorListNew n		
+		actor(n).control = 81
 		actor(n).exist = 1
 		actor(n).flags = 0		
 		actor(n).frame = 90
@@ -2875,6 +2880,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		'tail
 		n = getSpawnSlot
 		actorListNew n		
+		actor(n).control = 81
 		actor(n).exist = 1
 		actor(n).flags = 0		
 		actor(n).frame = 95
@@ -3041,7 +3047,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 			actor(n).anim = object - 51
 		END IF
 	CASE 63		'EXIT
-		actorListNew n
+		actorListNewLast n
 		actor(n).dir = y
 		actor(n).spawner = spawner		
 		actor(n).frame = 60
