@@ -868,11 +868,10 @@ CASE 255	'Normal player
     END IF	
 	
 	IF player.supaFly THEN 		
-		'screenTargetYlock = -1
+		screenTargetYlock = actor(2).y - 40
 		screenTargetY = actor(2).y - 40
 		'IF ABS(actor(2).y - screenTargetYlock > 50) THEN screenTargetYlock = -1
-		minY = -30
-		maxY = 20
+		minY = -30		
 	END IF
 	
 	IF player.inWater THEN 				
@@ -2141,11 +2140,12 @@ DO
 				NEXT b
 			END IF
 		ELSE
-			IF playerDeltaX < 5 AND playerDeltaY < 8 THEN
+			IF playerDeltaX < 5 AND playerDeltaY < 10 THEN
 				actor(n).life = 8
 				actor(n).frame = 30
 				actor(n).control = 0
 				actor(2).control = 263				
+				player.menuSound = 240
 				player.menuContext = 9 + actor(n).jump
 				player.levelCompletion(actor(n).jump) = 1				
 			END IF
@@ -2626,7 +2626,7 @@ SUB spawnObject (x, y, object, spawnerFlags, spawner)
 		actor(n).control = 0
 		actor(n).frame = spawnerFlags
 	CASE 200	'Explode
-		actorListNew n
+		actorListNewLast n
 		actor(n).control = 0
 		actor(n).life = 12		
 		actor(n).collider = 0
